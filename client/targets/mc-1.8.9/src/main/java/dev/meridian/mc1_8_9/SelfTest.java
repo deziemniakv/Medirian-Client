@@ -22,6 +22,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.world.level.LevelGeneratorType;
 import net.minecraft.world.level.LevelInfo;
+import org.lwjgl.opengl.Display;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -45,6 +46,15 @@ public final class SelfTest {
     private static int wait;
     private static int sceneX;
     private static int sceneZ;
+    /** Occlusion benchmark: pigs behind the wall, world render time measured with occlusion on and off. */
+    private static final int BENCH_PIGS = 160;
+    private static final int BENCH_TICKS = 100;
+    private static boolean sampling;
+    private static double sampleSum;
+    private static int sampleCount;
+    private static float onWorldMs;
+    private static float onFrameMs;
+    private static boolean disturbed;
 
     private SelfTest() {
     }
@@ -53,11 +63,20 @@ public final class SelfTest {
         if (!ENABLED || step < 0) {
             return;
         }
+        Meridian meridian = Meridian.get();
+        if (sampling) {
+            sampleSum += meridian.performance().worldRenderMs();
+            sampleCount++;
+            // a real keyboard / mouse used the window: the measurement no longer compares like with like
+            if (!disturbed && (client.currentScreen != null || Math.abs(client.player.yaw + 90f) > 1f || Math.abs(client.player.pitch) > 1f)) {
+                disturbed = true;
+                Log.warn("Self-test benchmark disturbed (screen {}, yaw {}, pitch {})", client.currentScreen, client.player.yaw, client.player.pitch);
+            }
+        }
         if (wait > 0) {
             wait--;
             return;
         }
-        Meridian meridian = Meridian.get();
         switch (step) {
             case 0:
                 if (client.currentScreen instanceof TitleScreen) {
@@ -117,9 +136,12 @@ public final class SelfTest {
                 return;
             case 8:
                 shot(client, "5-modmenu-ingame");
-                next(20);
+                // in a world the Target HUD previews the local player's head
+                meridian.platform().openScreen(new HudEditorScreen(null));
+                next(30);
                 return;
             case 9:
+                shot(client, "5b-hudeditor-ingame");
                 meridian.platform().openScreen(null);
                 buildCullingScene(client.player);
                 next(40);
@@ -127,6 +149,44 @@ public final class SelfTest {
             case 10:
                 verifyCulling(client);
                 shot(client, "6-culling");
+                spawnCrowd(client.player);
+                // measure rendering, not the frame limiter or a pause menu
+                meridian.modules().get("dynamicfps").setEnabled(false);
+                client.options.pauseOnLostFocus = false;
+                client.options.vsync = false;
+                Display.setVSyncEnabled(false);
+                client.options.maxFramerate = 260;
+                next(80);
+                return;
+            case 11:
+                aimAtWall(client.player);
+                startSampling();
+                next(BENCH_TICKS);
+                return;
+            case 12:
+                shot(client, "7-bench-occlusion");
+                onWorldMs = stopSampling();
+                onFrameMs = meridian.performance().frames().averageFrameMs();
+                occlusion(meridian, false);
+                next(40);
+                return;
+            case 13:
+                aimAtWall(client.player);
+                startSampling();
+                next(BENCH_TICKS);
+                return;
+            case 14:
+                shot(client, "8-bench-no-occlusion");
+                float offWorldMs = stopSampling();
+                float offFrameMs = meridian.performance().frames().averageFrameMs();
+                occlusion(meridian, true);
+                if (disturbed) {
+                    Log.warn("Self-test benchmark skipped: the game window was used while measuring");
+                } else {
+                    Log.info("Self-test benchmark ({} pigs behind a wall): world render {} ms with occlusion vs {} ms without; frame {} ms vs {} ms",
+                            BENCH_PIGS, String.format("%.2f", onWorldMs), String.format("%.2f", offWorldMs),
+                            String.format("%.2f", onFrameMs), String.format("%.2f", offFrameMs));
+                }
                 next(20);
                 return;
             default:
@@ -176,6 +236,38 @@ public final class SelfTest {
         player.sendChatMessage("/summon Pig " + (x + 9.5) + " " + y + " " + (z + 0.5) + " {NoAI:1}");
         player.sendChatMessage("/setblock " + (x + 3) + " " + y + " " + (z + 2) + " chest");
         player.sendChatMessage("/setblock " + (x + 9) + " " + y + " " + (z + 2) + " chest");
+    }
+
+    /** A crowd of pigs behind the wall (several per spot: only the rendering cost matters). */
+    private static void spawnCrowd(ClientPlayerEntity player) {
+        for (int i = 0; i < BENCH_PIGS; i++) {
+            double x = sceneX + 7.5 + (i % 4) * 0.9;
+            double z = sceneZ - 3.5 + (i / 4) % 8;
+            player.sendChatMessage("/summon Pig " + x + " " + SCENE_Y + " " + z + " {NoAI:1}");
+        }
+    }
+
+    /** Looks east at the wall from the scene position. */
+    private static void aimAtWall(ClientPlayerEntity player) {
+        player.yaw = -90f;
+        player.prevYaw = -90f;
+        player.pitch = 0f;
+        player.prevPitch = 0f;
+    }
+
+    private static void occlusion(Meridian meridian, boolean on) {
+        ((BooleanSetting) meridian.modules().get("entityculling").setting("occlusion")).set(on);
+    }
+
+    private static void startSampling() {
+        sampleSum = 0;
+        sampleCount = 0;
+        sampling = true;
+    }
+
+    private static float stopSampling() {
+        sampling = false;
+        return sampleCount == 0 ? 0 : (float) (sampleSum / sampleCount);
     }
 
     /** The pig behind the wall must be hidden (and actually skipped while rendering), the other one visible. */

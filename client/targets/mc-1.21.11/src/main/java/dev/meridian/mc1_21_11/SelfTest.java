@@ -53,6 +53,15 @@ final class SelfTest {
     private static final int SCENE_Y = 200;
     private static int sceneX;
     private static int sceneZ;
+    /** Occlusion benchmark: pigs behind the wall, world render time measured with occlusion on and off. */
+    private static final int BENCH_PIGS = 160;
+    private static final int BENCH_TICKS = 100;
+    private static boolean sampling;
+    private static double sampleSum;
+    private static int sampleCount;
+    private static float onWorldMs;
+    private static float onFrameMs;
+    private static boolean disturbed;
 
     private SelfTest() {
     }
@@ -61,11 +70,21 @@ final class SelfTest {
         if (!ENABLED) {
             return;
         }
+        Meridian meridian = Meridian.get();
+        if (sampling) {
+            sampleSum += meridian.performance().worldRenderMs();
+            sampleCount++;
+            // a real keyboard / mouse used the window: the measurement no longer compares like with like
+            LocalPlayer player = minecraft.player;
+            if (!disturbed && (minecraft.screen != null || Math.abs(player.getYRot() + 90f) > 1f || Math.abs(player.getXRot()) > 1f)) {
+                disturbed = true;
+                Log.warn("Self-test benchmark disturbed (screen {}, yaw {}, pitch {})", minecraft.screen, player.getYRot(), player.getXRot());
+            }
+        }
         if (wait > 0) {
             wait--;
             return;
         }
-        Meridian meridian = Meridian.get();
         switch (step) {
             case 0:
                 if (minecraft.screen instanceof TitleScreen) {
@@ -124,9 +143,12 @@ final class SelfTest {
                     Log.error("Self-test FAILED: mod menu key did not open the mod menu (screen: {})", minecraft.screen);
                 }
                 shot(minecraft, "5-modmenu-ingame");
-                next(40);
+                // in a world the Target HUD previews the local player's head
+                meridian.platform().openScreen(new HudEditorScreen(null));
+                next(30);
                 return;
             case 9:
+                shot(minecraft, "5b-hudeditor-ingame");
                 meridian.platform().openScreen(null);
                 buildCullingScene(minecraft.player);
                 next(40);
@@ -134,6 +156,44 @@ final class SelfTest {
             case 10:
                 verifyCulling(minecraft);
                 shot(minecraft, "6-culling");
+                spawnCrowd(minecraft.player);
+                // measure rendering, not the frame limiter or a pause menu
+                meridian.modules().get("dynamicfps").setEnabled(false);
+                minecraft.options.pauseOnLostFocus = false;
+                minecraft.options.enableVsync().set(false);
+                minecraft.options.framerateLimit().set(260);
+                next(80);
+                return;
+            case 11:
+                aimAtWall(minecraft.player);
+                startSampling();
+                next(BENCH_TICKS);
+                return;
+            case 12:
+                shot(minecraft, "7-bench-occlusion");
+                Log.info("Self-test benchmark: {} pigs hidden by occlusion", hiddenPigs(minecraft));
+                onWorldMs = stopSampling();
+                onFrameMs = meridian.performance().frames().averageFrameMs();
+                occlusion(meridian, false);
+                next(40);
+                return;
+            case 13:
+                aimAtWall(minecraft.player);
+                startSampling();
+                next(BENCH_TICKS);
+                return;
+            case 14:
+                shot(minecraft, "8-bench-no-occlusion");
+                float offWorldMs = stopSampling();
+                float offFrameMs = meridian.performance().frames().averageFrameMs();
+                occlusion(meridian, true);
+                if (disturbed) {
+                    Log.warn("Self-test benchmark skipped: the game window was used while measuring");
+                } else {
+                    Log.info("Self-test benchmark ({} pigs behind a wall): world render {} ms with occlusion vs {} ms without; frame {} ms vs {} ms",
+                            BENCH_PIGS, String.format("%.2f", onWorldMs), String.format("%.2f", offWorldMs),
+                            String.format("%.2f", onFrameMs), String.format("%.2f", offFrameMs));
+                }
                 next(20);
                 return;
             default:
@@ -168,6 +228,51 @@ final class SelfTest {
         player.connection.sendCommand("summon pig " + (x + 9.5) + " " + y + " " + (z + 0.5) + " {NoAI:1b}");
         player.connection.sendCommand("setblock " + (x + 3) + " " + y + " " + (z + 2) + " chest");
         player.connection.sendCommand("setblock " + (x + 9) + " " + y + " " + (z + 2) + " chest");
+    }
+
+    /** A crowd of pigs behind the wall (several per spot: only the rendering cost matters). */
+    private static void spawnCrowd(LocalPlayer player) {
+        for (int i = 0; i < BENCH_PIGS; i++) {
+            double x = sceneX + 7.5 + (i % 4) * 0.9;
+            double z = sceneZ - 3.5 + (i / 4) % 8;
+            player.connection.sendCommand("summon pig " + x + " " + SCENE_Y + " " + z + " {NoAI:1b}");
+        }
+    }
+
+    /** Pigs whose last occlusion test (within the last second) found them hidden. */
+    private static int hiddenPigs(Minecraft minecraft) {
+        int hidden = 0;
+        long now = System.nanoTime();
+        for (Entity entity : minecraft.level.entitiesForRendering()) {
+            CullState state = (CullState) entity;
+            if (entity.getType() == EntityType.PIG && state.meridian$cullCheckedAt() != 0
+                    && now - state.meridian$cullCheckedAt() < 1_000_000_000L && !state.meridian$cullVisible()) {
+                hidden++;
+            }
+        }
+        return hidden;
+    }
+
+    /** Looks east at the wall from the scene position. */
+    private static void aimAtWall(LocalPlayer player) {
+        player.setYRot(-90f);
+        player.setYHeadRot(-90f);
+        player.setXRot(0f);
+    }
+
+    private static void occlusion(Meridian meridian, boolean on) {
+        ((dev.meridian.setting.BooleanSetting) meridian.modules().get("entityculling").setting("occlusion")).set(on);
+    }
+
+    private static void startSampling() {
+        sampleSum = 0;
+        sampleCount = 0;
+        sampling = true;
+    }
+
+    private static float stopSampling() {
+        sampling = false;
+        return sampleCount == 0 ? 0 : (float) (sampleSum / sampleCount);
     }
 
     /** The pig behind the wall must be hidden (and actually skipped while rendering), the other one visible. */

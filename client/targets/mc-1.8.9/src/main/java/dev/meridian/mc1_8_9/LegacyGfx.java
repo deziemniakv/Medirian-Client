@@ -241,8 +241,14 @@ public final class LegacyGfx implements Gfx {
         if (!(handle instanceof AbstractClientPlayerEntity)) {
             return;
         }
+        // Legacy Yarn (build 604) swaps these names: getCapeId() returns the skin (with the default
+        // skin as fallback) and getSkinId() the cape, which is null for most players.
+        Identifier skin = ((AbstractClientPlayerEntity) handle).getCapeId();
+        if (skin == null) {
+            return;
+        }
         GlStateManager.color(1f, 1f, 1f, 1f);
-        client.getTextureManager().bindTexture(((AbstractClientPlayerEntity) handle).getSkinId());
+        client.getTextureManager().bindTexture(skin);
         DrawableHelper.drawTexture(x, y, 8f, 8f, 8, 8, size, size, 64f, 64f);
         DrawableHelper.drawTexture(x, y, 40f, 8f, 8, 8, size, size, 64f, 64f);
     }

@@ -28,12 +28,13 @@ Każdy wymaga hooka w obu adapterach (nowe `Capability`):
 - [ ] **Discord RPC** — po stronie launchera (named pipe `discord-ipc-0`), status z kanału live; wymaga Discord application id.
 - [x] **Occlusion culling** w Entity Culling (0.1.2): promienie z kamery do środka i narożników hitboxa (`perf/OcclusionCuller`).
 - [x] **Culling block entities** (skrzynie, tabliczki, głowy, banery) tym samym `OcclusionCuller` (0.1.2).
-- [ ] Pomiar zysku FPS z okluzji w self-teście (scena z N bytami za ścianą, okluzja wł./wył.).
+- [x] Pomiar zysku z okluzji w self-teście (160 świń za ścianą, okluzja wł./wył.; pomiar pomijany, gdy ktoś używa okna):
+      1.8.9 — świat 2,99 → 1,57 ms, klatka 3,14 → 1,86 ms; 1.21.11 — świat 2,27 → 0,60 ms, klatka 2,80 → 0,91 ms.
 - [ ] **Polityki serwerów** (np. wyłączenie Freelook tam, gdzie serwer go zabrania) — kanał plugin message.
 
 ## Etap 3 — kosmetyki
 
-- [ ] `CosmeticRenderer` dla CAPE w obu adapterach (1.8.9: `AbstractClientPlayerEntity#getCapeId`, modern: `PlayerSkin`).
+- [ ] `CosmeticRenderer` dla CAPE w obu adapterach (1.8.9: `AbstractClientPlayerEntity#getSkinId` — w Legacy Yarn 604 nazwy skin/cape są zamienione, modern: `PlayerSkin`).
 - [ ] Usługa kosmetyków (katalog, własność, loadouty innych graczy) — `CosmeticsProvider` sieciowy.
 - [ ] UI kosmetyków w mod menu (dopiero gdy istnieje renderer — wymóg „bez fake UI”).
 - [ ] WINGS / HAT jako warstwy renderera gracza, EMOTE, TRAIL.
