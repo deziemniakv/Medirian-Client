@@ -4,9 +4,14 @@ import dev.meridian.platform.Occluders;
 
 /**
  * Tests whether any part of a box can be seen from the camera or whether full opaque blocks hide
- * all of it. Rays are cast from the camera to the centre and the eight (slightly inset) corners of
- * the box through the block grid; the box is visible as soon as one ray passes. Visible boxes
- * usually cost a single ray, hidden ones nine rays that each stop at the first opaque block.
+ * all of it. Rays are cast from the camera through the block grid to sample points of the box: its
+ * centre, the centres of the (up to three) faces turned to the camera and its eight corners, all
+ * slightly inset. The box is visible as soon as one ray passes. Visible boxes usually cost a single
+ * ray, hidden ones at most twelve rays that each stop at the first opaque block.
+ *
+ * <p>Sampling is a trade-off: a box of which only a thin strip between sample points shows (for
+ * example through the edge of a one-block hole) is treated as hidden; the face centres make this
+ * rarer than testing corners alone.
  *
  * <p>The test is conservative: blocks containing the camera or a ray's end point are never treated
  * as occluders, so an entity is only hidden when it is fully behind solid blocks.
@@ -40,6 +45,25 @@ public final class OcclusionCuller {
         double y1 = maxY - insetY;
         double z0 = minZ + insetZ;
         double z1 = maxZ - insetZ;
+        double cx = (minX + maxX) * 0.5;
+        double cy = (minY + maxY) * 0.5;
+        double cz = (minZ + maxZ) * 0.5;
+        // faces turned to the camera (a face is only visible when the camera is outside its slab)
+        if (camX < minX || camX > maxX) {
+            if (rayClear(blocks, camX, camY, camZ, camX < minX ? x0 : x1, cy, cz)) {
+                return true;
+            }
+        }
+        if (camY < minY || camY > maxY) {
+            if (rayClear(blocks, camX, camY, camZ, cx, camY < minY ? y0 : y1, cz)) {
+                return true;
+            }
+        }
+        if (camZ < minZ || camZ > maxZ) {
+            if (rayClear(blocks, camX, camY, camZ, cx, cy, camZ < minZ ? z0 : z1)) {
+                return true;
+            }
+        }
         return rayClear(blocks, camX, camY, camZ, x0, y0, z0)
                 || rayClear(blocks, camX, camY, camZ, x1, y0, z0)
                 || rayClear(blocks, camX, camY, camZ, x0, y1, z0)

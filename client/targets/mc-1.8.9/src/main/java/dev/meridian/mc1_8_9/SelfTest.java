@@ -18,6 +18,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ClientPlayerEntity;
 import net.minecraft.entity.passive.PigEntity;
 import net.minecraft.text.LiteralText;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.world.level.LevelGeneratorType;
 import net.minecraft.world.level.LevelInfo;
@@ -173,6 +174,8 @@ public final class SelfTest {
         player.sendChatMessage("/tp " + (x + 0.5) + " " + y + " " + (z + 0.5) + " -90 0");
         player.sendChatMessage("/summon Pig " + (x + 3.5) + " " + y + " " + (z + 0.5) + " {NoAI:1}");
         player.sendChatMessage("/summon Pig " + (x + 9.5) + " " + y + " " + (z + 0.5) + " {NoAI:1}");
+        player.sendChatMessage("/setblock " + (x + 3) + " " + y + " " + (z + 2) + " chest");
+        player.sendChatMessage("/setblock " + (x + 9) + " " + y + " " + (z + 2) + " chest");
     }
 
     /** The pig behind the wall must be hidden (and actually skipped while rendering), the other one visible. */
@@ -210,6 +213,21 @@ public final class SelfTest {
         } else {
             Log.error("Self-test FAILED: occlusion culling (front visible {}, behind visible {}, skipped while rendering {})",
                     frontVisible, behindVisible, skipped);
+        }
+        Object frontChest = client.world.getBlockEntity(new BlockPos(sceneX + 3, SCENE_Y, sceneZ + 2));
+        Object behindChest = client.world.getBlockEntity(new BlockPos(sceneX + 9, SCENE_Y, sceneZ + 2));
+        if (!(frontChest instanceof CullState) || !(behindChest instanceof CullState)) {
+            Log.error("Self-test FAILED: block entity culling scene incomplete (front {}, behind {})", frontChest, behindChest);
+            return;
+        }
+        CullState frontState = (CullState) frontChest;
+        CullState behindState = (CullState) behindChest;
+        boolean frontShown = frontState.meridian$cullCheckedAt() != 0 && frontState.meridian$cullVisible();
+        boolean behindSkipped = behindState.meridian$cullCheckedAt() != 0 && !behindState.meridian$cullVisible();
+        if (frontShown && behindSkipped) {
+            Log.info("Self-test: block entity culling OK");
+        } else {
+            Log.error("Self-test FAILED: block entity culling (front shown {}, behind skipped {})", frontShown, behindSkipped);
         }
     }
 

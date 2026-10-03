@@ -4,6 +4,8 @@
   "package": "dev.meridian.mc1_8_9.mixin",
   "compatibilityLevel": "JAVA_8",
   "client": [
+    "BlockEntityMixin",
+    "BlockEntityRenderDispatcherMixin",
     "ChatHudMixin",
     "ClientPlayerInteractionManagerMixin",
     "EntityMixin",

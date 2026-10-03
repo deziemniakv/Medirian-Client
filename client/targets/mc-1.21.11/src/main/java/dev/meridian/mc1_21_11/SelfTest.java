@@ -16,6 +16,7 @@ import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.entity.Entity;
@@ -165,6 +166,8 @@ final class SelfTest {
         player.connection.sendCommand("tp @s " + (x + 0.5) + " " + y + " " + (z + 0.5) + " -90 0");
         player.connection.sendCommand("summon pig " + (x + 3.5) + " " + y + " " + (z + 0.5) + " {NoAI:1b}");
         player.connection.sendCommand("summon pig " + (x + 9.5) + " " + y + " " + (z + 0.5) + " {NoAI:1b}");
+        player.connection.sendCommand("setblock " + (x + 3) + " " + y + " " + (z + 2) + " chest");
+        player.connection.sendCommand("setblock " + (x + 9) + " " + y + " " + (z + 2) + " chest");
     }
 
     /** The pig behind the wall must be hidden (and actually skipped while rendering), the other one visible. */
@@ -198,6 +201,24 @@ final class SelfTest {
         } else {
             Log.error("Self-test FAILED: occlusion culling (front visible {}, behind visible {}, skipped while rendering {})",
                     frontVisible, behindVisible, skipped);
+        }
+        Object frontChest = minecraft.level.getBlockEntity(new BlockPos(sceneX + 3, SCENE_Y, sceneZ + 2));
+        Object behindChest = minecraft.level.getBlockEntity(new BlockPos(sceneX + 9, SCENE_Y, sceneZ + 2));
+        verifyBlockEntityCulling(frontChest, behindChest);
+    }
+
+    /** Both chests must have been tested while rendering: the front one visible, the one behind the wall hidden. */
+    static void verifyBlockEntityCulling(Object frontChest, Object behindChest) {
+        if (!(frontChest instanceof CullState front) || !(behindChest instanceof CullState behind)) {
+            Log.error("Self-test FAILED: block entity culling scene incomplete (front {}, behind {})", frontChest, behindChest);
+            return;
+        }
+        boolean frontShown = front.meridian$cullCheckedAt() != 0 && front.meridian$cullVisible();
+        boolean behindSkipped = behind.meridian$cullCheckedAt() != 0 && !behind.meridian$cullVisible();
+        if (frontShown && behindSkipped) {
+            Log.info("Self-test: block entity culling OK");
+        } else {
+            Log.error("Self-test FAILED: block entity culling (front shown {}, behind skipped {})", frontShown, behindSkipped);
         }
     }
 

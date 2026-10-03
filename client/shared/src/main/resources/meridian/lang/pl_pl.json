@@ -238,6 +238,8 @@
   "setting.entityculling.occlusion.desc": "Byty całkowicie zasłonięte pełnymi blokami nie są renderowane.",
   "setting.entityculling.occludePlayers": "Ukrywaj też graczy",
   "setting.entityculling.occludePlayers.desc": "Gracze za ścianami tracą wtedy także nicki nad głową, inaczej niż w vanilli.",
+  "setting.entityculling.occludeBlockEntities": "Ukrywaj też bloki specjalne",
+  "setting.entityculling.occludeBlockEntities.desc": "Skrzynie, tabliczki, głowy, banery i podobne bloki za ścianami.",
   "module.memory.name": "Monitor pamięci",
   "module.memory.desc": "Użycie pamięci Javy i obciążenie CPU.",
   "setting.memory.display": "Wyświetlanie",

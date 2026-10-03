@@ -250,6 +250,15 @@ public final class Hooks {
         return weather == null ? vanilla : weather.thunder(vanilla);
     }
 
+    /**
+     * Whether a block entity that vanilla would render should be rendered (occlusion culling).
+     * {@code state} is the block entity itself; renderers that draw far outside their block
+     * (beacon beams, structure outlines) must not be culled by the adapter.
+     */
+    public static boolean shouldRenderBlockEntity(CullState state, double camX, double camY, double camZ, int x, int y, int z) {
+        return culling == null || culling.shouldRenderBlockEntity(meridian.platform().game(), state, camX, camY, camZ, x, y, z);
+    }
+
     /** Whether a new particle may be spawned given {@code currentCount} live particles. */
     public static boolean allowParticle(int currentCount) {
         return particles == null || particles.allow(currentCount);
