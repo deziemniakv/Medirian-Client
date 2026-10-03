@@ -26,7 +26,8 @@ Każdy wymaga hooka w obu adapterach (nowe `Capability`):
 - [ ] **Chat: kopiowanie wiadomości** — kliknięcie linii w otwartym czacie kopiuje jej tekst
       (1.8.9: `ChatHud#getTextAt` daje tylko fragment — potrzebny indeks linii; modern: `ChatComponent#captureClickableText`).
 - [ ] **Discord RPC** — po stronie launchera (named pipe `discord-ipc-0`), status z kanału live; wymaga Discord application id.
-- [ ] **Occlusion culling** w Entity Culling (raycast/okluzja zamiast samej odległości).
+- [x] **Occlusion culling** w Entity Culling (0.1.2): promienie z kamery do środka i narożników hitboxa (`perf/OcclusionCuller`).
+- [ ] **Culling block entities** (skrzynie, tabliczki, głowy, banery) tym samym `OcclusionCuller` — duży zysk FPS w lobby.
 - [ ] **Polityki serwerów** (np. wyłączenie Freelook tam, gdzie serwer go zabrania) — kanał plugin message.
 
 ## Etap 3 — kosmetyki

@@ -2,6 +2,9 @@ package dev.meridian.mc1_8_9;
 
 import dev.meridian.core.Log;
 import dev.meridian.core.Meridian;
+import dev.meridian.perf.CullState;
+import dev.meridian.perf.OcclusionCuller;
+import dev.meridian.platform.Occluders;
 import dev.meridian.setting.BooleanSetting;
 import dev.meridian.ui.HudEditorScreen;
 import dev.meridian.ui.ModMenuScreen;
@@ -11,7 +14,11 @@ import net.minecraft.client.gui.hud.ChatHud;
 import net.minecraft.client.gui.hud.ChatHudLine;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.util.ScreenshotUtils;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.ClientPlayerEntity;
+import net.minecraft.entity.passive.PigEntity;
 import net.minecraft.text.LiteralText;
+import net.minecraft.util.math.Box;
 import net.minecraft.world.level.LevelGeneratorType;
 import net.minecraft.world.level.LevelInfo;
 
@@ -30,8 +37,13 @@ public final class SelfTest {
     private static final boolean ENABLED = Boolean.getBoolean("meridian.selftest");
     private static final String STACKED = "Meridian self-test: repeated line";
 
+    /** Culling scene: a stone platform at this height above the player, so the result never depends on terrain. */
+    private static final int SCENE_Y = 200;
+
     private static int step;
     private static int wait;
+    private static int sceneX;
+    private static int sceneZ;
 
     private SelfTest() {
     }
@@ -79,6 +91,7 @@ public final class SelfTest {
                     ((BooleanSetting) meridian.modules().get("blockoverlay").setting("fill")).set(true);
                     meridian.modules().get("hitcolor").setEnabled(true);
                     meridian.modules().get("chat").setEnabled(true);
+                    meridian.modules().get("entityculling").setEnabled(true);
                     client.player.sendChatMessage("/summon Pig ~1.5 ~ ~1.5");
                     for (int i = 0; i < 3; i++) {
                         client.inGameHud.getChatHud().addMessage(new LiteralText(STACKED));
@@ -103,6 +116,16 @@ public final class SelfTest {
                 return;
             case 8:
                 shot(client, "5-modmenu-ingame");
+                next(20);
+                return;
+            case 9:
+                meridian.platform().openScreen(null);
+                buildCullingScene(client.player);
+                next(40);
+                return;
+            case 10:
+                verifyCulling(client);
+                shot(client, "6-culling");
                 next(20);
                 return;
             default:
@@ -133,6 +156,60 @@ public final class SelfTest {
             }
         } catch (ReflectiveOperationException e) {
             Log.error("Self-test could not inspect the chat", e);
+        }
+    }
+
+    /** A platform high above the player facing east with a stone wall; one pig in front of it, one behind it. */
+    private static void buildCullingScene(ClientPlayerEntity player) {
+        sceneX = (int) Math.floor(player.x);
+        sceneZ = (int) Math.floor(player.z);
+        int x = sceneX;
+        int z = sceneZ;
+        int y = SCENE_Y;
+        player.sendChatMessage("/kill @e[type=Pig]");
+        player.sendChatMessage("/fill " + (x - 2) + " " + (y - 1) + " " + (z - 4) + " " + (x + 11) + " " + (y + 4) + " " + (z + 4) + " air");
+        player.sendChatMessage("/fill " + (x - 2) + " " + (y - 1) + " " + (z - 4) + " " + (x + 11) + " " + (y - 1) + " " + (z + 4) + " stone");
+        player.sendChatMessage("/fill " + (x + 6) + " " + y + " " + (z - 4) + " " + (x + 6) + " " + (y + 4) + " " + (z + 4) + " stone");
+        player.sendChatMessage("/tp " + (x + 0.5) + " " + y + " " + (z + 0.5) + " -90 0");
+        player.sendChatMessage("/summon Pig " + (x + 3.5) + " " + y + " " + (z + 0.5) + " {NoAI:1}");
+        player.sendChatMessage("/summon Pig " + (x + 9.5) + " " + y + " " + (z + 0.5) + " {NoAI:1}");
+    }
+
+    /** The pig behind the wall must be hidden (and actually skipped while rendering), the other one visible. */
+    private static void verifyCulling(MinecraftClient client) {
+        Entity front = null;
+        Entity behind = null;
+        for (Entity entity : new ArrayList<Entity>(client.world.loadedEntities)) {
+            if (!(entity instanceof PigEntity) || Math.abs(entity.y - SCENE_Y) > 1) {
+                continue;
+            }
+            double dx = entity.x - (sceneX + 0.5);
+            if (Math.abs(dx - 3) < 0.5) {
+                front = entity;
+            } else if (Math.abs(dx - 9) < 0.5) {
+                behind = entity;
+            }
+        }
+        if (front == null || behind == null) {
+            Log.error("Self-test FAILED: culling scene incomplete (front {}, behind {})", front, behind);
+            return;
+        }
+        // the scene's eye position (the player may have been moved by a real keyboard in the meantime)
+        Occluders blocks = Meridian.get().platform().game();
+        double eyeX = sceneX + 0.5;
+        double eyeY = SCENE_Y + 1.62;
+        double eyeZ = sceneZ + 0.5;
+        Box a = front.getBoundingBox();
+        Box b = behind.getBoundingBox();
+        boolean frontVisible = OcclusionCuller.isVisible(blocks, eyeX, eyeY, eyeZ, a.minX, a.minY, a.minZ, a.maxX, a.maxY, a.maxZ);
+        boolean behindVisible = OcclusionCuller.isVisible(blocks, eyeX, eyeY, eyeZ, b.minX, b.minY, b.minZ, b.maxX, b.maxY, b.maxZ);
+        CullState state = (CullState) behind;
+        boolean skipped = state.meridian$cullCheckedAt() != 0 && !state.meridian$cullVisible();
+        if (frontVisible && !behindVisible && skipped) {
+            Log.info("Self-test: occlusion culling OK");
+        } else {
+            Log.error("Self-test FAILED: occlusion culling (front visible {}, behind visible {}, skipped while rendering {})",
+                    frontVisible, behindVisible, skipped);
         }
     }
 

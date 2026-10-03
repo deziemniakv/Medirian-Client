@@ -5,6 +5,7 @@ All notable changes to Meridian Client. The launcher shows the newest entries on
 ## 0.1.2 — 2026-10-03 — Chat
 
 - New module: Chat — timestamps, repeated messages stacked into one line with a counter (x2, x3…) and a chat history of up to 1000 messages.
+- Entity Culling now also skips entities completely hidden behind solid blocks (occlusion culling); players are only hidden when you allow it.
 
 ## 0.1.1 — 2026-10-03 — Block Overlay & Hit Color
 

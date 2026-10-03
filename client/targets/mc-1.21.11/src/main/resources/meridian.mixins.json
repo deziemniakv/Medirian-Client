@@ -7,6 +7,7 @@
     "CameraMixin",
     "ChatComponentMixin",
     "ClientLevelDataMixin",
+    "EntityMixin",
     "EntityRenderDispatcherMixin",
     "FramerateLimitTrackerMixin",
     "GameRendererMixin",

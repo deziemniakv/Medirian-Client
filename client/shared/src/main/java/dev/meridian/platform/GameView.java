@@ -1,7 +1,7 @@
 package dev.meridian.platform;
 
 /** Read-only view of the game state. Implementations read live game data; calls must be cheap. */
-public interface GameView {
+public interface GameView extends Occluders {
 
     boolean inWorld();
 

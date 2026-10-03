@@ -21,6 +21,7 @@ import dev.meridian.module.impl.render.FullbrightModule;
 import dev.meridian.module.impl.render.ScoreboardModule;
 import dev.meridian.module.impl.render.TimeChangerModule;
 import dev.meridian.module.impl.render.WeatherChangerModule;
+import dev.meridian.perf.CullState;
 import dev.meridian.render.Gfx;
 
 import java.io.File;
@@ -254,9 +255,14 @@ public final class Hooks {
         return particles == null || particles.allow(currentCount);
     }
 
-    /** Whether an entity at {@code distanceSq} (squared blocks from the camera) should be rendered. */
-    public static boolean shouldRenderEntity(double distanceSq, boolean isPlayer) {
-        return culling == null || culling.shouldRender(distanceSq, isPlayer);
+    /**
+     * Whether an entity that passed vanilla's render checks (frustum) should be rendered: distance
+     * and occlusion culling. {@code state} is the entity itself (adapters mix {@link CullState} into it).
+     */
+    public static boolean shouldRenderEntity(CullState state, boolean isPlayer, double camX, double camY, double camZ,
+                                             double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
+        return culling == null || culling.shouldRender(meridian.platform().game(), state, isPlayer, camX, camY, camZ,
+                minX, minY, minZ, maxX, maxY, maxZ);
     }
 
     /** Frame limit to apply this frame. */

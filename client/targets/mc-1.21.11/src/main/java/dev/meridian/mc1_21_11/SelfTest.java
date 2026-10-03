@@ -2,6 +2,9 @@ package dev.meridian.mc1_21_11;
 
 import dev.meridian.core.Log;
 import dev.meridian.core.Meridian;
+import dev.meridian.perf.CullState;
+import dev.meridian.perf.OcclusionCuller;
+import dev.meridian.platform.Occluders;
 import dev.meridian.ui.HudEditorScreen;
 import dev.meridian.ui.ModMenuScreen;
 import dev.meridian.ui.SettingsScreen;
@@ -12,14 +15,19 @@ import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.Difficulty;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.LevelSettings;
 import net.minecraft.world.level.WorldDataConfiguration;
 import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.levelgen.WorldOptions;
 import net.minecraft.world.level.levelgen.presets.WorldPresets;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import org.lwjgl.glfw.GLFW;
 
 import java.lang.reflect.Field;
@@ -40,6 +48,10 @@ final class SelfTest {
 
     private static int step;
     private static int wait;
+    /** Culling scene: a stone platform at this height above the player, so the result never depends on terrain. */
+    private static final int SCENE_Y = 200;
+    private static int sceneX;
+    private static int sceneZ;
 
     private SelfTest() {
     }
@@ -113,6 +125,16 @@ final class SelfTest {
                 shot(minecraft, "5-modmenu-ingame");
                 next(40);
                 return;
+            case 9:
+                meridian.platform().openScreen(null);
+                buildCullingScene(minecraft.player);
+                next(40);
+                return;
+            case 10:
+                verifyCulling(minecraft);
+                shot(minecraft, "6-culling");
+                next(20);
+                return;
             default:
                 Log.info("Self-test finished; screenshots in {}", minecraft.gameDirectory);
                 step = -1;
@@ -126,6 +148,61 @@ final class SelfTest {
         ((dev.meridian.setting.BooleanSetting) meridian.modules().get("blockoverlay").setting("fill")).set(true);
         meridian.modules().get("hitcolor").setEnabled(true);
         meridian.modules().get("chat").setEnabled(true);
+        meridian.modules().get("entityculling").setEnabled(true);
+    }
+
+    /** A platform high above the player facing east with a stone wall; one pig in front of it, one behind it. */
+    private static void buildCullingScene(LocalPlayer player) {
+        sceneX = (int) Math.floor(player.getX());
+        sceneZ = (int) Math.floor(player.getZ());
+        int x = sceneX;
+        int z = sceneZ;
+        int y = SCENE_Y;
+        player.connection.sendCommand("kill @e[type=pig]");
+        player.connection.sendCommand("fill " + (x - 2) + " " + (y - 1) + " " + (z - 4) + " " + (x + 11) + " " + (y + 4) + " " + (z + 4) + " air");
+        player.connection.sendCommand("fill " + (x - 2) + " " + (y - 1) + " " + (z - 4) + " " + (x + 11) + " " + (y - 1) + " " + (z + 4) + " stone");
+        player.connection.sendCommand("fill " + (x + 6) + " " + y + " " + (z - 4) + " " + (x + 6) + " " + (y + 4) + " " + (z + 4) + " stone");
+        player.connection.sendCommand("tp @s " + (x + 0.5) + " " + y + " " + (z + 0.5) + " -90 0");
+        player.connection.sendCommand("summon pig " + (x + 3.5) + " " + y + " " + (z + 0.5) + " {NoAI:1b}");
+        player.connection.sendCommand("summon pig " + (x + 9.5) + " " + y + " " + (z + 0.5) + " {NoAI:1b}");
+    }
+
+    /** The pig behind the wall must be hidden (and actually skipped while rendering), the other one visible. */
+    private static void verifyCulling(Minecraft minecraft) {
+        Entity front = null;
+        Entity behind = null;
+        for (Entity entity : minecraft.level.entitiesForRendering()) {
+            if (entity.getType() != EntityType.PIG || Math.abs(entity.getY() - SCENE_Y) > 1) {
+                continue;
+            }
+            double dx = entity.getX() - (sceneX + 0.5);
+            if (Math.abs(dx - 3) < 0.5) {
+                front = entity;
+            } else if (Math.abs(dx - 9) < 0.5) {
+                behind = entity;
+            }
+        }
+        if (front == null || behind == null) {
+            Log.error("Self-test FAILED: culling scene incomplete (front {}, behind {})", front, behind);
+            return;
+        }
+        Occluders blocks = Meridian.get().platform().game();
+        // the scene's eye position (the player may have been moved by a real keyboard in the meantime)
+        Vec3 eye = new Vec3(sceneX + 0.5, SCENE_Y + 1.62, sceneZ + 0.5);
+        boolean frontVisible = visible(blocks, eye, front.getBoundingBox());
+        boolean behindVisible = visible(blocks, eye, behind.getBoundingBox());
+        CullState state = (CullState) behind;
+        boolean skipped = state.meridian$cullCheckedAt() != 0 && !state.meridian$cullVisible();
+        if (frontVisible && !behindVisible && skipped) {
+            Log.info("Self-test: occlusion culling OK");
+        } else {
+            Log.error("Self-test FAILED: occlusion culling (front visible {}, behind visible {}, skipped while rendering {})",
+                    frontVisible, behindVisible, skipped);
+        }
+    }
+
+    private static boolean visible(Occluders blocks, Vec3 eye, AABB box) {
+        return OcclusionCuller.isVisible(blocks, eye.x, eye.y, eye.z, box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ);
     }
 
     /** Three identical lines must have become one "(x3)" line with a timestamp. */

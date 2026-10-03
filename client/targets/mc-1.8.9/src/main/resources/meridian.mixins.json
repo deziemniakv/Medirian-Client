@@ -6,6 +6,7 @@
   "client": [
     "ChatHudMixin",
     "ClientPlayerInteractionManagerMixin",
+    "EntityMixin",
     "EntityRenderDispatcherMixin",
     "GameRendererMixin",
     "InGameHudMixin",

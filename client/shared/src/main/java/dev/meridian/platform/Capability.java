@@ -18,7 +18,7 @@ public enum Capability {
     WEATHER_OVERRIDE,
     /** {@link Hooks#allowParticle(int)} is consulted for every new particle. */
     PARTICLE_CONTROL,
-    /** {@link Hooks#shouldRenderEntity} is consulted before rendering entities. */
+    /** {@link Hooks#shouldRenderEntity} is consulted for entities that pass the frustum check; {@link GameView#isOccluder} works. */
     ENTITY_CULLING,
     /** {@link Hooks#framerateLimit} controls the frame limiter. */
     DYNAMIC_FPS,

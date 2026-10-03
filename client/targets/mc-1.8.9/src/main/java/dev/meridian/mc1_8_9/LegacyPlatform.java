@@ -10,6 +10,8 @@ import dev.meridian.platform.Platform;
 import dev.meridian.platform.PlayerView;
 import dev.meridian.platform.SidebarView;
 import dev.meridian.ui.MeridianScreen;
+import net.minecraft.block.Block;
+import net.minecraft.block.LeavesBlock;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.SettingsScreen;
@@ -26,6 +28,7 @@ import net.minecraft.scoreboard.ScoreboardPlayerScore;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import org.lwjgl.Sys;
 import org.lwjgl.input.Keyboard;
@@ -48,6 +51,8 @@ public final class LegacyPlatform implements Platform, GameView, InputView, Clie
     private static LegacyPlatform instance;
 
     private final MinecraftClient client;
+    /** Reused by {@link #isOccluder}: it runs thousands of times per frame. */
+    private final BlockPos.Mutable occluderPos = new BlockPos.Mutable();
     private final LegacyGfx gfx;
     // 1.8.9 draws status effects only in the inventory, so there is nothing to hide on the HUD
     private final Set<Capability> capabilities = EnumSet.complementOf(EnumSet.of(Capability.HIDE_VANILLA_EFFECTS));
@@ -325,6 +330,18 @@ public final class LegacyPlatform implements Platform, GameView, InputView, Clie
     @Override
     public boolean thirdPerson() {
         return client.options.perspective != 0;
+    }
+
+    @Override
+    public boolean isOccluder(int x, int y, int z) {
+        World world = client.world;
+        if (world == null) {
+            return false;
+        }
+        Block block = world.getBlockState(occluderPos.setPosition(x, y, z)).getBlock();
+        // yarn's Block#hasTransparency is MCP's isOpaqueCube: true for full opaque cubes. Leaves
+        // report opaque with fast graphics but are see-through with fancy graphics.
+        return block.hasTransparency() && !(block instanceof LeavesBlock);
     }
 
     // ------------------------------------------------------------------ InputView

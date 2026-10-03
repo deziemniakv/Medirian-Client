@@ -25,11 +25,15 @@ import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.numbers.NumberFormat;
 import net.minecraft.network.chat.numbers.StyledFormat;
 import net.minecraft.server.level.ParticleStatus;
 import net.minecraft.util.Util;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.LeavesBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.scores.DisplaySlot;
 import net.minecraft.world.scores.Objective;
 import net.minecraft.world.scores.PlayerScoreEntry;
@@ -55,6 +59,8 @@ public final class ModernPlatform implements Platform, GameView, InputView, Clie
     private static ModernPlatform instance;
 
     private final Minecraft minecraft;
+    /** Reused by {@link #isOccluder}: it runs thousands of times per frame. */
+    private final BlockPos.MutableBlockPos occluderPos = new BlockPos.MutableBlockPos();
     private final Set<Capability> capabilities = EnumSet.allOf(Capability.class);
     private final ModernGfx gfx;
     private final String[] keyLabels = new String[GameKey.values().length];
@@ -329,6 +335,16 @@ public final class ModernPlatform implements Platform, GameView, InputView, Clie
     @Override
     public boolean thirdPerson() {
         return !minecraft.options.getCameraType().isFirstPerson();
+    }
+
+    @Override
+    public boolean isOccluder(int x, int y, int z) {
+        Level level = minecraft.level;
+        if (level == null) {
+            return false;
+        }
+        BlockState state = level.getBlockState(occluderPos.set(x, y, z));
+        return state.isSolidRender() && !(state.getBlock() instanceof LeavesBlock);
     }
 
     // ------------------------------------------------------------------ InputView
