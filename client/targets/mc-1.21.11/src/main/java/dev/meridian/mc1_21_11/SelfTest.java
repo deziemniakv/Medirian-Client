@@ -117,6 +117,12 @@ final class SelfTest {
                     prepareScene(meridian);
                     minecraft.player.setXRot(55f); // look at the ground so a block is selected
                     minecraft.player.connection.sendCommand("summon pig ^ ^ ^3");
+                    // live data for Armor Status and Potion Effects
+                    minecraft.player.connection.sendCommand("item replace entity @s armor.head with diamond_helmet");
+                    minecraft.player.connection.sendCommand("item replace entity @s armor.chest with iron_chestplate");
+                    minecraft.player.connection.sendCommand("item replace entity @s weapon.mainhand with diamond_sword");
+                    minecraft.player.connection.sendCommand("effect give @s speed 120 1");
+                    minecraft.player.connection.sendCommand("effect give @s poison 120 0");
                     for (int i = 0; i < 3; i++) {
                         minecraft.gui.getChat().addMessage(Component.literal(STACKED));
                     }

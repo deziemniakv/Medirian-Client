@@ -113,6 +113,13 @@ public final class SelfTest {
                     meridian.modules().get("chat").setEnabled(true);
                     meridian.modules().get("entityculling").setEnabled(true);
                     client.player.sendChatMessage("/summon Pig ~1.5 ~ ~1.5");
+                    // live data for Armor Status and Potion Effects
+                    client.player.sendChatMessage("/replaceitem entity @p slot.armor.head diamond_helmet");
+                    client.player.sendChatMessage("/replaceitem entity @p slot.armor.chest iron_chestplate");
+                    client.player.sendChatMessage("/replaceitem entity @p slot.hotbar.0 diamond_sword");
+                    client.player.inventory.selectedSlot = 0;
+                    client.player.sendChatMessage("/effect @p speed 120 1");
+                    client.player.sendChatMessage("/effect @p poison 120 0");
                     for (int i = 0; i < 3; i++) {
                         client.inGameHud.getChatHud().addMessage(new LiteralText(STACKED));
                     }
