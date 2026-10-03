@@ -1,7 +1,7 @@
 {
   "name": "meridian-launcher",
   "productName": "Meridian Client",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Meridian Client launcher",
   "private": true,
   "main": "out/main/index.js",

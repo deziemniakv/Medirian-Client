@@ -60,6 +60,8 @@ java {
 }
 
 jar {
+    // the shaded jar is produced by the included Shared build: depend on it explicitly
+    dependsOn configurations.shade
     from {
         configurations.shade.collect { it.isDirectory() ? it : zipTree(it) }
     }

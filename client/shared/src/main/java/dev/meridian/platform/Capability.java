@@ -41,5 +41,9 @@ public enum Capability {
     /** Items, effect icons and player heads can be drawn by {@link dev.meridian.render.Gfx}. */
     WORLD_ICONS,
     /** {@link GameView#biome()} is available. */
-    BIOME
+    BIOME,
+    /** Block outline colour, width and fill come from {@link Hooks#blockOutlineColor(int)} and friends. */
+    BLOCK_OUTLINE,
+    /** The hurt overlay colour comes from {@link Hooks#hitColor()}. */
+    HIT_COLOR
 }

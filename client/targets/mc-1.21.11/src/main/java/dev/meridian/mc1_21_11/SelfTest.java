@@ -76,16 +76,24 @@ final class SelfTest {
                 return;
             case 5:
                 if (minecraft.player != null && minecraft.level != null && minecraft.screen == null) {
+                    prepareScene(meridian);
+                    minecraft.player.setXRot(55f); // look at the ground so a block is selected
+                    minecraft.player.connection.sendCommand("summon pig ^ ^ ^3");
                     next(120);
                 }
                 return;
             case 6:
+                // hurt the pig right before the screenshot to show the Hit Color flash
+                minecraft.player.connection.sendCommand("damage @e[type=pig,limit=1,sort=nearest] 1");
+                next(3);
+                return;
+            case 7:
                 shot(minecraft, "4-hud");
                 // press the mod menu key through the game's real keyboard handler
                 pressKey(minecraft, GLFW.GLFW_KEY_RIGHT_SHIFT);
                 next(30);
                 return;
-            case 7:
+            case 8:
                 if (minecraft.screen instanceof ScreenBridge bridge && bridge.meridian() instanceof ModMenuScreen) {
                     Log.info("Self-test: mod menu key OK");
                 } else {
@@ -99,6 +107,13 @@ final class SelfTest {
                 step = -1;
                 minecraft.stop();
         }
+    }
+
+    /** Turns on the render modules whose effect is only visible in a world (shared by both adapters). */
+    static void prepareScene(Meridian meridian) {
+        meridian.modules().get("blockoverlay").setEnabled(true);
+        ((dev.meridian.setting.BooleanSetting) meridian.modules().get("blockoverlay").setting("fill")).set(true);
+        meridian.modules().get("hitcolor").setEnabled(true);
     }
 
     private static void next(int ticks) {

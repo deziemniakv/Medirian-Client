@@ -10,9 +10,11 @@
     "GameRendererMixin",
     "InGameHudMixin",
     "KeyBindingMixin",
+    "LivingEntityRendererMixin",
     "MinecraftClientMixin",
     "ParticleManagerMixin",
-    "WorldMixin"
+    "WorldMixin",
+    "WorldRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1

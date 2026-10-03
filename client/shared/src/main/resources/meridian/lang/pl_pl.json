@@ -8,11 +8,9 @@
   "category.hud": "HUD",
   "category.misc": "Różne",
   "category.performance": "Wydajność",
-
   "group.appearance": "Wygląd",
   "group.layout": "Układ",
   "group.colors": "Kolory",
-
   "setting.background": "Tło",
   "setting.backgroundColor": "Kolor tła",
   "setting.rounded": "Zaokrąglone rogi",
@@ -25,7 +23,6 @@
   "setting.style": "Styl",
   "setting.mode": "Tryb klawisza",
   "setting.decimals": "Miejsca po przecinku",
-
   "setting.global.language": "Język",
   "setting.global.theme": "Motyw",
   "setting.global.theme.desc": "Auto przełącza motywy sezonowe, np. Halloween.",
@@ -39,7 +36,6 @@
   "setting.profile.hudScale": "Skala HUD",
   "setting.profile.performanceProfile": "Tryb wydajności",
   "setting.profile.performanceProfile.desc": "Realne optymalizacje: limity cząsteczek, zasięg renderowania bytów, limit FPS w tle i animacje UI.",
-
   "mode.Mode.AUTO": "Auto",
   "mode.Mode.DEFAULT": "Domyślny",
   "mode.Mode.HALLOWEEN": "Halloween",
@@ -81,7 +77,6 @@
   "mode.Weather.CLEAR": "Bezchmurnie",
   "mode.Weather.RAIN": "Deszcz",
   "mode.Weather.THUNDER": "Burza",
-
   "module.cps.name": "CPS",
   "module.cps.desc": "Kliknięcia na sekundę dla obu przycisków myszy.",
   "setting.cps.window": "Okno zliczania",
@@ -109,7 +104,6 @@
   "setting.targethud.barColor": "Pasek zdrowia",
   "hud.targethud.none": "Brak celu",
   "hud.preview": "podgląd",
-
   "module.togglesprint.name": "Toggle Sprint",
   "module.togglesprint.desc": "Naciśnij klawisz sprintu raz, aby biec cały czas.",
   "hud.togglesprint.toggled": "Sprint (przełączony)",
@@ -127,7 +121,6 @@
   "module.freelook.desc": "Obracaj kamerę wokół postaci podczas trzymania klawisza.",
   "setting.freelook.thirdPerson": "Przełącz na trzecią osobę",
   "setting.freelook.invertPitch": "Odwróć oś pionową",
-
   "module.armorstatus.name": "Status zbroi",
   "module.armorstatus.desc": "Twoja zbroja i trzymany przedmiot z wytrzymałością.",
   "setting.armorstatus.orientation": "Orientacja",
@@ -152,7 +145,6 @@
   "hud.coordinates.facing": "Kierunek",
   "hud.coordinates.overworld": "Overworld",
   "hud.coordinates.nether": "Nether",
-
   "module.crosshair.name": "Własny celownik",
   "module.crosshair.desc": "Zastąp celownik vanilla własnym.",
   "setting.crosshair.shape": "Kształt",
@@ -178,7 +170,6 @@
   "setting.scoreboard.hideNumbers": "Ukryj czerwone liczby",
   "setting.scoreboard.titleBackground": "Tło tytułu",
   "hud.scoreboard.none": "Scoreboard (serwer nie wyświetla tablicy)",
-
   "module.direction.name": "Kierunek",
   "module.direction.desc": "Pokazuje, w którą stronę patrzysz.",
   "setting.direction.compassWidth": "Szerokość kompasu",
@@ -194,7 +185,6 @@
   "module.biome.name": "Biom",
   "module.biome.desc": "Pokazuje biom, w którym stoisz.",
   "hud.biome": "Biom",
-
   "module.fps.name": "FPS",
   "module.fps.desc": "Klatki na sekundę, opcjonalnie czas klatki i 1% low.",
   "setting.fps.frameTime": "Pokaż czas klatki",
@@ -232,7 +222,6 @@
   "setting.sessioninfo.showTotal": "Pokaż czas od uruchomienia",
   "hud.session": "Sesja",
   "hud.session.total": "Czas gry",
-
   "module.dynamicfps.name": "Dynamic FPS",
   "module.dynamicfps.desc": "Ogranicza FPS, gdy gra działa w tle.",
   "setting.dynamicfps.unfocusedFps": "FPS bez fokusu",
@@ -255,7 +244,6 @@
   "setting.fpsgraph.frames": "Liczba klatek",
   "setting.fpsgraph.height": "Wysokość wykresu",
   "setting.fpsgraph.showStats": "Pokaż statystyki",
-
   "module.screenshot.name": "Zrzuty ekranu",
   "module.screenshot.desc": "Czytelniejsze potwierdzenie zrzutu i szybki dostęp do folderu.",
   "setting.screenshot.replaceChat": "Powiadomienie zamiast wiadomości na czacie",
@@ -277,13 +265,11 @@
   "hud.server": "Serwer",
   "hud.server.players": "Gracze",
   "hud.server.singleplayer": "Gra jednoosobowa",
-
   "notify.profileLoaded": "Wczytano profil",
   "notify.profileDeleted": "Usunięto profil",
   "notify.hudReset": "Zresetowano układ HUD",
   "notify.video": "Zastosowano ustawienia grafiki",
   "notify.video.none": "Ustawienia są już optymalne",
-
   "ui.on": "Wł.",
   "ui.off": "Wył.",
   "ui.done": "Gotowe",
@@ -318,7 +304,6 @@
   "ui.hudeditor.remove": "Usuń",
   "ui.hudeditor.noElements": "Brak dostępnych elementów HUD",
   "ui.hudeditor.allAdded": "Wszystkie elementy są na ekranie",
-
   "settings.tab.general": "Ogólne",
   "settings.tab.hud": "HUD",
   "settings.tab.game": "Gra",
@@ -373,5 +358,16 @@
   "settings.account.launcher": "Launcher",
   "settings.account.connected": "Połączono",
   "settings.account.notConnected": "Nie uruchomiono z launchera",
-  "settings.account.home": "Folder danych"
+  "settings.account.home": "Folder danych",
+  "module.blockoverlay.name": "Obrys bloku",
+  "module.blockoverlay.desc": "Zmień kolor i grubość obrysu zaznaczonego bloku, opcjonalnie z wypełnieniem.",
+  "setting.blockoverlay.color": "Kolor obrysu",
+  "setting.blockoverlay.thickness": "Grubość",
+  "setting.blockoverlay.thickness.desc": "Względem grubości obrysu vanilla.",
+  "setting.blockoverlay.fill": "Wypełnienie",
+  "setting.blockoverlay.fillColor": "Kolor wypełnienia",
+  "module.hitcolor.name": "Kolor trafienia",
+  "module.hitcolor.desc": "Zmień kolor, na jaki błyskają byty po otrzymaniu obrażeń.",
+  "setting.hitcolor.color": "Kolor",
+  "setting.hitcolor.intensity": "Intensywność"
 }

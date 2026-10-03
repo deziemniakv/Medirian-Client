@@ -2,6 +2,7 @@ package dev.meridian.mc1_8_9;
 
 import dev.meridian.core.Log;
 import dev.meridian.core.Meridian;
+import dev.meridian.setting.BooleanSetting;
 import dev.meridian.ui.HudEditorScreen;
 import dev.meridian.ui.ModMenuScreen;
 import dev.meridian.ui.SettingsScreen;
@@ -61,20 +62,32 @@ public final class SelfTest {
                 meridian.platform().openScreen(null);
                 meridian.config().loadProfile("PvP", false);
                 client.startIntegratedServer(WORLD, WORLD,
-                        new LevelInfo(4242L, LevelInfo.GameMode.CREATIVE, true, false, LevelGeneratorType.DEFAULT));
+                        new LevelInfo(4242L, LevelInfo.GameMode.CREATIVE, true, false, LevelGeneratorType.DEFAULT).enableCommands());
                 next(20);
                 return;
             case 5:
                 if (client.player != null && client.world != null && client.currentScreen == null) {
+                    meridian.modules().get("blockoverlay").setEnabled(true);
+                    ((BooleanSetting) meridian.modules().get("blockoverlay").setting("fill")).set(true);
+                    meridian.modules().get("hitcolor").setEnabled(true);
+                    client.player.sendChatMessage("/summon Pig ~1.5 ~ ~1.5");
                     next(100);
                 }
                 return;
             case 6:
+                // hurt the pig (instant damage) right before the screenshot to show the Hit Color flash
+                client.player.sendChatMessage("/effect @e[type=Pig,c=1] 7 1 0");
+                // look at the ground so a block is selected (set late: joining resets the rotation)
+                client.player.pitch = 55f;
+                client.player.prevPitch = 55f;
+                next(3);
+                return;
+            case 7:
                 shot(client, "4-hud");
                 meridian.platform().openScreen(new ModMenuScreen(null));
                 next(30);
                 return;
-            case 7:
+            case 8:
                 shot(client, "5-modmenu-ingame");
                 next(20);
                 return;

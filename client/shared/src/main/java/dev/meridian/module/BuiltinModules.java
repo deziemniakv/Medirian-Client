@@ -2,6 +2,7 @@ package dev.meridian.module;
 
 import dev.meridian.module.impl.combat.ComboModule;
 import dev.meridian.module.impl.combat.CpsModule;
+import dev.meridian.module.impl.combat.HitColorModule;
 import dev.meridian.module.impl.combat.ReachModule;
 import dev.meridian.module.impl.combat.TargetHudModule;
 import dev.meridian.module.impl.hud.ClockModule;
@@ -25,6 +26,7 @@ import dev.meridian.module.impl.performance.ParticleControlModule;
 import dev.meridian.module.impl.player.ArmorStatusModule;
 import dev.meridian.module.impl.player.CoordinatesModule;
 import dev.meridian.module.impl.player.PotionEffectsModule;
+import dev.meridian.module.impl.render.BlockOverlayModule;
 import dev.meridian.module.impl.render.CrosshairModule;
 import dev.meridian.module.impl.render.FullbrightModule;
 import dev.meridian.module.impl.render.ScoreboardModule;
@@ -48,6 +50,7 @@ public final class BuiltinModules {
         modules.register(new ComboModule());
         modules.register(new ReachModule());
         modules.register(new TargetHudModule());
+        modules.register(new HitColorModule());
         // MOVEMENT
         modules.register(new ToggleSprintModule());
         modules.register(new ToggleSneakModule());
@@ -59,6 +62,7 @@ public final class BuiltinModules {
         modules.register(new CoordinatesModule());
         // RENDER
         modules.register(new CrosshairModule());
+        modules.register(new BlockOverlayModule());
         modules.register(new FullbrightModule());
         modules.register(new TimeChangerModule());
         modules.register(new WeatherChangerModule());

@@ -112,6 +112,7 @@ public final class ModernPlatform implements Platform, GameView, InputView, Clie
         if (ticks % 40 == 1) {
             refreshKeyLabels();
         }
+        HitColorTexture.update(minecraft);
         if (optionsDirty && ticks % 20 == 0) {
             optionsDirty = false;
             minecraft.options.save();

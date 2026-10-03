@@ -2,6 +2,13 @@
 
 All notable changes to Meridian Client. The launcher shows the newest entries on its home screen.
 
+## 0.1.1 — 2026-10-03 — Block Overlay & Hit Color
+
+- New module: Block Overlay — outline color, thickness and an optional translucent fill of the selected block.
+- New module: Hit Color — custom damage flash color with intensity relative to vanilla.
+- Fixed: the mod menu key (Right Shift) opened the menu and closed it again in the same key press.
+- Launcher always checks for a newer client when you press Play.
+
 ## 0.1.0 — 2026-10-03 — Foundations
 
 - Meridian Launcher: first-run setup with diagnostics, automatic Java (8 and 21) and game installation, launch profiles, Microsoft sign-in, repair and cache tools.

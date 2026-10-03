@@ -4,6 +4,7 @@ import dev.meridian.core.Log;
 import dev.meridian.core.Meridian;
 import dev.meridian.event.Events;
 import dev.meridian.input.Key;
+import dev.meridian.module.impl.combat.HitColorModule;
 import dev.meridian.module.impl.misc.ScreenshotModule;
 import dev.meridian.module.impl.movement.FreelookModule;
 import dev.meridian.module.impl.movement.ToggleSneakModule;
@@ -13,6 +14,7 @@ import dev.meridian.module.impl.performance.DynamicFpsModule;
 import dev.meridian.module.impl.performance.EntityCullingModule;
 import dev.meridian.module.impl.performance.ParticleControlModule;
 import dev.meridian.module.impl.player.PotionEffectsModule;
+import dev.meridian.module.impl.render.BlockOverlayModule;
 import dev.meridian.module.impl.render.CrosshairModule;
 import dev.meridian.module.impl.render.FullbrightModule;
 import dev.meridian.module.impl.render.ScoreboardModule;
@@ -45,6 +47,8 @@ public final class Hooks {
     private static PotionEffectsModule potions;
     private static ToggleSprintModule toggleSprint;
     private static ToggleSneakModule toggleSneak;
+    private static BlockOverlayModule blockOverlay;
+    private static HitColorModule hitColor;
 
     private Hooks() {
     }
@@ -65,6 +69,8 @@ public final class Hooks {
         potions = instance.modules().get(PotionEffectsModule.class);
         toggleSprint = instance.modules().get(ToggleSprintModule.class);
         toggleSneak = instance.modules().get(ToggleSneakModule.class);
+        blockOverlay = instance.modules().get(BlockOverlayModule.class);
+        hitColor = instance.modules().get(HitColorModule.class);
     }
 
     // ------------------------------------------------------------------ lifecycle
@@ -250,6 +256,31 @@ public final class Hooks {
     /** True when Toggle Sprint holds the sprint key down. */
     public static boolean forceSprint() {
         return toggleSprint != null && toggleSprint.forceSprint();
+    }
+
+    /** Colour of the block outline (ARGB); {@code vanilla} when Block Overlay is off. */
+    public static int blockOutlineColor(int vanilla) {
+        return blockOverlay == null ? vanilla : blockOverlay.outlineColor(vanilla);
+    }
+
+    /** Line width of the block outline. */
+    public static float blockOutlineWidth(float vanilla) {
+        return blockOverlay == null ? vanilla : blockOverlay.outlineWidth(vanilla);
+    }
+
+    /** Fill colour of the selected block (ARGB), or 0 for no fill. */
+    public static int blockOutlineFill() {
+        return blockOverlay == null ? 0 : blockOverlay.fillColor();
+    }
+
+    /** Hurt overlay colour as opaque RGB ({@code 0xFFRRGGBB}), or 0 for the vanilla red. */
+    public static int hitColor() {
+        return hitColor == null ? 0 : hitColor.color();
+    }
+
+    /** Hurt overlay strength relative to vanilla (1 = vanilla). */
+    public static float hitColorIntensity() {
+        return hitColor == null ? 1f : hitColor.intensity();
     }
 
     /** True when Toggle Sneak holds the sneak key down. */

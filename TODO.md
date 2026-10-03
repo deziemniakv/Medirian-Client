@@ -1,6 +1,6 @@
 # Meridian — roadmapa
 
-Stan: **0.1.0 — fundamenty** (launcher, dwa targety klienta, HUD, 32 moduły, konfiguracja, wydajność).
+Stan: **0.1.1** (launcher, dwa targety klienta, HUD, 34 moduły, konfiguracja, wydajność).
 Poniżej kolejne etapy. Zasada bez zmian: funkcja trafia do UI dopiero, gdy naprawdę działa.
 
 ## Etap 1 — przed pierwszym publicznym wydaniem
@@ -19,8 +19,6 @@ Poniżej kolejne etapy. Zasada bez zmian: funkcja trafia do UI dopiero, gdy napr
 
 Każdy wymaga hooka w obu adapterach (nowe `Capability`):
 
-- [ ] **Hit Color** — kolor nakładki obrażeń (1.8.9: `LivingEntityRenderer#method_10248`; modern: render state overlay).
-- [ ] **Block Overlay** — kolor/grubość/wypełnienie obrysu bloku.
 - [ ] **Damage Indicator** — zdrowie nad głowami (renderowanie nametagów 3D).
 - [ ] **Item Physics** — fizyka leżących przedmiotów.
 - [ ] **Waypoints** — model danych + lista w UI + renderowanie w świecie (beam + etykieta).

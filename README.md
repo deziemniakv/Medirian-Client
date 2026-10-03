@@ -21,7 +21,7 @@
 
 Pełny opis architektury i decyzji technologicznych: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
 
-## Funkcje (0.1.0)
+## Funkcje (0.1.1)
 
 **Launcher** — kreator pierwszego uruchomienia z diagnostyką i automatycznymi naprawami, automatyczna
 instalacja Javy (Mojang: Java 8 dla 1.8.9, Java 21 dla 1.21.11), pobieranie i weryfikacja SHA-1 plików
@@ -35,8 +35,8 @@ przyciąganie z liniami pomocniczymi, skalowanie, panel właściwości, dodawani
 ustawienia globalne, profile konfiguracji (Default / PvP / Performance / własne) wspólne dla obu
 wersji gry, powiadomienia, i18n PL/EN, motywy sezonowe.
 
-Moduły (32): CPS, Combo Counter, Reach Display, Target HUD, Toggle Sprint, Toggle Sneak, Zoom, Freelook,
-Armor Status, Potion Effects, Coordinates, Custom Crosshair, Fullbright, Time Changer, Weather Changer,
+Moduły (34): CPS, Combo Counter, Reach Display, Target HUD, Hit Color, Toggle Sprint, Toggle Sneak, Zoom, Freelook,
+Armor Status, Potion Effects, Coordinates, Custom Crosshair, Block Overlay, Fullbright, Time Changer, Weather Changer,
 Scoreboard, Direction (kompas), Biome, FPS, Keystrokes, Ping, Clock, Stopwatch, Session Info,
 Dynamic FPS, Particle Control, Entity Culling, Memory Monitor, FPS Graph, Screenshot Tool, Auto GG,
 Server Info. Moduły zaplanowane (jeszcze bez UI): patrz [TODO.md](TODO.md).

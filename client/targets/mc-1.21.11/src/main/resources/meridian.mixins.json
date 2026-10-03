@@ -15,10 +15,12 @@
     "KeyMappingAccessor",
     "KeyMappingMixin",
     "LevelMixin",
+    "LevelRendererMixin",
     "LightTextureMixin",
     "MinecraftMixin",
     "MouseHandlerMixin",
     "MultiPlayerGameModeMixin",
+    "OverlayTextureAccessor",
     "ParticleEngineMixin",
     "ScreenshotMixin"
   ],

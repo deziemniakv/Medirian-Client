@@ -66,9 +66,10 @@ function build(dir) {
   }
 }
 
-function findJar(dir) {
+function findJar(dir, version) {
   const libs = join(root, dir, 'build', 'libs');
-  const jars = readdirSync(libs).filter((f) => f.endsWith('.jar') && !f.endsWith('-sources.jar') && !f.endsWith('-dev.jar'));
+  // only the jar of the current version (older builds may still be lying around)
+  const jars = readdirSync(libs).filter((f) => f.endsWith('.jar') && f.includes(`-${version}+`) && !f.endsWith('-sources.jar') && !f.endsWith('-dev.jar'));
   if (jars.length !== 1) {
     throw new Error(`Expected one jar in ${libs}, found: ${jars.join(', ') || 'none'}`);
   }
@@ -88,7 +89,7 @@ for (const target of TARGETS) {
   if (!skipBuild) {
     build(target.dir);
   }
-  const jar = findJar(target.dir);
+  const jar = findJar(target.dir, version);
   const fileName = `meridian-${target.id}-${version}.jar`;
   copyFileSync(jar, join(out, fileName));
   const artifact = { file: fileName, sha1: sha1(jar), size: statSync(jar).size };
