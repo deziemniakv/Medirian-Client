@@ -5,6 +5,7 @@ import dev.meridian.core.Meridian;
 import dev.meridian.event.Events;
 import dev.meridian.input.Key;
 import dev.meridian.module.impl.combat.HitColorModule;
+import dev.meridian.module.impl.misc.ChatModule;
 import dev.meridian.module.impl.misc.ScreenshotModule;
 import dev.meridian.module.impl.movement.FreelookModule;
 import dev.meridian.module.impl.movement.ToggleSneakModule;
@@ -49,6 +50,7 @@ public final class Hooks {
     private static ToggleSneakModule toggleSneak;
     private static BlockOverlayModule blockOverlay;
     private static HitColorModule hitColor;
+    private static ChatModule chatModule;
 
     private Hooks() {
     }
@@ -71,6 +73,7 @@ public final class Hooks {
         toggleSneak = instance.modules().get(ToggleSneakModule.class);
         blockOverlay = instance.modules().get(BlockOverlayModule.class);
         hitColor = instance.modules().get(HitColorModule.class);
+        chatModule = instance.modules().get(ChatModule.class);
     }
 
     // ------------------------------------------------------------------ lifecycle
@@ -165,6 +168,26 @@ public final class Hooks {
         if (meridian != null) {
             meridian.events().post(new Events.ChatReceived(plainText));
         }
+    }
+
+    /** Timestamp prefix ("[14:05] ") for a new chat line, or null for none. */
+    public static String chatTimestamp(String plainText) {
+        return chatModule == null ? null : chatModule.timestamp(plainText);
+    }
+
+    /**
+     * How many times in a row this chat line has arrived (1 = new line). When greater than 1 the
+     * adapter removes the newest chat line and adds this one with a "(xN)" counter.
+     *
+     * @param previousShown the line Meridian saw last is still the newest line in the chat
+     */
+    public static int chatStack(String plainText, boolean previousShown) {
+        return chatModule == null ? 1 : chatModule.stack(plainText, previousShown);
+    }
+
+    /** Number of chat messages / lines to keep. */
+    public static int chatHistory(int vanilla) {
+        return chatModule == null ? vanilla : chatModule.history(vanilla);
     }
 
     /** A screenshot was saved. May be called from any thread. */

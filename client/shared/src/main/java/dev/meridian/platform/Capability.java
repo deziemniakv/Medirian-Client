@@ -45,5 +45,7 @@ public enum Capability {
     /** Block outline colour, width and fill come from {@link Hooks#blockOutlineColor(int)} and friends. */
     BLOCK_OUTLINE,
     /** The hurt overlay colour comes from {@link Hooks#hitColor()}. */
-    HIT_COLOR
+    HIT_COLOR,
+    /** Chat lines are decorated by {@link Hooks#chatTimestamp}/{@link Hooks#chatStack} and the history length comes from {@link Hooks#chatHistory}. */
+    CHAT_UTILITIES
 }

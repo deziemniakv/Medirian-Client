@@ -2,6 +2,10 @@
 
 All notable changes to Meridian Client. The launcher shows the newest entries on its home screen.
 
+## 0.1.2 — 2026-10-03 — Chat
+
+- New module: Chat — timestamps, repeated messages stacked into one line with a counter (x2, x3…) and a chat history of up to 1000 messages.
+
 ## 0.1.1 — 2026-10-03 — Block Overlay & Hit Color
 
 - New module: Block Overlay — outline color, thickness and an optional translucent fill of the selected block.

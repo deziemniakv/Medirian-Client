@@ -28,6 +28,8 @@ dependencies {
 }
 
 loom {
+    // Loom's default log config needs a newer log4j than 1.8.9 ships (2.0-beta9): dev runs would log nothing
+    log4jConfigs.setFrom(file('dev/log4j2.xml'))
     runs {
         client {
             // Development runs keep their Meridian data inside run/ instead of the real MERIDIAN_HOME.

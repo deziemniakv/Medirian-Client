@@ -12,6 +12,7 @@ import dev.meridian.module.impl.hud.PingModule;
 import dev.meridian.module.impl.hud.SessionInfoModule;
 import dev.meridian.module.impl.hud.StopwatchModule;
 import dev.meridian.module.impl.misc.AutoGgModule;
+import dev.meridian.module.impl.misc.ChatModule;
 import dev.meridian.module.impl.misc.ScreenshotModule;
 import dev.meridian.module.impl.misc.ServerInfoModule;
 import dev.meridian.module.impl.movement.FreelookModule;
@@ -84,6 +85,7 @@ public final class BuiltinModules {
         modules.register(new MemoryModule());
         modules.register(new FpsGraphModule());
         // MISC
+        modules.register(new ChatModule());
         modules.register(new ScreenshotModule());
         modules.register(new AutoGgModule());
         modules.register(new ServerInfoModule());

@@ -369,5 +369,13 @@
   "module.hitcolor.name": "Kolor trafienia",
   "module.hitcolor.desc": "Zmień kolor, na jaki błyskają byty po otrzymaniu obrażeń.",
   "setting.hitcolor.color": "Kolor",
-  "setting.hitcolor.intensity": "Intensywność"
+  "setting.hitcolor.intensity": "Intensywność",
+  "module.chat.name": "Czat",
+  "module.chat.desc": "Znaczniki czasu, scalanie powtórzonych wiadomości i dłuższa historia czatu.",
+  "setting.chat.timestamps": "Znaczniki czasu",
+  "setting.chat.timeFormat": "Format czasu",
+  "setting.chat.stack": "Scalaj powtórzenia",
+  "setting.chat.stack.desc": "Wiadomość identyczna z poprzednią zastępuje ją z licznikiem: (x2), (x3)…",
+  "setting.chat.history": "Długość historii",
+  "setting.chat.history.desc": "Liczba wiadomości przechowywanych w czacie (vanilla: 100)."
 }

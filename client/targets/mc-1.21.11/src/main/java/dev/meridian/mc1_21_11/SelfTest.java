@@ -7,9 +7,12 @@ import dev.meridian.ui.ModMenuScreen;
 import dev.meridian.ui.SettingsScreen;
 import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.GuiMessage;
 import net.minecraft.client.Screenshot;
+import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.input.KeyEvent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.LevelSettings;
@@ -19,7 +22,9 @@ import net.minecraft.world.level.levelgen.WorldOptions;
 import net.minecraft.world.level.levelgen.presets.WorldPresets;
 import org.lwjgl.glfw.GLFW;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.List;
 
 /**
  * Developer self-test (never active for players): enabled with {@code -Dmeridian.selftest=true}
@@ -31,6 +36,7 @@ final class SelfTest {
 
     private static final String WORLD = "meridian-selftest";
     private static final boolean ENABLED = Boolean.getBoolean("meridian.selftest");
+    static final String STACKED = "Meridian self-test: repeated line";
 
     private static int step;
     private static int wait;
@@ -79,6 +85,10 @@ final class SelfTest {
                     prepareScene(meridian);
                     minecraft.player.setXRot(55f); // look at the ground so a block is selected
                     minecraft.player.connection.sendCommand("summon pig ^ ^ ^3");
+                    for (int i = 0; i < 3; i++) {
+                        minecraft.gui.getChat().addMessage(Component.literal(STACKED));
+                    }
+                    minecraft.gui.getChat().addMessage(Component.literal("Meridian self-test: chat line"));
                     next(120);
                 }
                 return;
@@ -88,6 +98,7 @@ final class SelfTest {
                 next(3);
                 return;
             case 7:
+                verifyChat(minecraft);
                 shot(minecraft, "4-hud");
                 // press the mod menu key through the game's real keyboard handler
                 pressKey(minecraft, GLFW.GLFW_KEY_RIGHT_SHIFT);
@@ -114,6 +125,26 @@ final class SelfTest {
         meridian.modules().get("blockoverlay").setEnabled(true);
         ((dev.meridian.setting.BooleanSetting) meridian.modules().get("blockoverlay").setting("fill")).set(true);
         meridian.modules().get("hitcolor").setEnabled(true);
+        meridian.modules().get("chat").setEnabled(true);
+    }
+
+    /** Three identical lines must have become one "(x3)" line with a timestamp. */
+    @SuppressWarnings("unchecked")
+    private static void verifyChat(Minecraft minecraft) {
+        try {
+            Field field = ChatComponent.class.getDeclaredField("allMessages");
+            field.setAccessible(true);
+            List<GuiMessage> messages = (List<GuiMessage>) field.get(minecraft.gui.getChat());
+            List<String> copies = messages.stream().map(m -> m.content().getString()).filter(t -> t.contains(STACKED)).toList();
+            String stacked = copies.isEmpty() ? "" : copies.get(0);
+            if (copies.size() == 1 && stacked.startsWith("[") && stacked.endsWith(STACKED + " (x3)")) {
+                Log.info("Self-test: chat stacking OK ({})", stacked);
+            } else {
+                Log.error("Self-test FAILED: chat stacking ({} copies, line: {})", copies.size(), stacked);
+            }
+        } catch (ReflectiveOperationException e) {
+            Log.error("Self-test could not inspect the chat", e);
+        }
     }
 
     private static void next(int ticks) {
