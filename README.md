@@ -84,12 +84,19 @@ wszystkich ekranów, `MERIDIAN_DEV_LAUNCH=<profil>` uruchamia grę przez pełny 
 |---|---|---|
 | `MERIDIAN_MSA_CLIENT_ID` | build/uruchomienie launchera (lub *Ustawienia → Deweloperskie*) | identyfikator aplikacji Azure dla logowania Microsoft |
 | `MERIDIAN_MANIFEST_URL` | uruchomienie launchera | domyślny URL manifestu wydań (kanał stabilny) |
+| `MERIDIAN_DISCORD_APP_ID` / `MAIN_VITE_DISCORD_APP_ID` | uruchomienie / build launchera (lub *Ustawienia → Discord*) | identyfikator aplikacji Discord dla Rich Presence |
 | `MERIDIAN_HOME` | launcher i klient | zmiana folderu danych (domyślnie `%APPDATA%\.meridian`) |
 
 **Logowanie Microsoft** wymaga własnej rejestracji aplikacji w Azure (konta osobiste, przepływ
 „device code”, uprawnienie `XboxLive.signin`) oraz zatwierdzenia przez Mojang dostępu do API Minecraft
 Services — to wymóg Mojang dla każdego launchera. Do tego czasu build deweloperski udostępnia konto
 offline do testów w singleplayer.
+
+**Discord Rich Presence** wymaga aplikacji w [Discord Developer Portal](https://discord.com/developers/applications)
+(nazwa aplikacji = nazwa widoczna na profilu, np. „Meridian Client”). W *Rich Presence → Art Assets* dodaj
+`branding/meridian-icon-512.png` pod nazwą `meridian`. Identyfikator aplikacji wpisz w launcherze lub wbuduj
+przez `MAIN_VITE_DISCORD_APP_ID`. Launcher łączy się z lokalnym Discordem (named pipe / unix socket) i pokazuje
+wersję gry, profil Meridian, menu / singleplayer / serwer (adres można ukryć) oraz czas gry.
 
 **Publikacja**: `node scripts/build-clients.mjs --base-url https://twoj-cdn/meridian/0.1.0/`, wgraj
 zawartość `distribution/` pod ten adres i ustaw URL manifestu w launcherze.

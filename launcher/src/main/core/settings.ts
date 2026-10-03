@@ -14,7 +14,11 @@ export function defaultSettings(localDistributionDir: string): LauncherSettings 
     reuseMinecraftAssets: true,
     setupCompleted: false,
     selectedProfileId: null,
-    msaClientId: ''
+    msaClientId: '',
+    discordPresence: true,
+    discordShowServer: true,
+    discordShowInLauncher: false,
+    discordAppId: ''
   };
 }
 

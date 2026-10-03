@@ -58,6 +58,10 @@ export async function runDevAutomation(
     await wait(900);
     await capture(`page-${page}`);
   }
+  // settings tabs beyond the first one
+  await run(`[...document.querySelectorAll('.settings__tab')].find((tab) => tab.textContent === 'Discord')?.click()`);
+  await wait(600);
+  await capture('page-settings-discord');
   await run("window.__meridianDev.navigate('home')");
 
   if (!launch) {

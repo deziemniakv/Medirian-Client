@@ -2,6 +2,10 @@
 
 All notable changes to Meridian Client. The launcher shows the newest entries on its home screen.
 
+## 0.1.3 — 2026-10-03 — Discord
+
+- Discord Rich Presence: your Discord profile shows the Minecraft version, Meridian profile, whether you are in the menus, in singleplayer or on a server (the address can be hidden) and how long you have been playing. Settings → Discord.
+
 ## 0.1.2 — 2026-10-03 — Chat & Waypoints
 
 - New module: Waypoints — mark places per world and dimension and see them on screen with their distance, even through walls; add them at your position with a key, manage them in their own screen; optional death point. Shared between 1.8.9 and 1.21.11.

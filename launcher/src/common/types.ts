@@ -22,6 +22,14 @@ export interface LauncherSettings {
   selectedProfileId: string | null;
   /** Developer override for the Azure application id used for Microsoft login. */
   msaClientId: string;
+  /** Show the running game on the user's Discord profile (Rich Presence). */
+  discordPresence: boolean;
+  /** Include the server address in the Discord activity. */
+  discordShowServer: boolean;
+  /** Also show an activity while only the launcher is open. */
+  discordShowInLauncher: boolean;
+  /** Discord application id ('' = the id built into the launcher, if any). */
+  discordAppId: string;
 }
 
 export interface Resolution {
@@ -122,6 +130,13 @@ export interface BridgeStatus {
   server?: string;
   profile?: string;
   clientVersion?: string;
+}
+
+export interface DiscordStatus {
+  state: 'disabled' | 'unconfigured' | 'connecting' | 'connected' | 'unavailable' | 'error';
+  /** Discord user while connected. */
+  user?: string;
+  error?: string;
 }
 
 export type GameState =

@@ -9,6 +9,7 @@ import { runDevAutomation } from './devAutomation';
 import { initLog, log } from './core/log';
 import { instanceDir, meridianPaths } from './core/paths';
 import { defaultSettings, SettingsStore } from './core/settings';
+import { buildActivity, DiscordPresenceService } from './discord/presence';
 import { Installer } from './install/installer';
 import { SetupService, systemInfo } from './install/setup';
 import { clearCache, diskUsage } from './install/storage';
@@ -20,7 +21,8 @@ import { MojangService } from './minecraft/mojang';
 import { listClientConfigProfiles, ProfileStore } from './profiles/profiles';
 import { UpdateService } from './updates/updates';
 
-const EXTERNAL_ALLOWED = [/^https:\/\/(www\.)?microsoft\.com\//, /^https:\/\/(www\.)?minecraft\.net\//, /^https:\/\/login\.live\.com\//];
+const EXTERNAL_ALLOWED = [/^https:\/\/(www\.)?microsoft\.com\//, /^https:\/\/(www\.)?minecraft\.net\//, /^https:\/\/login\.live\.com\//,
+  /^https:\/\/discord\.com\/developers\//];
 
 let window: BrowserWindow | null = null;
 
@@ -62,8 +64,27 @@ async function bootstrap(): Promise<Services> {
   const updates = new UpdateService(paths, () => settings.get());
   const installer = new Installer(paths, mojang, loader, runtimes, updates,
     () => settings.get().concurrentDownloads, () => settings.get().reuseMinecraftAssets);
+  const discord = new DiscordPresenceService({
+    enabled: () => settings.get().discordPresence,
+    applicationId: () => settings.get().discordAppId || import.meta.env.MAIN_VITE_DISCORD_APP_ID || process.env.MERIDIAN_DISCORD_APP_ID || '',
+    activity: () => buildActivity({
+      game: game.current(),
+      targetName: (targetId) => updates.target(targetId)?.displayName ?? null,
+      profileTarget: (profileId) => profiles.get(profileId)?.targetId ?? null,
+      version: app.getVersion(),
+      language: settings.get().language,
+      showServer: settings.get().discordShowServer,
+      showInLauncher: settings.get().discordShowInLauncher
+    }),
+    emitStatus: (status) => emit('discord:status', status),
+    log
+  });
+  app.on('before-quit', () => discord.dispose());
   const game = new GameService(paths, installer, updates, profiles, accounts, app.getVersion(),
-    (state) => emit('game:state', state),
+    (state) => {
+      emit('game:state', state);
+      discord.refresh();
+    },
     (lines) => emit('game:log', lines),
     () => {
       if (settings.get().afterLaunch === 'minimize') {
@@ -85,7 +106,11 @@ async function bootstrap(): Promise<Services> {
   handle('window:close', () => window?.close());
 
   handle('settings:get', () => settings.get());
-  handle('settings:update', (patch) => settings.update(patch));
+  handle('settings:update', async (patch) => {
+    const next = await settings.update(patch);
+    discord.refresh();
+    return next;
+  });
 
   handle('profiles:list', () => profiles.list());
   handle('profiles:create', (base) => profiles.create(base));
@@ -127,6 +152,8 @@ async function bootstrap(): Promise<Services> {
   handle('account:offline', (name) => accounts.offline(name));
   handle('account:offlineAllowed', () => accounts.isOfflineAllowed());
 
+  handle('discord:status', () => discord.current());
+
   handle('system:info', () => systemInfo(paths));
   handle('setup:run', () => setup.run());
   handle('setup:fix', (id) => setup.fix(id));
@@ -148,6 +175,7 @@ async function bootstrap(): Promise<Services> {
     }
     await shell.openExternal(url);
   });
+  discord.refresh();
   return { settings, accounts, profiles, game };
 }
 

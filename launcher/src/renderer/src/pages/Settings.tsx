@@ -5,7 +5,7 @@ import { Icon } from '../components/Icon';
 import { useT, type MessageKey } from '../i18n';
 import { useStore } from '../store';
 
-type Section = 'general' | 'updates' | 'installation' | 'java' | 'account' | 'developer' | 'about';
+type Section = 'general' | 'updates' | 'installation' | 'java' | 'account' | 'discord' | 'developer' | 'about';
 
 const SECTIONS: { id: Section; label: MessageKey }[] = [
   { id: 'general', label: 'settings.general' },
@@ -13,6 +13,7 @@ const SECTIONS: { id: Section; label: MessageKey }[] = [
   { id: 'installation', label: 'settings.installation' },
   { id: 'java', label: 'settings.java' },
   { id: 'account', label: 'settings.account' },
+  { id: 'discord', label: 'settings.discord' },
   { id: 'developer', label: 'settings.developer' },
   { id: 'about', label: 'settings.about' }
 ];
@@ -84,6 +85,7 @@ export function Settings() {
           {section === 'installation' && <InstallationSection />}
           {section === 'java' && <JavaSection />}
           {section === 'account' && <AccountSection />}
+          {section === 'discord' && <DiscordSection />}
           {section === 'developer' && (
             <Row label={t('settings.msaClientId')} hint="MERIDIAN_MSA_CLIENT_ID">
               <input className="input mono settings__wide-input" value={settings.msaClientId}
@@ -253,6 +255,51 @@ function AccountSection() {
         <button className="btn btn--primary" onClick={() => open(true)}>{t('account.signIn')}</button>
       )}
     </Row>
+  );
+}
+
+function DiscordSection() {
+  const t = useT();
+  const settings = useStore((s) => s.settings)!;
+  const update = useStore((s) => s.updateSettings);
+  const status = useStore((s) => s.discord);
+  // the id is applied when editing ends, not on every keystroke (each change reconnects)
+  const [appId, setAppId] = useState(settings.discordAppId);
+  const commitAppId = () => {
+    if (appId !== settings.discordAppId) {
+      void update({ discordAppId: appId });
+    }
+  };
+  const toggle = (key: 'discordPresence' | 'discordShowServer' | 'discordShowInLauncher', label: string, disabled = false) => (
+    <button className={`toggle${settings[key] ? ' toggle--on' : ''}`} disabled={disabled} aria-label={label}
+      onClick={() => void update({ [key]: !settings[key] })} />
+  );
+  const off = !settings.discordPresence;
+  return (
+    <>
+      <Row label={t('discord.enable')} hint={t('discord.enableHint')}>{toggle('discordPresence', t('discord.enable'))}</Row>
+      <Row label={t('discord.showServer')}>{toggle('discordShowServer', t('discord.showServer'), off)}</Row>
+      <Row label={t('discord.showInLauncher')}>{toggle('discordShowInLauncher', t('discord.showInLauncher'), off)}</Row>
+      <Row label={t('discord.status')} hint={status.state === 'error' ? status.error : undefined}>
+        <span className={`discord-status discord-status--${status.state}`}>
+          {t(`discord.state.${status.state}` as MessageKey, { user: status.user ?? '' })}
+        </span>
+      </Row>
+      <Row label={t('discord.appId')} hint={t('discord.appIdHint')}>
+        <input className="input mono settings__wide-input" value={appId} placeholder="123456789012345678" inputMode="numeric"
+          onChange={(e) => setAppId(e.target.value.replace(/D/g, ''))} onBlur={commitAppId}
+          onKeyDown={(e) => e.key === 'Enter' && commitAppId()} />
+      </Row>
+      {status.state === 'unconfigured' && (
+        <div className="alert discord-setup">
+          <span>{t('discord.setup')}</span>
+          <button className="btn" onClick={() => void invoke('shell:openExternal', 'https://discord.com/developers/applications')}>
+            <Icon name="external" size={14} />
+            {t('discord.openPortal')}
+          </button>
+        </div>
+      )}
+    </>
   );
 }
 

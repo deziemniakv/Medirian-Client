@@ -3,6 +3,7 @@ import type {
   Account,
   AppInfo,
   ChangelogEntry,
+  DiscordStatus,
   GameState,
   LaunchProfile,
   LauncherSettings,
@@ -25,6 +26,7 @@ interface State {
   game: GameState;
   log: string[];
   account: Account | null;
+  discord: DiscordStatus;
   app: AppInfo | null;
   system: SystemInfo | null;
   accountDialog: boolean;
@@ -55,6 +57,7 @@ export const useStore = create<State>((set, get) => ({
   game: { state: 'idle' },
   log: [],
   account: null,
+  discord: { state: 'disabled' },
   app: null,
   system: null,
   accountDialog: false,
@@ -65,7 +68,7 @@ export const useStore = create<State>((set, get) => ({
       subscribed = true;
       subscribe(set, get);
     }
-    const [settings, profiles, game, account, app, system, changelog, log] = await Promise.all([
+    const [settings, profiles, game, account, app, system, changelog, log, discord] = await Promise.all([
       invoke('settings:get'),
       invoke('profiles:list'),
       invoke('game:state'),
@@ -73,9 +76,10 @@ export const useStore = create<State>((set, get) => ({
       invoke('app:info'),
       invoke('system:info'),
       invoke('changelog:get'),
-      invoke('game:log')
+      invoke('game:log'),
+      invoke('discord:status')
     ]);
-    set({ settings, profiles, game, account, app, system, changelog, log, ready: true });
+    set({ settings, profiles, game, account, app, system, changelog, log, discord, ready: true });
     void get().refreshReleases();
   },
 
@@ -128,6 +132,7 @@ function subscribe(set: (partial: Partial<State> | ((state: State) => Partial<St
   });
   on('game:log', (lines) => set((state) => ({ log: [...state.log, ...lines].slice(-LOG_LIMIT) })));
   on('account:changed', (account) => set({ account }));
+  on('discord:status', (discord) => set({ discord }));
 }
 
 export function selectedProfile(state: Pick<State, 'profiles' | 'settings'>): LaunchProfile | undefined {

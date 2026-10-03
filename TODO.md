@@ -27,7 +27,8 @@ Każdy wymaga hooka w obu adapterach (nowe `Capability`):
 - [x] **Chat** — znaczniki czasu, scalanie powtórzeń, dłuższa historia (0.1.2).
 - [ ] **Chat: kopiowanie wiadomości** — kliknięcie linii w otwartym czacie kopiuje jej tekst
       (1.8.9: `ChatHud#getTextAt` daje tylko fragment — potrzebny indeks linii; modern: `ChatComponent#captureClickableText`).
-- [ ] **Discord RPC** — po stronie launchera (named pipe `discord-ipc-0`), status z kanału live; wymaga Discord application id.
+- [x] **Discord Rich Presence** (0.1.3) — launcher (`main/discord`), status z kanału live. Do zrobienia przez właściciela:
+      aplikacja w Discord Developer Portal + asset `meridian`, identyfikator wbudowany przez `MAIN_VITE_DISCORD_APP_ID`.
 - [x] **Occlusion culling** w Entity Culling (0.1.2): promienie z kamery do środka i narożników hitboxa (`perf/OcclusionCuller`).
 - [x] **Culling block entities** (skrzynie, tabliczki, głowy, banery) tym samym `OcclusionCuller` (0.1.2).
 - [x] Pomiar zysku z okluzji w self-teście (160 świń za ścianą, okluzja wł./wył.; pomiar pomijany, gdy ktoś używa okna):

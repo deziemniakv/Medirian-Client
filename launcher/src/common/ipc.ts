@@ -5,6 +5,7 @@ import type {
   AppInfo,
   ChangelogEntry,
   DeviceCodeInfo,
+  DiscordStatus,
   DiskUsage,
   GameState,
   JavaInstall,
@@ -60,6 +61,8 @@ export interface InvokeApi {
   'setup:run': () => SetupCheck[];
   'setup:fix': (id: SetupCheck['id']) => SetupCheck[];
 
+  'discord:status': () => DiscordStatus;
+
   'shell:open': (target: OpenTarget, targetId?: string) => void;
   'shell:openExternal': (url: string) => void;
 }
@@ -70,6 +73,7 @@ export interface EventApi {
   'game:log': string[];
   'account:changed': Account | null;
   'account:loginResult': LoginResult;
+  'discord:status': DiscordStatus;
 }
 
 export type InvokeChannel = keyof InvokeApi;
@@ -85,10 +89,11 @@ export const INVOKE_CHANNELS: InvokeChannel[] = [
   'java:detect',
   'account:get', 'account:loginStart', 'account:loginCancel', 'account:logout', 'account:offline', 'account:offlineAllowed',
   'system:info', 'setup:run', 'setup:fix',
+  'discord:status',
   'shell:open', 'shell:openExternal'
 ];
 
-export const EVENT_CHANNELS: EventChannel[] = ['game:state', 'game:log', 'account:changed', 'account:loginResult'];
+export const EVENT_CHANNELS: EventChannel[] = ['game:state', 'game:log', 'account:changed', 'account:loginResult', 'discord:status'];
 
 /** Shape of `window.meridian` exposed by the preload script. */
 export interface MeridianBridge {
