@@ -35,9 +35,9 @@ przyciąganie z liniami pomocniczymi, skalowanie, panel właściwości, dodawani
 ustawienia globalne, profile konfiguracji (Default / PvP / Performance / własne) wspólne dla obu
 wersji gry, powiadomienia, i18n PL/EN, motywy sezonowe.
 
-Moduły (35): CPS, Combo Counter, Reach Display, Target HUD, Hit Color, Toggle Sprint, Toggle Sneak, Zoom, Freelook,
+Moduły (36): CPS, Combo Counter, Reach Display, Target HUD, Hit Color, Toggle Sprint, Toggle Sneak, Zoom, Freelook,
 Armor Status, Potion Effects, Coordinates, Custom Crosshair, Block Overlay, Fullbright, Time Changer, Weather Changer,
-Scoreboard, Direction (kompas), Biome, FPS, Keystrokes, Ping, Clock, Stopwatch, Session Info,
+Scoreboard, Direction (kompas), Biome, Waypoints (punkty nawigacyjne), FPS, Keystrokes, Ping, Clock, Stopwatch, Session Info,
 Dynamic FPS, Particle Control, Entity Culling (odległość + okluzja), Memory Monitor, FPS Graph, Chat (znaczniki czasu, scalanie
 powtórzeń, dłuższa historia), Screenshot Tool, Auto GG, Server Info. Moduły zaplanowane (jeszcze bez UI): patrz [TODO.md](TODO.md).
 

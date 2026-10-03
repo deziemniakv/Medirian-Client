@@ -35,6 +35,7 @@ import dev.meridian.module.impl.render.TimeChangerModule;
 import dev.meridian.module.impl.render.WeatherChangerModule;
 import dev.meridian.module.impl.world.BiomeModule;
 import dev.meridian.module.impl.world.DirectionModule;
+import dev.meridian.module.impl.world.WaypointsModule;
 
 /**
  * Registers every built-in module. Modules whose capabilities the running version does not
@@ -71,6 +72,7 @@ public final class BuiltinModules {
         // WORLD
         modules.register(new DirectionModule());
         modules.register(new BiomeModule());
+        modules.register(new WaypointsModule());
         // HUD
         modules.register(new FpsModule());
         modules.register(new KeystrokesModule());

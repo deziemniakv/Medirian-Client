@@ -2,6 +2,7 @@ package dev.meridian.mc1_8_9;
 
 import dev.meridian.account.PlayerIdentity;
 import dev.meridian.input.Key;
+import dev.meridian.platform.CameraView;
 import dev.meridian.platform.Capability;
 import dev.meridian.platform.ClientActions;
 import dev.meridian.platform.GameView;
@@ -9,6 +10,7 @@ import dev.meridian.platform.InputView;
 import dev.meridian.platform.Platform;
 import dev.meridian.platform.PlayerView;
 import dev.meridian.platform.SidebarView;
+import dev.meridian.platform.WorldKeys;
 import dev.meridian.ui.MeridianScreen;
 import net.minecraft.block.Block;
 import net.minecraft.block.LeavesBlock;
@@ -54,6 +56,7 @@ public final class LegacyPlatform implements Platform, GameView, InputView, Clie
     /** Reused by {@link #isOccluder}: it runs thousands of times per frame. */
     private final BlockPos.Mutable occluderPos = new BlockPos.Mutable();
     private final LegacyGfx gfx;
+    private final LegacyCamera camera;
     // 1.8.9 draws status effects only in the inventory, so there is nothing to hide on the HUD
     private final Set<Capability> capabilities = EnumSet.complementOf(EnumSet.of(Capability.HIDE_VANILLA_EFFECTS));
     private final String[] keyLabels = new String[GameKey.values().length];
@@ -69,6 +72,7 @@ public final class LegacyPlatform implements Platform, GameView, InputView, Clie
     private LegacyPlatform(MinecraftClient client) {
         this.client = client;
         this.gfx = new LegacyGfx(client);
+        this.camera = new LegacyCamera(client);
     }
 
     public static LegacyPlatform create(MinecraftClient client) {
@@ -294,6 +298,23 @@ public final class LegacyPlatform implements Platform, GameView, InputView, Clie
     @Override
     public PlayerView player() {
         return client.player == null ? null : playerView;
+    }
+
+    @Override
+    public CameraView camera() {
+        return client.world == null || client.player == null ? null : camera;
+    }
+
+    @Override
+    public String worldKey() {
+        if (client.world == null) {
+            return null;
+        }
+        if (client.isIntegratedServerRunning() && client.getServer() != null) {
+            return WorldKeys.local(client.getServer().getLevelName());
+        }
+        ServerInfo server = client.getCurrentServerEntry();
+        return WorldKeys.server(server == null ? null : server.address);
     }
 
     @Override

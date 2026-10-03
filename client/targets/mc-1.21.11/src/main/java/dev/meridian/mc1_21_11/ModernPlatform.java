@@ -5,6 +5,7 @@ import com.mojang.blaze3d.platform.Window;
 import dev.meridian.account.PlayerIdentity;
 import dev.meridian.input.Key;
 import dev.meridian.mc1_21_11.mixin.KeyMappingAccessor;
+import dev.meridian.platform.CameraView;
 import dev.meridian.platform.Capability;
 import dev.meridian.platform.ClientActions;
 import dev.meridian.platform.GameView;
@@ -12,6 +13,7 @@ import dev.meridian.platform.InputView;
 import dev.meridian.platform.Platform;
 import dev.meridian.platform.PlayerView;
 import dev.meridian.platform.SidebarView;
+import dev.meridian.platform.WorldKeys;
 import dev.meridian.ui.MeridianScreen;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.CloudStatus;
@@ -25,6 +27,7 @@ import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.numbers.NumberFormat;
@@ -34,6 +37,7 @@ import net.minecraft.util.Util;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.LevelResource;
 import net.minecraft.world.scores.DisplaySlot;
 import net.minecraft.world.scores.Objective;
 import net.minecraft.world.scores.PlayerScoreEntry;
@@ -42,6 +46,7 @@ import net.minecraft.world.scores.Scoreboard;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -63,6 +68,7 @@ public final class ModernPlatform implements Platform, GameView, InputView, Clie
     private final BlockPos.MutableBlockPos occluderPos = new BlockPos.MutableBlockPos();
     private final Set<Capability> capabilities = EnumSet.allOf(Capability.class);
     private final ModernGfx gfx;
+    private final ModernCamera camera;
     private final String[] keyLabels = new String[GameKey.values().length];
 
     private Views.LocalPlayerView playerView;
@@ -76,6 +82,7 @@ public final class ModernPlatform implements Platform, GameView, InputView, Clie
     private ModernPlatform(Minecraft minecraft) {
         this.minecraft = minecraft;
         this.gfx = new ModernGfx(minecraft);
+        this.camera = new ModernCamera(minecraft);
     }
 
     public static ModernPlatform create(Minecraft minecraft) {
@@ -300,6 +307,25 @@ public final class ModernPlatform implements Platform, GameView, InputView, Clie
     @Override
     public PlayerView player() {
         return minecraft.player == null ? null : playerView;
+    }
+
+    @Override
+    public CameraView camera() {
+        return minecraft.level == null ? null : camera;
+    }
+
+    @Override
+    public String worldKey() {
+        if (minecraft.level == null) {
+            return null;
+        }
+        IntegratedServer server = minecraft.getSingleplayerServer();
+        if (server != null) {
+            Path root = server.getWorldPath(LevelResource.ROOT).normalize();
+            return WorldKeys.local(String.valueOf(root.getFileName()));
+        }
+        ServerData data = minecraft.getCurrentServer();
+        return WorldKeys.server(data == null ? null : data.ip);
     }
 
     @Override

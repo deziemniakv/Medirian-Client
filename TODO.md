@@ -1,6 +1,6 @@
 # Meridian — roadmapa
 
-Stan: **0.1.2** (launcher, dwa targety klienta, HUD, 35 modułów, konfiguracja, wydajność).
+Stan: **0.1.2** (launcher, dwa targety klienta, HUD, 36 modułów, konfiguracja, wydajność).
 Poniżej kolejne etapy. Zasada bez zmian: funkcja trafia do UI dopiero, gdy naprawdę działa.
 
 ## Etap 1 — przed pierwszym publicznym wydaniem
@@ -21,7 +21,9 @@ Każdy wymaga hooka w obu adapterach (nowe `Capability`):
 
 - [ ] **Damage Indicator** — zdrowie nad głowami (renderowanie nametagów 3D).
 - [ ] **Item Physics** — fizyka leżących przedmiotów.
-- [ ] **Waypoints** — model danych + lista w UI + renderowanie w świecie (beam + etykieta).
+- [x] **Waypoints** (0.1.2) — dane per świat/wymiar (`waypoints.json`, wspólne dla obu wersji), ekran zarządzania,
+      znaczniki rzutowane na HUD (`render/Projection`), klawisz dodawania, punkt śmierci.
+- [ ] Waypoints: promień (beam) w świecie, wskaźnik kierunku dla punktów poza ekranem, import/eksport.
 - [x] **Chat** — znaczniki czasu, scalanie powtórzeń, dłuższa historia (0.1.2).
 - [ ] **Chat: kopiowanie wiadomości** — kliknięcie linii w otwartym czacie kopiuje jej tekst
       (1.8.9: `ChatHud#getTextAt` daje tylko fragment — potrzebny indeks linii; modern: `ChatComponent#captureClickableText`).

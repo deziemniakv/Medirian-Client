@@ -47,5 +47,7 @@ public enum Capability {
     /** The hurt overlay colour comes from {@link Hooks#hitColor()}. */
     HIT_COLOR,
     /** Chat lines are decorated by {@link Hooks#chatTimestamp}/{@link Hooks#chatStack} and the history length comes from {@link Hooks#chatHistory}. */
-    CHAT_UTILITIES
+    CHAT_UTILITIES,
+    /** {@link GameView#camera()}, {@link GameView#worldKey()} and {@link PlayerView#dimensionId()} work. */
+    WAYPOINTS
 }

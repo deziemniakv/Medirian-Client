@@ -1,5 +1,6 @@
 package dev.meridian.mc1_8_9.mixin;
 
+import dev.meridian.mc1_8_9.LegacyCamera;
 import dev.meridian.platform.Hooks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.GameOptions;
@@ -23,6 +24,11 @@ public abstract class GameRendererMixin {
         double multiplier = Hooks.fovMultiplier();
         if (multiplier != 1.0) {
             cir.setReturnValue((float) (cir.getReturnValueF() * multiplier));
+        }
+        if (changingFov) {
+            // the world projection's FOV (the hand uses its own): waypoint markers project with it
+            LegacyCamera.fov = cir.getReturnValueF();
+            LegacyCamera.tickDelta = tickDelta;
         }
     }
 

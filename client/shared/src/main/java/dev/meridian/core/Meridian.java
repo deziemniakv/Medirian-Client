@@ -58,6 +58,7 @@ public final class Meridian {
     private String lastStatus = "";
     private boolean wasInWorld;
     private int lastHurtTime;
+    private boolean wasDead;
 
     private Meridian(Platform platform) {
         this.platform = platform;
@@ -237,7 +238,7 @@ public final class Meridian {
     }
 
     /**
-     * Derives world join/leave and "player hurt" events from game state, so every version adapter
+     * Derives world join/leave, "player hurt" and "player died" events from game state, so every version adapter
      * gets them without dedicated hooks.
      */
     private void detectStateChanges() {
@@ -255,6 +256,11 @@ public final class Meridian {
             events.post(Events.PlayerHurt.INSTANCE);
         }
         lastHurtTime = hurtTime;
+        boolean dead = player != null && !player.isAlive();
+        if (dead && !wasDead) {
+            events.post(Events.PlayerDeath.INSTANCE);
+        }
+        wasDead = dead;
     }
 
     /** Draws the in-game HUD. {@code g} is in Minecraft GUI space. */

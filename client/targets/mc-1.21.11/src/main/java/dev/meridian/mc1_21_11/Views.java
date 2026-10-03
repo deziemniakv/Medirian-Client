@@ -141,6 +141,11 @@ final class Views {
         }
 
         @Override
+        public String dimensionId() {
+            return entity.level().dimension().identifier().toString();
+        }
+
+        @Override
         public ItemView armor(int slot) {
             return new Item(entity.getItemBySlot(ARMOR[slot]));
         }

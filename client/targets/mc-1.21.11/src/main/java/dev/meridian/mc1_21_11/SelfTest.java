@@ -2,6 +2,10 @@ package dev.meridian.mc1_21_11;
 
 import dev.meridian.core.Log;
 import dev.meridian.core.Meridian;
+import dev.meridian.module.impl.world.WaypointsModule;
+import dev.meridian.ui.WaypointsScreen;
+import dev.meridian.waypoint.Waypoint;
+import dev.meridian.waypoint.WaypointStore;
 import dev.meridian.perf.CullState;
 import dev.meridian.perf.OcclusionCuller;
 import dev.meridian.platform.Occluders;
@@ -162,6 +166,12 @@ final class SelfTest {
             case 10:
                 verifyCulling(minecraft);
                 shot(minecraft, "6-culling");
+                meridian.platform().openScreen(new WaypointsScreen(null));
+                next(30);
+                return;
+            case 11:
+                shot(minecraft, "6b-waypoints");
+                meridian.platform().openScreen(null);
                 spawnCrowd(minecraft.player);
                 // measure rendering, not the frame limiter or a pause menu
                 meridian.modules().get("dynamicfps").setEnabled(false);
@@ -170,12 +180,12 @@ final class SelfTest {
                 minecraft.options.framerateLimit().set(260);
                 next(80);
                 return;
-            case 11:
+            case 12:
                 aimAtWall(minecraft.player);
                 startSampling();
                 next(BENCH_TICKS);
                 return;
-            case 12:
+            case 13:
                 shot(minecraft, "7-bench-occlusion");
                 Log.info("Self-test benchmark: {} pigs hidden by occlusion", hiddenPigs(minecraft));
                 onWorldMs = stopSampling();
@@ -183,12 +193,12 @@ final class SelfTest {
                 occlusion(meridian, false);
                 next(40);
                 return;
-            case 13:
+            case 14:
                 aimAtWall(minecraft.player);
                 startSampling();
                 next(BENCH_TICKS);
                 return;
-            case 14:
+            case 15:
                 shot(minecraft, "8-bench-no-occlusion");
                 float offWorldMs = stopSampling();
                 float offFrameMs = meridian.performance().frames().averageFrameMs();
@@ -234,6 +244,9 @@ final class SelfTest {
         player.connection.sendCommand("summon pig " + (x + 9.5) + " " + y + " " + (z + 0.5) + " {NoAI:1b}");
         player.connection.sendCommand("setblock " + (x + 3) + " " + y + " " + (z + 2) + " chest");
         player.connection.sendCommand("setblock " + (x + 9) + " " + y + " " + (z + 2) + " chest");
+        // a waypoint on top of a gold block: its marker must sit on the block's top face
+        player.connection.sendCommand("setblock " + (x + 5) + " " + y + " " + (z - 2) + " gold_block");
+        addSceneWaypoint(x + 5, y, z - 2);
     }
 
     /** A crowd of pigs behind the wall (several per spot: only the rendering cost matters). */
@@ -354,6 +367,19 @@ final class SelfTest {
         } catch (ReflectiveOperationException e) {
             Log.error("Self-test could not inspect the chat", e);
         }
+    }
+
+    /** Replaces the test world's waypoints with one at the given block. */
+    private static void addSceneWaypoint(int x, int y, int z) {
+        Meridian meridian = Meridian.get();
+        WaypointsModule module = meridian.modules().get(WaypointsModule.class);
+        module.setEnabled(true);
+        String world = meridian.game().worldKey();
+        WaypointStore store = module.store();
+        for (Waypoint old : new java.util.ArrayList<Waypoint>(store.of(world))) {
+            store.remove(world, old);
+        }
+        store.add(world, new Waypoint("Gold", x, y, z, meridian.game().player().dimensionId(), 0xFFE8C547));
     }
 
     private static void next(int ticks) {

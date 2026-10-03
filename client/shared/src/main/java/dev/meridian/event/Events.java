@@ -74,6 +74,14 @@ public final class Events {
         }
     }
 
+    /** The local player died (health reached zero). Derived from game state by the core. */
+    public static final class PlayerDeath {
+        public static final PlayerDeath INSTANCE = new PlayerDeath();
+
+        private PlayerDeath() {
+        }
+    }
+
     /** A chat/system message was received. {@code plainText} has formatting codes removed. */
     public static final class ChatReceived {
         public final String plainText;

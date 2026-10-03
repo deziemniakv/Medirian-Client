@@ -21,7 +21,7 @@ MERIDIAN_HOME/
 ├── game/                versions/, libraries/, assets/  (współdzielone przez wszystkie targety)
 ├── clients/<target>/    zainstalowany jar Meridian + installed.json
 ├── instances/<target>/  katalog gry (mods/, saves/, options.txt, screenshots/)
-├── config/              client.json, profiles/*.json, cosmetics.json   ← klient
+├── config/              client.json, profiles/*.json, waypoints.json, cosmetics.json   ← klient
 └── cache/               manifesty, natywki — można bezpiecznie usunąć
 ```
 
@@ -121,3 +121,23 @@ Nieznane typy wiadomości są ignorowane (zgodność w przód).
 * Klawisze to przenośne nazwy (`dev.meridian.input.Key`), kolory `#AARRGGBB`.
 * Moduły nieznane danej wersji gry są zachowywane przy zapisie (profil współdzielony przez 1.8.9 i 1.21.11).
 * Zmiany formatu: podnieś `version` i dodaj krok w `ConfigMigrations`.
+
+`config/waypoints.json` (moduł Waypoints, wspólny dla wszystkich wersji gry):
+
+```json
+{
+  "schema": 1,
+  "worlds": {
+    "server:mc.example.net": [
+      { "name": "Base", "x": 120, "y": 64, "z": -38, "dimension": "minecraft:overworld", "color": "#FF9B55D6", "visible": true }
+    ],
+    "local:Nowy świat": [
+      { "name": "Death", "x": 4, "y": 31, "z": 9, "dimension": "minecraft:the_nether", "color": "#FFE5484D", "visible": true, "death": true }
+    ]
+  }
+}
+```
+
+* Klucz świata (`GameView#worldKey`, `WorldKeys`): `server:<host[:port]>` (małe litery, bez domyślnego portu 25565)
+  albo `local:<folder zapisu>`. Wymiary jako identyfikatory przestrzeni nazw (1.8.9 mapuje 0 / −1 / 1).
+* Dla każdego świata przechowywany jest tylko ostatni punkt śmierci (`death: true`).

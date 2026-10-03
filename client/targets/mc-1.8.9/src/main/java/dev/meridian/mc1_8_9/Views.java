@@ -131,6 +131,14 @@ final class Views {
             return id == 0 ? Dimension.OVERWORLD : id == -1 ? Dimension.NETHER : id == 1 ? Dimension.END : Dimension.OTHER;
         }
 
+        /** The same ids as modern versions, so waypoints are shared between them. */
+        @Override
+        public String dimensionId() {
+            int id = entity.dimension;
+            return id == 0 ? "minecraft:overworld" : id == -1 ? "minecraft:the_nether" : id == 1 ? "minecraft:the_end"
+                    : "minecraft:dimension_" + id;
+        }
+
         @Override
         public ItemView armor(int slot) {
             // 1.8.9 armor slots: 0 = boots … 3 = helmet

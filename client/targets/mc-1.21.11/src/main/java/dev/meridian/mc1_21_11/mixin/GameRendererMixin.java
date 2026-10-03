@@ -1,5 +1,6 @@
 package dev.meridian.mc1_21_11.mixin;
 
+import dev.meridian.mc1_21_11.ModernCamera;
 import dev.meridian.platform.Hooks;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
@@ -19,6 +20,10 @@ public abstract class GameRendererMixin {
         double multiplier = Hooks.fovMultiplier();
         if (multiplier != 1.0) {
             cir.setReturnValue((float) (cir.getReturnValueF() * multiplier));
+        }
+        if (useFovSetting) {
+            // the world projection's FOV (the hand uses its own): waypoint markers project with it
+            ModernCamera.fov = cir.getReturnValueF();
         }
     }
 

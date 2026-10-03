@@ -20,6 +20,9 @@ public interface PlayerView extends EntityView {
 
     Dimension dimension();
 
+    /** Namespaced dimension id, e.g. {@code minecraft:the_nether} (1.8.9 maps its numeric ids to these). */
+    String dimensionId();
+
     /** Armor slot item, {@code slot} 0 = helmet … 3 = boots. Never null; may be empty. */
     ItemView armor(int slot);
 

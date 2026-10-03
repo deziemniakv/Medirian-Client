@@ -22,6 +22,16 @@ public interface GameView extends Occluders {
     /** The local player, or null when not in a world. */
     PlayerView player();
 
+    /** The camera of the last rendered frame, or null when not in a world. */
+    CameraView camera();
+
+    /**
+     * Identifies the current world for per-world data such as waypoints: {@code server:<address>}
+     * for multiplayer, {@code local:<save folder>} for singleplayer, null when not in a world.
+     * Identical in every Minecraft version, so data is shared between them.
+     */
+    String worldKey();
+
     /** Localised name of the biome at the player position, or null. */
     String biome();
 
