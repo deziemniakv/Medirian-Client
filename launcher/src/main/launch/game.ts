@@ -61,7 +61,8 @@ export class GameService {
     progress({ phase: 'manifest', label: 'Checking for updates', done: 0, total: 1 });
 
     try {
-      const releases = await this.updates.refresh(false);
+      // always re-read the manifest: Play is the moment users expect the latest client
+      const releases = await this.updates.refresh(true);
       const target = this.updates.target(profile.targetId);
       if (!target) {
         throw new Error(releases.error ?? `Meridian for ${profile.targetId} is not available in the current release channel.`);
