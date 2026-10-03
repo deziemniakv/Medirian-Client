@@ -1,0 +1,28 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "dev.meridian.mc1_21_11.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "CameraMixin",
+    "ChatComponentMixin",
+    "ClientLevelDataMixin",
+    "EntityRenderDispatcherMixin",
+    "FramerateLimitTrackerMixin",
+    "GameRendererMixin",
+    "GuiMixin",
+    "KeyboardHandlerMixin",
+    "KeyMappingAccessor",
+    "KeyMappingMixin",
+    "LevelMixin",
+    "LightTextureMixin",
+    "MinecraftMixin",
+    "MouseHandlerMixin",
+    "MultiPlayerGameModeMixin",
+    "ParticleEngineMixin",
+    "ScreenshotMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

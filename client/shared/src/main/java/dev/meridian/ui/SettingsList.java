@@ -1,0 +1,365 @@
+package dev.meridian.ui;
+
+import dev.meridian.i18n.I18n;
+import dev.meridian.input.Key;
+import dev.meridian.render.Gfx;
+import dev.meridian.render.Theme;
+import dev.meridian.render.UiDraw;
+import dev.meridian.setting.ActionSetting;
+import dev.meridian.setting.BooleanSetting;
+import dev.meridian.setting.ColorSetting;
+import dev.meridian.setting.KeySetting;
+import dev.meridian.setting.ModeSetting;
+import dev.meridian.setting.NumberSetting;
+import dev.meridian.setting.Setting;
+import dev.meridian.setting.TextSetting;
+import dev.meridian.ui.widget.Button;
+import dev.meridian.ui.widget.ColorButton;
+import dev.meridian.ui.widget.KeybindButton;
+import dev.meridian.ui.widget.ModeSelector;
+import dev.meridian.ui.widget.ScrollState;
+import dev.meridian.ui.widget.Slider;
+import dev.meridian.ui.widget.Switch;
+import dev.meridian.ui.widget.TextField;
+import dev.meridian.ui.widget.Widget;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
+
+/**
+ * Scrollable list of labelled rows ("label …… control"). Builds the right control for every
+ * {@link Setting} type, inserts group headers and supports custom rows (info, actions).
+ */
+public final class SettingsList {
+
+    private static final float ROW_HEIGHT = 20;
+    private static final float DESC_HEIGHT = 9;
+
+    private final MeridianScreen screen;
+    private final List<Row> rows = new ArrayList<Row>();
+    private final ScrollState scroll = new ScrollState();
+    public float x;
+    public float y;
+    public float w;
+    public float h;
+
+    public SettingsList(MeridianScreen screen) {
+        this.screen = screen;
+    }
+
+    public SettingsList bounds(float x, float y, float w, float h) {
+        this.x = x;
+        this.y = y;
+        this.w = w;
+        this.h = h;
+        return this;
+    }
+
+    public void clear() {
+        rows.clear();
+        scroll.reset();
+    }
+
+    public SettingsList add(Row row) {
+        rows.add(row);
+        return this;
+    }
+
+    /** Adds rows for settings, inserting a header whenever the setting group changes. */
+    public SettingsList addSettings(List<Setting<?>> settings) {
+        String group = null;
+        for (Setting<?> setting : settings) {
+            String next = setting.group();
+            if (next != null && !next.equals(group)) {
+                add(new HeaderRow(I18n.tr("group." + next.toLowerCase().replace(' ', '_'), next)));
+            }
+            group = next;
+            add(new SettingRow(screen, setting));
+        }
+        return this;
+    }
+
+    public boolean isEmpty() {
+        return rows.isEmpty();
+    }
+
+    // ------------------------------------------------------------------ rendering & input
+
+    public void render(Gfx g, float mx, float my) {
+        float content = 0;
+        for (Row row : rows) {
+            if (row.visible()) {
+                content += row.height();
+            }
+        }
+        scroll.setBounds(content, h);
+        float offset = scroll.offset();
+        boolean inside = mx >= x && my >= y && mx < x + w && my < y + h;
+        float rowY = y - offset;
+        g.enableScissor((int) x, (int) y, (int) (x + w), (int) (y + h));
+        for (Row row : rows) {
+            if (!row.visible()) {
+                continue;
+            }
+            float rh = row.height();
+            row.layout(x, rowY, w - 6);
+            if (rowY + rh > y && rowY < y + h) {
+                row.render(g, inside ? mx : -1, inside ? my : -1);
+            }
+            rowY += rh;
+        }
+        g.disableScissor();
+        scroll.renderBar(g, x + w - 2, y);
+    }
+
+    public boolean mouseClicked(float mx, float my, int button) {
+        if (mx < x || my < y || mx >= x + w || my >= y + h) {
+            return false;
+        }
+        for (Row row : rows) {
+            Widget control = row.control();
+            if (row.visible() && control != null && control.mouseClicked(mx, my, button)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void mouseReleased(float mx, float my, int button) {
+        for (Row row : rows) {
+            if (row.control() != null) {
+                row.control().mouseReleased(mx, my, button);
+            }
+        }
+    }
+
+    public void mouseDragged(float mx, float my) {
+        for (Row row : rows) {
+            if (row.control() != null) {
+                row.control().mouseDragged(mx, my);
+            }
+        }
+    }
+
+    public boolean mouseScrolled(float mx, float my, double amount) {
+        if (mx < x || my < y || mx >= x + w || my >= y + h) {
+            return false;
+        }
+        for (Row row : rows) {
+            Widget control = row.control();
+            if (row.visible() && control instanceof Slider && control.mouseScrolled(mx, my, amount)) {
+                return true;
+            }
+        }
+        scroll.scroll(amount);
+        return true;
+    }
+
+    /** Arrow keys adjust the hovered slider. */
+    public boolean keyPressed(Key key, boolean ctrl, boolean shift, float mx, float my) {
+        for (Row row : rows) {
+            Widget control = row.control();
+            if (row.visible() && control instanceof Slider && control.contains(mx, my)) {
+                return control.keyPressed(key, ctrl, shift);
+            }
+        }
+        return false;
+    }
+
+    // ------------------------------------------------------------------ rows
+
+    /** One line of the list. */
+    public abstract static class Row {
+        protected float rx;
+        protected float ry;
+        protected float rw;
+
+        public float height() {
+            return ROW_HEIGHT;
+        }
+
+        public boolean visible() {
+            return true;
+        }
+
+        public void layout(float x, float y, float w) {
+            rx = x;
+            ry = y;
+            rw = w;
+        }
+
+        public abstract void render(Gfx g, float mx, float my);
+
+        public Widget control() {
+            return null;
+        }
+
+        protected void label(Gfx g, String text, String description, float maxWidth) {
+            Theme theme = Theme.current();
+            if (description == null) {
+                g.text(UiDraw.ellipsize(g, text, (int) maxWidth), rx, ry + (ROW_HEIGHT - g.fontHeight()) / 2f + 1, theme.text, false);
+                return;
+            }
+            g.text(UiDraw.ellipsize(g, text, (int) maxWidth), rx, ry + 4, theme.text, false);
+            g.push();
+            g.translate(rx, ry + 14);
+            g.scale(0.8f, 0.8f);
+            g.text(UiDraw.ellipsize(g, description, (int) (maxWidth / 0.8f)), 0, 0, theme.textMuted, false);
+            g.pop();
+        }
+    }
+
+    /** Section header. */
+    public static final class HeaderRow extends Row {
+        private final String text;
+
+        public HeaderRow(String text) {
+            this.text = text;
+        }
+
+        @Override
+        public float height() {
+            return 18;
+        }
+
+        @Override
+        public void render(Gfx g, float mx, float my) {
+            Theme theme = Theme.current();
+            g.text(text.toUpperCase(), rx, ry + 7, theme.accentHover, false);
+            float lineX = rx + g.textWidth(text.toUpperCase()) + 6;
+            g.fill((int) lineX, (int) ry + 11, (int) (rx + rw), (int) ry + 12, theme.border);
+        }
+    }
+
+    /** A row for any {@link Setting}. */
+    public static final class SettingRow extends Row {
+        private final Setting<?> setting;
+        private final Widget control;
+        private final float controlWidth;
+
+        public SettingRow(MeridianScreen screen, Setting<?> setting) {
+            this.setting = setting;
+            if (setting instanceof BooleanSetting) {
+                final BooleanSetting b = (BooleanSetting) setting;
+                control = new Switch(b::on, b::set);
+                controlWidth = 22;
+            } else if (setting instanceof NumberSetting) {
+                control = Slider.of((NumberSetting) setting);
+                controlWidth = -1; // computed in layout
+            } else if (setting instanceof ModeSetting) {
+                control = new ModeSelector((ModeSetting<?>) setting);
+                controlWidth = 104;
+            } else if (setting instanceof ColorSetting) {
+                control = new ColorButton(screen, (ColorSetting) setting);
+                controlWidth = 36;
+            } else if (setting instanceof KeySetting) {
+                control = new KeybindButton(screen, (KeySetting) setting);
+                controlWidth = 72;
+            } else if (setting instanceof TextSetting) {
+                final TextSetting text = (TextSetting) setting;
+                control = new TextField(screen, text.get(), text.maxLength()).onChange(text::set);
+                controlWidth = -1;
+            } else if (setting instanceof ActionSetting) {
+                final ActionSetting action = (ActionSetting) setting;
+                control = new Button(action::buttonLabel, Button.Style.SECONDARY, action::run);
+                controlWidth = 72;
+            } else {
+                control = null;
+                controlWidth = 0;
+            }
+        }
+
+        @Override
+        public float height() {
+            return setting.displayDescription() != null ? ROW_HEIGHT + DESC_HEIGHT - 2 : ROW_HEIGHT;
+        }
+
+        @Override
+        public boolean visible() {
+            return setting.isVisible();
+        }
+
+        @Override
+        public void layout(float x, float y, float w) {
+            super.layout(x, y, w);
+            if (control == null) {
+                return;
+            }
+            float cw = controlWidth < 0 ? Math.min(150, w * 0.5f) : controlWidth;
+            control.bounds(x + w - cw, y + (height() - control.h) / 2f, cw, control.h);
+        }
+
+        @Override
+        public void render(Gfx g, float mx, float my) {
+            float labelWidth = control == null ? rw : rw - control.w - 10;
+            label(g, setting.displayName(), setting.displayDescription(), labelWidth);
+            if (control != null) {
+                control.render(g, mx, my);
+            }
+        }
+
+        @Override
+        public Widget control() {
+            return control;
+        }
+    }
+
+    /** Read-only "label: value" row. */
+    public static final class InfoRow extends Row {
+        private final String label;
+        private final Supplier<String> value;
+
+        public InfoRow(String label, Supplier<String> value) {
+            this.label = label;
+            this.value = value;
+        }
+
+        @Override
+        public void render(Gfx g, float mx, float my) {
+            Theme theme = Theme.current();
+            String text = value.get();
+            int valueWidth = g.textWidth(text);
+            label(g, label, null, rw - valueWidth - 10);
+            g.text(text, rx + rw - valueWidth, ry + (ROW_HEIGHT - g.fontHeight()) / 2f + 1, theme.textDim, false);
+        }
+    }
+
+    /** Label with one control on the right (button, switch…). */
+    public static final class ControlRow extends Row {
+        private final String label;
+        private final String description;
+        private final Widget control;
+        private final float controlWidth;
+
+        public ControlRow(String label, String description, Widget control, float controlWidth) {
+            this.label = label;
+            this.description = description;
+            this.control = control;
+            this.controlWidth = controlWidth;
+        }
+
+        @Override
+        public float height() {
+            return description != null ? ROW_HEIGHT + DESC_HEIGHT - 2 : ROW_HEIGHT;
+        }
+
+        @Override
+        public void layout(float x, float y, float w) {
+            super.layout(x, y, w);
+            float ch = control.h > 0 ? control.h : 14;
+            control.bounds(x + w - controlWidth, y + (height() - ch) / 2f, controlWidth, ch);
+        }
+
+        @Override
+        public void render(Gfx g, float mx, float my) {
+            label(g, label, description, rw - controlWidth - 10);
+            control.render(g, mx, my);
+        }
+
+        @Override
+        public Widget control() {
+            return control;
+        }
+    }
+}

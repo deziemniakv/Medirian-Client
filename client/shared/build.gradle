@@ -1,0 +1,46 @@
+// Meridian Shared — version-independent client core.
+// Compiled for Java 8 because it runs inside Minecraft 1.8.9 as well as modern versions.
+// MUST NOT depend on Minecraft. Gson is provided by every supported Minecraft version
+// (1.8.9 ships Gson 2.2.4, so only APIs available in 2.2.4 may be used).
+
+plugins {
+    id 'java-library'
+}
+
+group = 'dev.meridian'
+version = rootProject.file('../../VERSION').text.trim()
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compileOnly 'com.google.code.gson:gson:2.2.4'
+
+    testImplementation 'com.google.code.gson:gson:2.2.4'
+    testImplementation platform('org.junit:junit-bom:5.14.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 8
+    options.compilerArgs += ['-Xlint:-options', '-Xlint:deprecation', '-Xlint:unchecked']
+}
+
+processResources {
+    def props = [version: project.version]
+    inputs.properties props
+    filesMatching('meridian/build.properties') {
+        expand props
+    }
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events 'failed'
+        exceptionFormat = 'full'
+    }
+}

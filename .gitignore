@@ -1,0 +1,25 @@
+# Gradle / Java
+.gradle/
+build/
+out/
+run/
+*.class
+.kotlin/
+# IDE
+.idea/
+*.iml
+.vscode/
+!.vscode/extensions.json
+# Node / launcher
+node_modules/
+launcher/out/
+launcher/dist/
+*.log
+# Meridian build outputs
+distribution/
+# OS
+Thumbs.db
+.DS_Store
+
+# Local archives
+*.zip

@@ -1,0 +1,132 @@
+import { useEffect, useState } from 'react';
+import type { DeviceCodeInfo } from '../../../common/types';
+import { errorMessage, invoke, on } from '../api';
+import { useT } from '../i18n';
+import { useStore } from '../store';
+import { Icon } from './Icon';
+
+/** Microsoft sign-in (device code flow), account info and the development offline account. */
+export function AccountDialog() {
+  const t = useT();
+  const account = useStore((s) => s.account);
+  const close = () => useStore.getState().setAccountDialog(false);
+  const [code, setCode] = useState<DeviceCodeInfo | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [offlineAllowed, setOfflineAllowed] = useState(false);
+  const [offlineName, setOfflineName] = useState('');
+
+  useEffect(() => {
+    void invoke('account:offlineAllowed').then(setOfflineAllowed);
+    return on('account:loginResult', (result) => {
+      setCode(null);
+      setBusy(false);
+      if (result.ok) {
+        close();
+      } else {
+        setError(result.error);
+      }
+    });
+  }, []);
+
+  const startLogin = async () => {
+    setError(null);
+    setBusy(true);
+    try {
+      setCode(await invoke('account:loginStart'));
+    } catch (e) {
+      setError(errorMessage(e));
+      setBusy(false);
+    }
+  };
+
+  const cancel = () => {
+    void invoke('account:loginCancel');
+    setCode(null);
+    setBusy(false);
+  };
+
+  const useOffline = async () => {
+    setError(null);
+    try {
+      await invoke('account:offline', offlineName);
+      close();
+    } catch (e) {
+      setError(errorMessage(e));
+    }
+  };
+
+  return (
+    <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && !code && close()}>
+      <div className="dialog">
+        <h2 className="dialog__title">{t('account.title')}</h2>
+
+        {account && !code && (
+          <div className="account-card">
+            <div className="account-card__avatar">{account.name.slice(0, 1).toUpperCase()}</div>
+            <div>
+              <div className="account-card__name">{t('account.signedInAs', { name: account.name })}</div>
+              <div className="muted">{account.type === 'microsoft' ? t('account.microsoft') : t('account.offline')}</div>
+            </div>
+          </div>
+        )}
+
+        {code ? (
+          <>
+            <p className="dim">{t('account.step')}</p>
+            <div className="device-code">{code.userCode}</div>
+            <div className="row">
+              <button className="btn btn--primary" onClick={() => void invoke('shell:openExternal', code.verificationUri)}>
+                <Icon name="external" size={15} />
+                {t('account.openLink')}
+              </button>
+              <button className="btn" onClick={() => {
+                void navigator.clipboard.writeText(code.userCode);
+                setCopied(true);
+              }}>
+                <Icon name={copied ? 'check' : 'copy'} size={15} />
+                {copied ? t('account.copied') : t('account.copy')}
+              </button>
+            </div>
+            <div className="row dim account-waiting">
+              <span className="spinner" />
+              {t('account.waiting')}
+            </div>
+          </>
+        ) : (
+          !account && (
+            <button className="btn btn--primary account-signin" disabled={busy} onClick={() => void startLogin()}>
+              {busy ? <span className="spinner" /> : <Icon name="shield" size={16} />}
+              {t('account.signIn')}
+            </button>
+          )
+        )}
+
+        {error && <div className="alert alert--error account-error"><Icon name="alert" size={16} />{error}</div>}
+
+        {offlineAllowed && !code && !account && (
+          <div className="account-offline">
+            <div className="field__label">{t('account.offlineTitle')}</div>
+            <div className="field__hint">{t('account.offlineHint')}</div>
+            <div className="row">
+              <input className="input" placeholder={t('account.offlineName')} value={offlineName} maxLength={16}
+                onChange={(e) => setOfflineName(e.target.value)} />
+              <button className="btn" disabled={offlineName.trim().length < 3} onClick={() => void useOffline()}>
+                {t('account.useOffline')}
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="dialog__actions">
+          {code && <button className="btn btn--ghost" onClick={cancel}>{t('account.close')}</button>}
+          {account && !code && (
+            <button className="btn btn--danger" onClick={() => void invoke('account:logout')}>{t('account.signOut')}</button>
+          )}
+          {!code && <button className="btn" onClick={close}>{t('account.close')}</button>}
+        </div>
+      </div>
+    </div>
+  );
+}

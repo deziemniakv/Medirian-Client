@@ -1,0 +1,26 @@
+appId: dev.meridian.launcher
+productName: Meridian Client
+directories:
+  output: dist
+  buildResources: resources
+files:
+  - out/**/*
+  - package.json
+extraResources:
+  - from: ../CHANGELOG.md
+    to: CHANGELOG.md
+win:
+  target: nsis
+  icon: resources/icon.png
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  artifactName: Meridian-Setup-${version}.${ext}
+mac:
+  target: dmg
+  icon: resources/icon.png
+  category: public.app-category.games
+linux:
+  target: AppImage
+  icon: resources/icon.png
+  category: Game

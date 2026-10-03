@@ -1,0 +1,75 @@
+// Meridian adapter for Minecraft 1.8.9 (Legacy Fabric).
+// Pure Fabric Loader + Mixin, compiled for Java 8 (Minecraft 1.8.9 runs on Java 8 / LWJGL 2).
+
+plugins {
+    id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
+    id 'legacy-looming' version "${loom_version}"
+}
+
+def meridianVersion = rootProject.file('../../../VERSION').text.trim()
+version = "${meridianVersion}+mc${project.minecraft_version}"
+group = 'dev.meridian'
+
+base {
+    archivesName = 'meridian-1.8.9'
+}
+
+configurations {
+    // classes bundled into the mod jar
+    shade
+    implementation.extendsFrom shade
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings(legacy.yarn(project.minecraft_version, project.yarn_build))
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    shade "dev.meridian:meridian-shared:${meridianVersion}"
+}
+
+loom {
+    runs {
+        client {
+            // Development runs keep their Meridian data inside run/ instead of the real MERIDIAN_HOME.
+            vmArg "-Dmeridian.home=${file('run/meridian-home').absolutePath}"
+            if (project.hasProperty('selftest')) {
+                vmArg '-Dmeridian.selftest=true'
+                vmArg '-Dmeridian.mixinAudit=true'
+                programArgs '--width', '1600', '--height', '900'
+            }
+        }
+    }
+}
+
+// Minecraft 1.8.9 (LWJGL 2) runs on Java 8 in production (Mojang's jre-legacy); dev runs match it.
+tasks.withType(net.fabricmc.loom.task.AbstractRunTask).configureEach {
+    javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(8)
+    }
+}
+
+processResources {
+    def props = [version: project.version, minecraft: project.minecraft_version, loader: project.loader_version]
+    inputs.properties props
+    filesMatching('fabric.mod.json') {
+        expand props
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 8
+    options.compilerArgs += ['-Xlint:-options']
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+jar {
+    from {
+        configurations.shade.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    exclude 'META-INF/MANIFEST.MF'
+}

@@ -1,0 +1,56 @@
+# Meridian — roadmapa
+
+Stan: **0.1.0 — fundamenty** (launcher, dwa targety klienta, HUD, 32 moduły, konfiguracja, wydajność).
+Poniżej kolejne etapy. Zasada bez zmian: funkcja trafia do UI dopiero, gdy naprawdę działa.
+
+## Etap 1 — przed pierwszym publicznym wydaniem
+
+- [ ] **Rejestracja aplikacji Azure + zgoda Mojang** dla logowania Microsoft (`MERIDIAN_MSA_CLIENT_ID`).
+      Kod device-code flow jest gotowy (`launcher/src/main/auth`), brakuje wyłącznie identyfikatora.
+- [ ] **Hosting wydań**: opublikować `release-manifest.json` + jary (np. GitHub Releases / CDN),
+      `node scripts/build-clients.mjs --base-url <url>`; ustawić domyślny `manifestUrl` (`MERIDIAN_MANIFEST_URL`).
+- [ ] **Podpisywanie kodu** launchera (Windows Authenticode, macOS notarization) i **auto-update launchera**
+      (`electron-updater`) — interfejs aktualizacji klienta już istnieje, launcher sam się jeszcze nie aktualizuje.
+- [ ] Licencja projektu (do wyboru przez właściciela) i pola `license` w `fabric.mod.json` / `package.json`.
+- [ ] CI: build wszystkich targetów + testy Shared + `npm run build` launchera na każdym PR.
+- [ ] Test na macOS (arm64: `jre-legacy` przez Rosettę) i Linux.
+
+## Etap 2 — moduły (zaplanowane, jeszcze nierejestrowane)
+
+Każdy wymaga hooka w obu adapterach (nowe `Capability`):
+
+- [ ] **Hit Color** — kolor nakładki obrażeń (1.8.9: `LivingEntityRenderer#method_10248`; modern: render state overlay).
+- [ ] **Block Overlay** — kolor/grubość/wypełnienie obrysu bloku.
+- [ ] **Damage Indicator** — zdrowie nad głowami (renderowanie nametagów 3D).
+- [ ] **Item Physics** — fizyka leżących przedmiotów.
+- [ ] **Waypoints** — model danych + lista w UI + renderowanie w świecie (beam + etykieta).
+- [ ] **Chat Utilities** — znaczniki czasu, scalanie powtórzeń, kopiowanie wiadomości.
+- [ ] **Discord RPC** — po stronie launchera (named pipe `discord-ipc-0`), status z kanału live; wymaga Discord application id.
+- [ ] **Occlusion culling** w Entity Culling (raycast/okluzja zamiast samej odległości).
+- [ ] **Polityki serwerów** (np. wyłączenie Freelook tam, gdzie serwer go zabrania) — kanał plugin message.
+
+## Etap 3 — kosmetyki
+
+- [ ] `CosmeticRenderer` dla CAPE w obu adapterach (1.8.9: `AbstractClientPlayerEntity#getCapeId`, modern: `PlayerSkin`).
+- [ ] Usługa kosmetyków (katalog, własność, loadouty innych graczy) — `CosmeticsProvider` sieciowy.
+- [ ] UI kosmetyków w mod menu (dopiero gdy istnieje renderer — wymóg „bez fake UI”).
+- [ ] WINGS / HAT jako warstwy renderera gracza, EMOTE, TRAIL.
+
+## Etap 4 — konto Meridian
+
+- [ ] Backend kont (logowanie przez handshake sesji Mojang), `MeridianAccountService`.
+- [ ] Synchronizacja profili konfiguracji w chmurze.
+
+## Etap 5 — kolejne wersje Minecrafta
+
+- [ ] Target **26.x** (bez obfuskacji: plugin `net.fabricmc.fabric-loom` bez remapowania, Java 25 `java-runtime-epsilon`).
+- [ ] Opcjonalnie dodatkowe targety 1.21.x (np. 1.21.4/1.21.8) — kopia `mc-1.21.11` + poprawki API (zob. ARCHITECTURE §12).
+
+## Etap 6 — UI / jakość
+
+- [ ] Własny renderer czcionki (SDF/MSDF) dla ostrzejszego tekstu w HUD i menu.
+- [ ] Zaokrąglone prostokąty shaderem zamiast rasteryzacji linii (mniej draw calli w 1.8.9).
+- [ ] Batchowanie wypełnień w `LegacyGfx` (jeden draw call na klatkę HUD).
+- [ ] Testy wizualne: porównywanie zrzutów z `runClient -Pselftest` w CI.
+- [ ] Więcej języków (system i18n gotowy: `meridian/lang/*.json`, `launcher/src/renderer/src/i18n.ts`).
+- [ ] Sezonowe motywy: Christmas (nowa instancja `Theme` + tokeny CSS).

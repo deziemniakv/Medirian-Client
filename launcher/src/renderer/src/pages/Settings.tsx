@@ -1,0 +1,282 @@
+import { useEffect, useState, type ReactNode } from 'react';
+import type { DiskUsage, JavaInstall, LauncherSettings } from '../../../common/types';
+import { errorMessage, invoke } from '../api';
+import { Icon } from '../components/Icon';
+import { useT, type MessageKey } from '../i18n';
+import { useStore } from '../store';
+
+type Section = 'general' | 'updates' | 'installation' | 'java' | 'account' | 'developer' | 'about';
+
+const SECTIONS: { id: Section; label: MessageKey }[] = [
+  { id: 'general', label: 'settings.general' },
+  { id: 'updates', label: 'settings.updates' },
+  { id: 'installation', label: 'settings.installation' },
+  { id: 'java', label: 'settings.java' },
+  { id: 'account', label: 'settings.account' },
+  { id: 'developer', label: 'settings.developer' },
+  { id: 'about', label: 'settings.about' }
+];
+
+function formatBytes(bytes: number): string {
+  if (bytes >= 1024 ** 3) {
+    return `${(bytes / 1024 ** 3).toFixed(2)} GB`;
+  }
+  return `${Math.max(0, Math.round(bytes / 1024 ** 2))} MB`;
+}
+
+function Row({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
+  return (
+    <div className="setting-row">
+      <div>
+        <div className="setting-row__label">{label}</div>
+        {hint && <div className="setting-row__hint">{hint}</div>}
+      </div>
+      <div className="setting-row__control">{children}</div>
+    </div>
+  );
+}
+
+export function Settings() {
+  const t = useT();
+  const [section, setSection] = useState<Section>('general');
+  const settings = useStore((s) => s.settings)!;
+  const update = useStore((s) => s.updateSettings);
+  const set = (patch: Partial<LauncherSettings>) => void update(patch);
+
+  return (
+    <div className="page">
+      <div className="page__header">
+        <h1 className="page__title">{t('settings.title')}</h1>
+      </div>
+      <div className="settings">
+        <nav className="settings__nav">
+          {SECTIONS.map((s) => (
+            <button key={s.id} className={`settings__tab${section === s.id ? ' settings__tab--active' : ''}`} onClick={() => setSection(s.id)}>
+              {t(s.label)}
+            </button>
+          ))}
+        </nav>
+        <div className="card settings__content">
+          {section === 'general' && (
+            <>
+              <Row label={t('settings.language')}>
+                <select className="select" value={settings.language} onChange={(e) => set({ language: e.target.value as LauncherSettings['language'] })}>
+                  <option value="en">English</option>
+                  <option value="pl">Polski</option>
+                </select>
+              </Row>
+              <Row label={t('settings.theme')}>
+                <select className="select" value={settings.theme} onChange={(e) => set({ theme: e.target.value as LauncherSettings['theme'] })}>
+                  <option value="auto">{t('settings.themeAuto')}</option>
+                  <option value="default">{t('settings.themeDefault')}</option>
+                  <option value="halloween">{t('settings.themeHalloween')}</option>
+                </select>
+              </Row>
+              <Row label={t('settings.afterLaunch')}>
+                <select className="select" value={settings.afterLaunch} onChange={(e) => set({ afterLaunch: e.target.value as LauncherSettings['afterLaunch'] })}>
+                  <option value="keep">{t('settings.afterKeep')}</option>
+                  <option value="minimize">{t('settings.afterMinimize')}</option>
+                </select>
+              </Row>
+            </>
+          )}
+          {section === 'updates' && <UpdatesSection />}
+          {section === 'installation' && <InstallationSection />}
+          {section === 'java' && <JavaSection />}
+          {section === 'account' && <AccountSection />}
+          {section === 'developer' && (
+            <Row label={t('settings.msaClientId')} hint="MERIDIAN_MSA_CLIENT_ID">
+              <input className="input mono settings__wide-input" value={settings.msaClientId}
+                placeholder="00000000-0000-0000-0000-000000000000"
+                onChange={(e) => set({ msaClientId: e.target.value.trim() })} />
+            </Row>
+          )}
+          {section === 'about' && <AboutSection />}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function UpdatesSection() {
+  const t = useT();
+  const settings = useStore((s) => s.settings)!;
+  const update = useStore((s) => s.updateSettings);
+  const releases = useStore((s) => s.releases);
+  const refresh = useStore((s) => s.refreshReleases);
+  const [checking, setChecking] = useState(false);
+
+  const check = async () => {
+    setChecking(true);
+    await refresh(true);
+    setChecking(false);
+  };
+
+  return (
+    <>
+      <Row label={t('settings.channel')}>
+        <select className="select" value={settings.updateChannel}
+          onChange={(e) => void update({ updateChannel: e.target.value as LauncherSettings['updateChannel'] }).then(() => refresh(true))}>
+          <option value="stable">{t('settings.channelStable')}</option>
+          <option value="local">{t('settings.channelLocal')}</option>
+        </select>
+      </Row>
+      {settings.updateChannel === 'stable' ? (
+        <Row label={t('settings.manifestUrl')}>
+          <input className="input mono settings__wide-input" value={settings.manifestUrl} placeholder="https://…/release-manifest.json"
+            onChange={(e) => void update({ manifestUrl: e.target.value.trim() })} />
+        </Row>
+      ) : (
+        <Row label={t('settings.localDir')}>
+          <input className="input mono settings__wide-input" value={settings.localDistributionDir}
+            onChange={(e) => void update({ localDistributionDir: e.target.value.trim() })} />
+        </Row>
+      )}
+      <Row label={releases?.manifest ? t('settings.releaseOk', { version: releases.manifest.client.version, count: releases.manifest.targets.length }) : '—'}
+        hint={releases?.error ?? undefined}>
+        <button className="btn" disabled={checking} onClick={() => void check()}>
+          {checking ? <span className="spinner" /> : <Icon name="refresh" size={15} />}
+          {checking ? t('settings.checking') : t('settings.checkNow')}
+        </button>
+      </Row>
+    </>
+  );
+}
+
+function InstallationSection() {
+  const t = useT();
+  const settings = useStore((s) => s.settings)!;
+  const update = useStore((s) => s.updateSettings);
+  const app = useStore((s) => s.app);
+  const targets = useStore((s) => s.releases?.manifest?.targets ?? []);
+  const [usage, setUsage] = useState<DiskUsage | null>(null);
+  const [repairing, setRepairing] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const repair = async (targetId: string) => {
+    setRepairing(targetId);
+    setError(null);
+    try {
+      const report = await invoke('install:repair', targetId);
+      setMessage(`${targetId}: ${t('settings.repairDone', { checked: report.checkedFiles, repaired: report.repairedFiles })}`);
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setRepairing(null);
+    }
+  };
+
+  return (
+    <>
+      <Row label={t('settings.dataFolder')} hint={app?.home}>
+        <button className="btn" onClick={() => void invoke('shell:open', 'home')}>
+          <Icon name="folder" size={15} />
+          {t('settings.open')}
+        </button>
+      </Row>
+      <Row label={t('settings.diskUsage')}
+        hint={usage ? `Java ${formatBytes(usage.runtimeBytes)} · Minecraft ${formatBytes(usage.gameBytes)} · Meridian ${formatBytes(usage.clientsBytes)} · Cache ${formatBytes(usage.cacheBytes)}` : undefined}>
+        <button className="btn" onClick={() => void invoke('install:diskUsage').then(setUsage)}>{t('settings.calculate')}</button>
+      </Row>
+      <Row label={t('settings.repair')} hint={t('settings.repairHint')}>
+        {targets.map((target) => (
+          <button key={target.id} className="btn" disabled={repairing !== null} onClick={() => void repair(target.id)}>
+            {repairing === target.id ? <span className="spinner" /> : <Icon name="shield" size={15} />}
+            {target.displayName}
+          </button>
+        ))}
+      </Row>
+      <Row label={t('settings.clearCache')} hint={t('settings.clearCacheHint')}>
+        <button className="btn" onClick={() => void invoke('install:clearCache').then((freed) => setMessage(t('settings.cleared', { size: formatBytes(freed) })))}>
+          <Icon name="trash" size={15} />
+          {t('settings.clearCache')}
+        </button>
+      </Row>
+      <Row label={t('settings.downloads')}>
+        <input className="range settings__range" type="range" min={2} max={32} value={settings.concurrentDownloads}
+          onChange={(e) => void update({ concurrentDownloads: Number(e.target.value) })} />
+        <span className="mono settings__range-value">{settings.concurrentDownloads}</span>
+      </Row>
+      <Row label={t('settings.reuseAssets')}>
+        <button className={`toggle${settings.reuseMinecraftAssets ? ' toggle--on' : ''}`}
+          onClick={() => void update({ reuseMinecraftAssets: !settings.reuseMinecraftAssets })} aria-label={t('settings.reuseAssets')} />
+      </Row>
+      {message && <div className="alert">{message}</div>}
+      {error && <div className="alert alert--error">{error}</div>}
+    </>
+  );
+}
+
+function JavaSection() {
+  const t = useT();
+  const [javas, setJavas] = useState<JavaInstall[] | null>(null);
+  const scan = () => {
+    setJavas(null);
+    void invoke('java:detect').then(setJavas);
+  };
+  useEffect(scan, []);
+  return (
+    <>
+      <p className="dim settings__intro">{t('settings.javaHint')}</p>
+      {javas === null ? <div className="row dim"><span className="spinner" /></div> : javas.length === 0 ? (
+        <p className="muted">{t('settings.javaNone')}</p>
+      ) : (
+        <ul className="java-list">
+          {javas.map((java) => (
+            <li key={java.path}>
+              <span className={`chip ${java.source === 'meridian' ? '' : 'chip--muted'}`}>Java {java.major}</span>
+              <span className="java-list__version">{java.version}</span>
+              <span className="muted">{java.vendor}</span>
+              <span className="mono java-list__path">{java.path}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="settings__footer">
+        <button className="btn" onClick={scan}><Icon name="refresh" size={15} />{t('settings.javaScan')}</button>
+      </div>
+    </>
+  );
+}
+
+function AccountSection() {
+  const t = useT();
+  const account = useStore((s) => s.account);
+  const open = useStore((s) => s.setAccountDialog);
+  return (
+    <Row label={account ? t('account.signedInAs', { name: account.name }) : t('account.notSignedIn')}
+      hint={account ? (account.type === 'microsoft' ? t('account.microsoft') : t('account.offline')) : undefined}>
+      {account ? (
+        <button className="btn btn--danger" onClick={() => void invoke('account:logout')}>{t('account.signOut')}</button>
+      ) : (
+        <button className="btn btn--primary" onClick={() => open(true)}>{t('account.signIn')}</button>
+      )}
+    </Row>
+  );
+}
+
+function AboutSection() {
+  const t = useT();
+  const app = useStore((s) => s.app);
+  const releases = useStore((s) => s.releases);
+  if (!app) {
+    return null;
+  }
+  return (
+    <>
+      <Row label="Meridian Launcher" hint={`Electron ${app.electron} · Chromium ${app.chrome} · Node ${app.node}`}>
+        <span className="chip">v{app.version}</span>
+      </Row>
+      <Row label="Meridian Client">
+        <span className="chip chip--muted">{releases?.manifest ? `v${releases.manifest.client.version}` : '—'}</span>
+      </Row>
+      <Row label={t('settings.logs')}>
+        <button className="btn" onClick={() => void invoke('shell:open', 'logs')}>
+          <Icon name="folder" size={15} />
+          {t('settings.open')}
+        </button>
+      </Row>
+    </>
+  );
+}
