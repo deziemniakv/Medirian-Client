@@ -1,0 +1,42 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "dev.meridian.mc26_3.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": [
+    "AbstractClientPlayerMixin",
+    "BlockEntityMixin",
+    "BlockEntityRenderDispatcherMixin",
+    "CameraMixin",
+    "ChatComponentMixin",
+    "ChatScreenMixin",
+    "ClientLevelDataMixin",
+    "ClientPacketListenerMixin",
+    "ClientboundCustomPayloadPacketMixin",
+    "EntityMixin",
+    "EntityRenderDispatcherMixin",
+    "EntityRendererMixin",
+    "FramerateLimitTrackerMixin",
+    "GameRendererMixin",
+    "GuiMixin",
+    "GuiScreenMixin",
+    "ItemEntityRendererMixin",
+    "KeyMappingAccessor",
+    "KeyMappingMixin",
+    "KeyboardHandlerMixin",
+    "LevelMixin",
+    "LevelRendererMixin",
+    "LightmapMixin",
+    "MinecraftMixin",
+    "MouseHandlerMixin",
+    "MultiPlayerGameModeMixin",
+    "OverlayTextureAccessor",
+    "ParticleEngineMixin",
+    "ScreenEffectRendererMixin",
+    "ScreenshotMixin",
+    "ServerboundCustomPayloadPacketMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

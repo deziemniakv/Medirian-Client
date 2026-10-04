@@ -37,7 +37,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [mc-1.8.9, mc-1.21.11]
+        target: [mc-1.8.9, mc-1.21.11, mc-26.3]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -110,7 +110,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [mc-1.8.9, mc-1.21.11]
+        target: [mc-1.8.9, mc-1.21.11, mc-26.3]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4

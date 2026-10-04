@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "meridian",
+  "version": "${version}",
+  "name": "Meridian Client",
+  "description": "Meridian Client for Minecraft ${minecraft}: HUD, modules and performance tools.",
+  "authors": ["Meridian"],
+  "icon": "assets/meridian/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["dev.meridian.mc26_3.MeridianMod"]
+  },
+  "mixins": ["meridian.mixins.json"],
+  "depends": {
+    "fabricloader": ">=${loader}",
+    "minecraft": "~26.3",
+    "java": ">=25"
+  }
+}

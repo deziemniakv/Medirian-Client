@@ -88,6 +88,12 @@ daje precyzyjne, wydajne hooki bez reflection w gorących ścieżkach.
   * Dlaczego 1.21.11 jako pierwszy target, a nie 26.3: gałąź „1.21+” w wymaganiach; 1.21.11 ma
     najszerzej wspierany ekosystem serwerów i jest punktem wyjścia do kolejnych targetów
     (26.x dodajemy jako osobny target — patrz [§12](#12-dodawanie-nowej-wersji-minecrafta)).
+* **Najnowsza wersja:** Minecraft **26.3** (0.1.4), wydawany bez obfuskacji — plugin Loom `fabric-loom`
+  bez remapowania i bez mappings, Java 25 (`java-runtime-epsilon`). Adapter powstał z kopii 1.21.11; główne
+  zmiany 26.x: okno i wejście na **SDL3** (zamiast GLFW: `InputConstants` to kody SDL, stan przycisków myszy
+  zapisywany z `MouseHandler#onButton`), GUI jako ekstrakcja stanu (`GuiGraphicsExtractor`, `extractRenderState`),
+  HUD w osobnej klasie `Hud`, ekran w `Gui#screen()`, świat jako „submit” (`SubmitNodeCollector`), czas dnia
+  w zegarach świata (`ClientClockManager`), lightmap w `LightmapRenderStateExtractor`.
 * Fabric API w 1.21.11 jest **zagnieżdżone (jar-in-jar)** — tylko potrzebne moduły — więc launcher
   dystrybuuje jeden plik na target.
 
@@ -149,7 +155,8 @@ Meridian/
 │   ├── shared/                  Meridian Shared (Java 8, bez Minecrafta) + testy JUnit
 │   └── targets/
 │       ├── mc-1.8.9/            adapter Legacy Fabric 1.8.9
-│       └── mc-1.21.11/          adapter Fabric 1.21.11
+│       ├── mc-1.21.11/          adapter Fabric 1.21.11
+│       └── mc-26.3/             adapter Fabric 26.3 (bez obfuskacji)
 └── launcher/                    Electron + React + TypeScript
     ├── src/main/                proces main: serwisy (install, launch, auth, java, updates…)
     ├── src/preload/             wąskie API dla UI
@@ -345,7 +352,9 @@ Nowy sezon = nowa instancja `Theme` + zestaw tokenów CSS — bez zmian w kompon
 1. Skopiuj najbliższy target (`client/targets/mc-1.21.11` → `mc-1.21.4` lub `mc-26.3`).
 2. Zmień `gradle.properties` (wersja MC, loader, Fabric API, Loom; dla 26.x plugin `fabric-loom`
    bez remapowania).
-3. Popraw mixiny i backend `Gfx` pod zmiany API — shared pozostaje bez zmian.
+3. Popraw mixiny i backend `Gfx` pod zmiany API — shared pozostaje bez zmian. Kompilator wskaże zmienione
+   klasy; cele mixinów (nazwy metod, deskryptory, cele `INVOKE`) sprawdza dopiero uruchomienie z
+   `-Pselftest` (audyt mixinów) — przy dużych zmianach szybciej jest porównać je z `javap` na jarze gry.
 4. Zadeklaruj capabilities w `XPlatform`.
 5. Dodaj target do `scripts/build-clients.mjs` — launcher wykryje go z manifestu automatycznie.
 

@@ -42,6 +42,17 @@ const TARGETS = [
     java: { component: 'java-runtime-delta', majorVersion: 21 },
     description: 'Survival & modern servers',
     tags: ['modern']
+  },
+  {
+    id: '26.3',
+    dir: 'client/targets/mc-26.3',
+    displayName: 'Minecraft 26.3',
+    minecraftVersion: '26.3',
+    branch: 'modern',
+    loader: 'fabric',
+    java: { component: 'java-runtime-epsilon', majorVersion: 25 },
+    description: 'The newest Minecraft',
+    tags: ['modern', 'latest']
   }
 ];
 

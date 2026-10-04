@@ -122,7 +122,7 @@ export class SetupService {
     return {
       id: 'java',
       status: 'ok',
-      detail: `${summary}The correct Java for each version (8 for 1.8.9, 21 for 1.21.11) is installed automatically.`
+      detail: `${summary}The correct Java for each version (8 for 1.8.9, 21 for 1.21.11, 25 for 26.3) is installed automatically.`
     };
   }
 

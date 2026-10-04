@@ -66,7 +66,9 @@ Każdy wymaga hooka w obu adapterach (nowe `Capability`):
 
 ## Etap 5 — kolejne wersje Minecrafta
 
-- [ ] Target **26.x** (bez obfuskacji: plugin `net.fabricmc.fabric-loom` bez remapowania, Java 25 `java-runtime-epsilon`).
+- [x] Target **26.3** (0.1.4) — `client/targets/mc-26.3`, plugin `fabric-loom` bez remapowania, Java 25. Port objął SDL3
+      (wejście), `GuiGraphicsExtractor`/`Hud`, submit świata, zegary świata; self-test (audyt mixinów, wszystkie kontrole,
+      peleryny), wzorce wizualne, CI i pełna ścieżka launchera (Java 25 → gra → mostek) sprawdzone.
 - [ ] Opcjonalnie dodatkowe targety 1.21.x (np. 1.21.4/1.21.8) — kopia `mc-1.21.11` + poprawki API (zob. ARCHITECTURE §12).
 
 ## Etap 6 — UI / jakość

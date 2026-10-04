@@ -39,7 +39,8 @@ function platformKeys(): string[] {
 
 /**
  * Installs and locates the Java runtimes Mojang publishes for each Minecraft version
- * (e.g. {@code jre-legacy} = Java 8 for 1.8.9, {@code java-runtime-delta} = Java 21).
+ * (e.g. {@code jre-legacy} = Java 8 for 1.8.9, {@code java-runtime-delta} = Java 21,
+ * {@code java-runtime-epsilon} = Java 25 for 26.x).
  */
 export class JavaRuntimeService {
   constructor(private readonly paths: MeridianPaths) {}

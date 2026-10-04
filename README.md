@@ -4,7 +4,7 @@
 
 <h1 align="center">Meridian Client</h1>
 
-<p align="center">Klient Minecraft z własnym launcherem: HUD, moduły PvP i wydajność — dla 1.8.9 i 1.21.11.</p>
+<p align="center">Klient Minecraft z własnym launcherem: HUD, moduły PvP i wydajność — dla 1.8.9, 1.21.11 i 26.3.</p>
 
 ---
 
@@ -16,6 +16,7 @@
 | **Meridian Shared** (rdzeń klienta, bez zależności od Minecrafta) | `client/shared/` | Java 8, Gson |
 | **Adapter Minecraft 1.8.9** | `client/targets/mc-1.8.9/` | Legacy Fabric, Mixin, Java 8 |
 | **Adapter Minecraft 1.21.11** | `client/targets/mc-1.21.11/` | Fabric, Mixin, Java 21 |
+| **Adapter Minecraft 26.3** | `client/targets/mc-26.3/` | Fabric (bez obfuskacji, bez remapowania), Mixin, Java 25, SDL3 |
 | Dokumentacja | `docs/ARCHITECTURE.md`, `docs/PROTOCOL.md`, `docs/RELEASING.md`, `TODO.md` | |
 | CI i wydania | `.github/workflows/`, `scripts/` | GitHub Actions, Node |
 | **Usługi Meridian** (konta, kosmetyki, profile w chmurze) | `backend/` | Node 22+, bez zależności — [docs/SERVICES.md](docs/SERVICES.md) |
@@ -26,7 +27,7 @@ Pełny opis architektury i decyzji technologicznych: **[docs/ARCHITECTURE.md](do
 ## Funkcje (0.1.4)
 
 **Launcher** — kreator pierwszego uruchomienia z diagnostyką i automatycznymi naprawami, automatyczna
-instalacja Javy (Mojang: Java 8 dla 1.8.9, Java 21 dla 1.21.11), pobieranie i weryfikacja SHA-1 plików
+instalacja Javy (Mojang: Java 8 dla 1.8.9, Java 21 dla 1.21.11, Java 25 dla 26.3), pobieranie i weryfikacja SHA-1 plików
 gry, ponowne użycie assetów z istniejącego `.minecraft`, profile uruchomieniowe (wersja, RAM, Java,
 argumenty JVM, rozdzielczość, profil konfiguracji Meridian), logowanie Microsoft (device code),
 aktualizacje klienta z manifestu wydań (kanał stabilny / lokalny), automatyczna aktualizacja samego launchera, naprawa instalacji, czyszczenie cache,

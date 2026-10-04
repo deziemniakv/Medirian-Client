@@ -42,7 +42,8 @@ export class ProfileStore {
     this.profiles = stored.profiles ?? [];
     if (this.profiles.length === 0) {
       // first run: one profile per supported branch
-      this.profiles = [profile('PvP 1.8.9', '1.8.9', 'PvP'), profile('Survival 1.21.11', '1.21.11', 'Default')];
+      this.profiles = [profile('PvP 1.8.9', '1.8.9', 'PvP'), profile('Survival 1.21.11', '1.21.11', 'Default'),
+        profile('Latest 26.3', '26.3', 'Default')];
       await this.persist();
     }
   }
