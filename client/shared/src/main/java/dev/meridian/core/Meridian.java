@@ -54,7 +54,8 @@ public final class Meridian {
     private final KeybindManager keybinds;
     private final CosmeticsManager cosmetics;
     private final ServerPolicyManager policies;
-    private final MeridianAccountService account = MeridianAccountService.UNAVAILABLE;
+    private final dev.meridian.services.MeridianServices services;
+    private final dev.meridian.services.CloudProfiles cloudProfiles;
     private final ConcurrentLinkedQueue<Runnable> tasks = new ConcurrentLinkedQueue<Runnable>();
     private final long launchedAtMs = System.currentTimeMillis();
     private LauncherBridge bridge;
@@ -72,6 +73,9 @@ public final class Meridian {
         this.hud = new HudManager(modules, profileSettings);
         this.config = new ConfigManager(home, modules, global, profileSettings);
         this.cosmetics = new CosmeticsManager(home);
+        this.services = new dev.meridian.services.MeridianServices(dev.meridian.services.ServicesConfig.fromEnvironment(),
+                platform.identity(), platform::accessToken);
+        this.cloudProfiles = new dev.meridian.services.CloudProfiles(services, config, this::runOnClientThread);
         this.policies = new ServerPolicyManager(modules, notifications);
         events.subscribe(Events.WorldJoin.class, e -> onServerJoin(e.serverAddress));
         events.subscribe(Events.WorldLeave.class, e -> policies.clear());
@@ -115,6 +119,9 @@ public final class Meridian {
         global.notifications.onChange(notifications::setEnabled);
         performance.updateAnimations();
         cosmetics.load();
+        cosmetics.registerProvider(new dev.meridian.cosmetics.BundledCosmetics());
+        cosmetics.connect(services);
+        services.start();
         config.setProfileListener(name -> {
             events.post(new Events.ProfileLoaded(name));
             notifications.post(I18n.tr("notify.profileLoaded", "Profile loaded"), name, NotificationManager.Level.SUCCESS);
@@ -221,7 +228,15 @@ public final class Meridian {
     }
 
     public MeridianAccountService account() {
-        return account;
+        return services;
+    }
+
+    public dev.meridian.services.MeridianServices services() {
+        return services;
+    }
+
+    public dev.meridian.services.CloudProfiles cloudProfiles() {
+        return cloudProfiles;
     }
 
     public boolean launcherConnected() {
@@ -320,6 +335,7 @@ public final class Meridian {
     /** Called by {@link Hooks#shutdown()}. */
     public void shutdown() {
         config.shutdown();
+        services.shutdown();
         if (bridge != null) {
             bridge.close();
         }

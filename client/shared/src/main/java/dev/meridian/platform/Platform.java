@@ -26,6 +26,12 @@ public interface Platform {
     /** The Minecraft account the game was started with. */
     PlayerIdentity identity();
 
+    /**
+     * The game session's access token. Only ever sent to Mojang's session server (signing in to
+     * Meridian services), never to Meridian's own servers.
+     */
+    String accessToken();
+
     /** Opens a Meridian screen, or returns to the game when {@code screen} is null. */
     void openScreen(MeridianScreen screen);
 

@@ -170,6 +170,16 @@ public final class ModernGfx implements Gfx {
     }
 
     @Override
+    public void textureRegion(String path, int x, int y, int width, int height, float u0, float v0, float u1, float v1, int argbTint) {
+        Textures.Entry texture = Textures.get(minecraft, path);
+        if (texture != null) {
+            graphics.blit(RenderPipelines.GUI_TEXTURED, texture.id(), x, y, u0 * texture.width(), v0 * texture.height(), width, height,
+                    Math.round((u1 - u0) * texture.width()), Math.round((v1 - v0) * texture.height()),
+                    texture.width(), texture.height(), argbTint);
+        }
+    }
+
+    @Override
     public void richText(Object nativeText, float x, float y, int argb, boolean shadow) {
         if (nativeText instanceof Component component) {
             graphics.pose().pushMatrix();

@@ -18,6 +18,7 @@ import dev.meridian.render.Colors;
 import dev.meridian.render.Gfx;
 import dev.meridian.render.Theme;
 import dev.meridian.render.UiDraw;
+import dev.meridian.services.CloudProfiles;
 import dev.meridian.ui.widget.Button;
 import dev.meridian.ui.widget.Slider;
 import dev.meridian.ui.widget.Switch;
@@ -52,6 +53,12 @@ public final class SettingsScreen extends MeridianScreen {
     private int lastRealWidth;
     private int lastRealHeight;
     private String pendingDelete;
+    private String pendingCloudDelete;
+    /** Profiles in the Meridian cloud; null until loaded. */
+    private List<CloudProfiles.Entry> cloud;
+    private String cloudError;
+    private boolean cloudLoading;
+    private boolean closed;
     private final Map<Tab, Anim> navAnims = new HashMap<Tab, Anim>();
 
     public SettingsScreen(MeridianScreen parent) {
@@ -234,6 +241,110 @@ public final class SettingsScreen extends MeridianScreen {
         list.add(new SettingsList.ControlRow(I18n.tr("settings.profiles.copy", "Copy of current settings"),
                 null, row, row.preferredWidth()));
         list.add(new SettingsList.InfoRow("", () -> profileError == null ? "" : profileError));
+        buildCloudSection(meridian);
+    }
+
+    /** One line describing the Meridian account. */
+    static String accountStatus(MeridianAccountService account) {
+        switch (account.state()) {
+            case SIGNED_IN:
+                return I18n.tr("settings.account.signedIn", "Signed in as {0}", account.displayName());
+            case SIGNING_IN:
+                return I18n.tr("settings.account.signingIn", "Signing in...");
+            case OFFLINE_ACCOUNT:
+                return I18n.tr("settings.account.offlineAccount", "Needs a Microsoft account");
+            case FAILED:
+                return I18n.tr("settings.account.failed", "Sign-in failed");
+            default:
+                return I18n.tr("settings.account.unavailable", "Meridian services are not configured");
+        }
+    }
+
+    /** The Meridian cloud part of the Profiles tab. */
+    private void buildCloudSection(final Meridian meridian) {
+        list.add(new SettingsList.HeaderRow(I18n.tr("settings.cloud.title", "Meridian Cloud")));
+        final MeridianAccountService account = meridian.account();
+        if (account.state() != MeridianAccountService.State.SIGNED_IN) {
+            list.add(new SettingsList.InfoRow(I18n.tr("settings.account.status", "Status"), () -> accountStatus(account)));
+            return;
+        }
+        final CloudProfiles cloudProfiles = meridian.cloudProfiles();
+        final String active = meridian.config().activeProfile();
+        list.add(new SettingsList.ControlRow(I18n.tr("settings.cloud.uploadActive", "Upload the active profile"), active,
+                new Button(I18n.tr("settings.cloud.upload", "Upload"), Button.Style.PRIMARY,
+                        () -> cloudProfiles.upload(active, (updatedAt, error) -> {
+                            cloudResult(meridian, error, I18n.tr("notify.cloudUploaded", "Profile uploaded"), active);
+                            cloud = null;
+                            refreshCloud(meridian);
+                        })), 72));
+        if (cloud == null) {
+            list.add(new SettingsList.InfoRow("", () -> cloudError != null
+                    ? I18n.tr("settings.cloud.error", "Cloud unavailable: {0}", cloudError)
+                    : I18n.tr("settings.cloud.loading", "Loading...")));
+            refreshCloud(meridian);
+            return;
+        }
+        if (cloud.isEmpty()) {
+            list.add(new SettingsList.InfoRow("", () -> I18n.tr("settings.cloud.empty", "No profiles in the cloud yet")));
+        }
+        java.text.SimpleDateFormat format = new java.text.SimpleDateFormat("dd.MM.yyyy HH:mm");
+        for (final CloudProfiles.Entry entry : cloud) {
+            Button download = new Button(I18n.tr("settings.cloud.download", "Download"), Button.Style.SECONDARY,
+                    () -> cloudProfiles.download(entry.name, (ok, error) -> {
+                        cloudResult(meridian, error, I18n.tr("notify.cloudDownloaded", "Profile downloaded"), entry.name);
+                        rebuildIfOpen();
+                    }));
+            Button delete = new Button(() -> entry.name.equals(pendingCloudDelete) ? I18n.tr("ui.confirm", "Confirm") : I18n.tr("ui.delete", "Delete"),
+                    Button.Style.DANGER, () -> {
+                        if (!entry.name.equals(pendingCloudDelete)) {
+                            pendingCloudDelete = entry.name;
+                            return;
+                        }
+                        pendingCloudDelete = null;
+                        cloudProfiles.delete(entry.name, (ok, error) -> {
+                            cloudResult(meridian, error, I18n.tr("notify.cloudDeleted", "Removed from the cloud"), entry.name);
+                            cloud = null;
+                            refreshCloud(meridian);
+                        });
+                    });
+            WidgetRow buttons = new WidgetRow(new Widget[] {download, delete}, new float[] {66, 56});
+            list.add(new SettingsList.ControlRow(entry.name,
+                    I18n.tr("settings.cloud.saved", "Saved {0}", format.format(new java.util.Date(entry.updatedAt))),
+                    buttons, buttons.preferredWidth()));
+        }
+    }
+
+    private void refreshCloud(Meridian meridian) {
+        if (cloudLoading) {
+            return;
+        }
+        cloudLoading = true;
+        cloudError = null;
+        meridian.cloudProfiles().list((entries, error) -> {
+            cloudLoading = false;
+            cloud = entries;
+            cloudError = error;
+            rebuildIfOpen();
+        });
+    }
+
+    private void cloudResult(Meridian meridian, String error, String success, String name) {
+        if (error == null) {
+            meridian.notifications().post(success, name, NotificationManager.Level.SUCCESS);
+        } else {
+            meridian.notifications().post(I18n.tr("notify.cloudFailed", "Cloud sync failed"), error, NotificationManager.Level.WARNING);
+        }
+    }
+
+    private void rebuildIfOpen() {
+        if (!closed && tab == Tab.PROFILES) {
+            buildTab();
+        }
+    }
+
+    @Override
+    protected void removed() {
+        closed = true;
     }
 
     private void createProfile(Meridian meridian) {
@@ -270,15 +381,17 @@ public final class SettingsScreen extends MeridianScreen {
                 () -> identity.online() ? I18n.tr("settings.account.online", "Microsoft account")
                         : I18n.tr("settings.account.offline", "Offline (development)")));
         list.add(new SettingsList.HeaderRow(I18n.tr("settings.account.meridian", "Meridian account")));
-        list.add(new SettingsList.InfoRow(I18n.tr("settings.account.status", "Status"), () -> {
-            MeridianAccountService.State state = meridian.account().state();
-            if (state == MeridianAccountService.State.SIGNED_IN) {
-                return meridian.account().displayName();
-            }
-            return state == MeridianAccountService.State.SIGNED_OUT
-                    ? I18n.tr("settings.account.signedOut", "Signed out")
-                    : I18n.tr("settings.account.unavailable", "Not available yet");
-        }));
+        final MeridianAccountService account = meridian.account();
+        list.add(new SettingsList.InfoRow(I18n.tr("settings.account.status", "Status"), () -> accountStatus(account)));
+        if (account.state() == MeridianAccountService.State.FAILED) {
+            list.add(new SettingsList.ControlRow(I18n.tr("settings.account.failed", "Sign-in failed"), account.error(),
+                    new Button(I18n.tr("settings.account.retry", "Retry"), Button.Style.SECONDARY, () -> {
+                        account.retry();
+                        buildTab();
+                    }), 72));
+        }
+        list.add(new SettingsList.InfoRow(I18n.tr("settings.account.benefits", "Gives you"),
+                () -> I18n.tr("settings.account.benefits.value", "capes seen by other players, profiles in the cloud")));
         list.add(new SettingsList.HeaderRow(I18n.tr("settings.account.client", "Client")));
         list.add(new SettingsList.InfoRow(I18n.tr("settings.account.version", "Meridian"),
                 () -> BuildInfo.VERSION + " · Minecraft " + meridian.platform().minecraftVersion()));

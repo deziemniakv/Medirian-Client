@@ -67,6 +67,12 @@ public interface Gfx {
     /** Draws a Meridian texture, {@code path} relative to {@code assets/meridian/textures/}. */
     void texture(String path, int x, int y, int width, int height, int argbTint);
 
+    /**
+     * Draws part of a Meridian texture stretched to {@code width}×{@code height}. The region is
+     * given in fractions of the texture (0..1), so it does not depend on the texture's resolution.
+     */
+    void textureRegion(String path, int x, int y, int width, int height, float u0, float v0, float u1, float v1, int argbTint);
+
     /** Draws native rich text (e.g. scoreboard lines). */
     void richText(Object nativeText, float x, float y, int argb, boolean shadow);
 

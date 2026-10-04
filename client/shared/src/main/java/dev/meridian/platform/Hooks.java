@@ -375,6 +375,16 @@ public final class Hooks {
         return waypoints == null ? java.util.Collections.<dev.meridian.waypoint.Waypoint>emptyList() : waypoints.beams();
     }
 
+    /**
+     * Texture (relative to {@code assets/meridian/textures/}) of the Meridian cape a player wears,
+     * or null for the vanilla cape. Called for every rendered player every frame.
+     *
+     * @param local whether the player is this client's player
+     */
+    public static String capeTexture(java.util.UUID player, boolean local) {
+        return meridian == null || player == null ? null : meridian.cosmetics().capeTexture(player, local);
+    }
+
     /** Dropped items lie on the ground instead of floating and spinning. */
     public static boolean itemPhysics() {
         return itemPhysics != null && itemPhysics.active();

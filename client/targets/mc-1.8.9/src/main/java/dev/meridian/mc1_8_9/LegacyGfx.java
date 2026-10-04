@@ -356,6 +356,22 @@ public final class LegacyGfx implements Gfx {
     }
 
     @Override
+    public void textureRegion(String path, int x, int y, int width, int height, float u0, float v0, float u1, float v1, int argbTint) {
+        Textures.Entry entry = Textures.get(client, path);
+        if (entry == null) {
+            return;
+        }
+        flush();
+        GlStateManager.enableBlend();
+        GlStateManager.color(((argbTint >> 16) & 0xFF) / 255f, ((argbTint >> 8) & 0xFF) / 255f, (argbTint & 0xFF) / 255f,
+                (argbTint >>> 24) / 255f);
+        client.getTextureManager().bindTexture(entry.id);
+        DrawableHelper.drawTexture(x, y, u0 * entry.width, v0 * entry.height, Math.round((u1 - u0) * entry.width),
+                Math.round((v1 - v0) * entry.height), width, height, entry.width, entry.height);
+        GlStateManager.color(1f, 1f, 1f, 1f);
+    }
+
+    @Override
     public void richText(Object nativeText, float x, float y, int argb, boolean shadow) {
         if (nativeText instanceof String) {
             text((String) nativeText, x, y, argb, shadow);

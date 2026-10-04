@@ -20,7 +20,7 @@ public abstract class MinecraftMixin {
 
     @Inject(method = "<init>", at = @At("TAIL"))
     private void meridian$boot(GameConfig config, CallbackInfo ci) {
-        Meridian.boot(ModernPlatform.create((Minecraft) (Object) this));
+        Meridian.boot(ModernPlatform.create((Minecraft) (Object) this)).cosmetics().registerRenderer(dev.meridian.mc1_21_11.ModernCapes.RENDERER);
         if (Boolean.getBoolean("meridian.mixinAudit")) {
             // Development only: force every mixin target to load so broken injections fail fast.
             MixinEnvironment.getCurrentEnvironment().audit();

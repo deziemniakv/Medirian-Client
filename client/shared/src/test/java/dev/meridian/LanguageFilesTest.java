@@ -29,6 +29,25 @@ class LanguageFilesTest {
         }
     }
 
+    /** Every key the code asks for with a literal ({@code I18n.tr("key", ...)}) is translated. */
+    @Test
+    void everyKeyUsedInTheCodeIsTranslated() throws Exception {
+        Set<String> translated = keys("pl_pl");
+        Set<String> missing = new TreeSet<String>();
+        java.util.regex.Pattern call = java.util.regex.Pattern.compile("I18n\\.tr\\(\\s*\"([a-zA-Z0-9_.]*[a-zA-Z0-9_])\"\\s*[,)]");
+        try (java.util.stream.Stream<java.nio.file.Path> files = java.nio.file.Files.walk(java.nio.file.Paths.get("src/main/java"))) {
+            for (java.nio.file.Path file : (Iterable<java.nio.file.Path>) files.filter(p -> p.toString().endsWith(".java"))::iterator) {
+                java.util.regex.Matcher matcher = call.matcher(new String(java.nio.file.Files.readAllBytes(file), StandardCharsets.UTF_8));
+                while (matcher.find()) {
+                    if (!translated.contains(matcher.group(1))) {
+                        missing.add(matcher.group(1) + " (" + file.getFileName() + ")");
+                    }
+                }
+            }
+        }
+        assertEquals(new TreeSet<String>(), missing, "keys without a translation in pl_pl.json");
+    }
+
     @Test
     void translationsAreComplete() throws Exception {
         Set<String> reference = keys("pl_pl");

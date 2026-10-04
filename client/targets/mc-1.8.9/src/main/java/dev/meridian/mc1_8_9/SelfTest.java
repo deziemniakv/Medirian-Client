@@ -10,6 +10,7 @@ import dev.meridian.perf.CullState;
 import dev.meridian.perf.OcclusionCuller;
 import dev.meridian.platform.Occluders;
 import dev.meridian.setting.BooleanSetting;
+import dev.meridian.ui.CosmeticsScreen;
 import dev.meridian.ui.HudEditorScreen;
 import dev.meridian.ui.ModMenuScreen;
 import dev.meridian.ui.SettingsScreen;
@@ -46,6 +47,10 @@ public final class SelfTest {
     /** Culling scene: a stone platform at this height above the player, so the result never depends on terrain. */
     private static final int SCENE_Y = 200;
 
+    private static final String CAPE = "cape_moonlit";
+
+    /** Meridian services end to end, when a services URL is configured. */
+    private static dev.meridian.services.ServicesSelfTest servicesCheck;
     private static int step;
     private static int wait;
     private static int sceneX;
@@ -70,6 +75,9 @@ public final class SelfTest {
             return;
         }
         Meridian meridian = Meridian.get();
+        if (servicesCheck != null) {
+            servicesCheck.poll();
+        }
         if (sampling) {
             sampleSum += meridian.performance().worldRenderMs();
             hudSum += LegacyPlatform.get().gfx().lastFrameNanos() / 1_000_000.0;
@@ -111,13 +119,21 @@ public final class SelfTest {
                 return;
             case 4:
                 shot(client, "3-settings");
+                // a cape for the cosmetics screen and the third-person shot
+                meridian.cosmetics().equip(meridian.cosmetics().byId(CAPE));
+                meridian.platform().openScreen(new CosmeticsScreen(null));
+                next(30);
+                return;
+            case 5:
+                shot(client, "3b-cosmetics");
+                servicesCheck = new dev.meridian.services.ServicesSelfTest(meridian);
                 meridian.platform().openScreen(null);
                 meridian.config().loadProfile("PvP", false);
                 client.startIntegratedServer(WORLD, WORLD,
                         new LevelInfo(4242L, LevelInfo.GameMode.CREATIVE, true, false, LevelGeneratorType.DEFAULT).enableCommands());
                 next(20);
                 return;
-            case 5:
+            case 6:
                 if (client.player != null && client.world != null && client.currentScreen == null) {
                     meridian.modules().get("blockoverlay").setEnabled(true);
                     ((BooleanSetting) meridian.modules().get("blockoverlay").setting("fill")).set(true);
@@ -148,7 +164,7 @@ public final class SelfTest {
                     next(100);
                 }
                 return;
-            case 6:
+            case 7:
                 // hurt the pig (instant damage) right before the screenshot to show the Hit Color flash
                 client.player.sendChatMessage("/effect @e[type=Pig,name=!Tagged,c=1] 7 1 0");
                 // look at the ground so a block is selected (set late: joining resets the rotation)
@@ -159,22 +175,32 @@ public final class SelfTest {
                 client.player.sendChatMessage("/setblock ~ ~ ~ fire");
                 next(3);
                 return;
-            case 7:
+            case 8:
                 verifyHealthTag(client);
                 verifyChat(client);
                 shot(client, "4-hud");
                 client.player.sendChatMessage("/gamemode 1");
                 client.player.sendChatMessage("/setblock ~ ~ ~ air");
+                // third person from behind, in daylight: the Meridian cape
+                client.player.sendChatMessage("/time set 1000");
+                client.player.sendChatMessage("/weather clear");
+                client.options.perspective = 1;
+                next(20);
+                return;
+            case 9:
+                verifyCape(client);
+                shot(client, "4b-cape");
+                client.options.perspective = 0;
                 meridian.platform().openScreen(new ModMenuScreen(null));
                 next(30);
                 return;
-            case 8:
+            case 10:
                 shot(client, "5-modmenu-ingame");
                 // in a world the Target HUD previews the local player's head
                 meridian.platform().openScreen(new HudEditorScreen(null));
                 next(30);
                 return;
-            case 9:
+            case 11:
                 shot(client, "5b-hudeditor-ingame");
                 meridian.platform().openScreen(null);
                 verifyChatCopy(client);
@@ -182,14 +208,14 @@ public final class SelfTest {
                 buildCullingScene(client.player);
                 next(40);
                 return;
-            case 10:
+            case 12:
                 verifyPolicy(meridian);
                 verifyCulling(client);
                 shot(client, "6-culling");
                 meridian.platform().openScreen(new WaypointsScreen(null));
                 next(30);
                 return;
-            case 11:
+            case 13:
                 shot(client, "6b-waypoints");
                 meridian.platform().openScreen(null);
                 spawnCrowd(client.player);
@@ -201,12 +227,12 @@ public final class SelfTest {
                 client.options.maxFramerate = 260;
                 next(80);
                 return;
-            case 12:
+            case 14:
                 aimAtWall(client.player);
                 startSampling();
                 next(BENCH_TICKS);
                 return;
-            case 13:
+            case 15:
                 shot(client, "7-bench-occlusion");
                 onHudMs = sampleCount == 0 ? 0 : (float) (hudSum / sampleCount);
                 onWorldMs = stopSampling();
@@ -218,12 +244,12 @@ public final class SelfTest {
                 gfx.setBatching(false);
                 next(40);
                 return;
-            case 14:
+            case 16:
                 aimAtWall(client.player);
                 startSampling();
                 next(BENCH_TICKS);
                 return;
-            case 15:
+            case 17:
                 shot(client, "8-bench-no-occlusion");
                 float offHudMs = sampleCount == 0 ? 0 : (float) (hudSum / sampleCount);
                 float offWorldMs = stopSampling();
@@ -244,7 +270,7 @@ public final class SelfTest {
                         String.format("%.3f", onHudMs), String.format("%.3f", offHudMs));
                 next(20);
                 return;
-            case 16:
+            case 18:
                 // the Christmas theme (runtime only, the setting is untouched)
                 dev.meridian.render.Theme.apply(dev.meridian.render.Theme.Mode.CHRISTMAS);
                 // and a translation other than English/Polish (umlauts in the font)
@@ -252,20 +278,33 @@ public final class SelfTest {
                 meridian.platform().openScreen(new ModMenuScreen(null));
                 next(30);
                 return;
-            case 17:
+            case 19:
                 shot(client, "9-christmas");
                 meridian.platform().openScreen(new HudEditorScreen(null));
                 next(20);
                 return;
-            case 18:
+            case 20:
                 shot(client, "9b-hudeditor-german");
                 meridian.platform().openScreen(null);
                 next(10);
                 return;
             default:
+                if (servicesCheck != null && !servicesCheck.poll()) {
+                    return; // still waiting for Meridian services (the check times out by itself)
+                }
                 Log.info("Self-test finished; screenshots in {}", client.runDirectory);
                 step = -1;
                 client.scheduleStop();
+        }
+    }
+
+    /** The local player's cape getter must return the Meridian cape. */
+    private static void verifyCape(MinecraftClient client) {
+        net.minecraft.util.Identifier cape = client.player.getSkinId(); // the cape getter in Legacy Yarn 604
+        if (cape != null && cape.getPath().contains(CAPE)) {
+            Log.info("Self-test: cape OK ({})", cape);
+        } else {
+            Log.error("Self-test FAILED: cape (texture {})", cape);
         }
     }
 

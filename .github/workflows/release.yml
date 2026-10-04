@@ -67,6 +67,7 @@ jobs:
           # owner-provided ids (repository variables); empty until registered
           MAIN_VITE_MSA_CLIENT_ID: ${{ vars.MSA_CLIENT_ID }}
           MAIN_VITE_DISCORD_APP_ID: ${{ vars.DISCORD_APP_ID }}
+          MAIN_VITE_SERVICES_URL: ${{ vars.SERVICES_URL }}
       - name: Package
         env:
           CSC_LINK: ${{ secrets.CSC_LINK }}

@@ -42,6 +42,7 @@ export function Settings() {
   const [section, setSection] = useState<Section>('general');
   const settings = useStore((s) => s.settings)!;
   const update = useStore((s) => s.updateSettings);
+  const app = useStore((s) => s.app);
   const set = (patch: Partial<LauncherSettings>) => void update(patch);
 
   return (
@@ -90,11 +91,18 @@ export function Settings() {
           {section === 'account' && <AccountSection />}
           {section === 'discord' && <DiscordSection />}
           {section === 'developer' && (
-            <Row label={t('settings.msaClientId')} hint="MERIDIAN_MSA_CLIENT_ID">
-              <input className="input mono settings__wide-input" value={settings.msaClientId}
-                placeholder="00000000-0000-0000-0000-000000000000"
-                onChange={(e) => set({ msaClientId: e.target.value.trim() })} />
-            </Row>
+            <>
+              <Row label={t('settings.msaClientId')} hint="MERIDIAN_MSA_CLIENT_ID">
+                <input className="input mono settings__wide-input" value={settings.msaClientId}
+                  placeholder="00000000-0000-0000-0000-000000000000"
+                  onChange={(e) => set({ msaClientId: e.target.value.trim() })} />
+              </Row>
+              <Row label={t('settings.servicesUrl')} hint="MERIDIAN_SERVICES_URL">
+                <input className="input mono settings__wide-input" value={settings.servicesUrl}
+                  placeholder={app?.defaultServicesUrl || 'https://…'}
+                  onChange={(e) => set({ servicesUrl: e.target.value.trim() })} />
+              </Row>
+            </>
           )}
           {section === 'about' && <AboutSection />}
         </div>

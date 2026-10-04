@@ -33,7 +33,8 @@ export class GameService {
     private readonly launcherVersion: string,
     private readonly emitState: (state: GameState) => void,
     private readonly emitLog: (lines: string[]) => void,
-    private readonly onStarted: () => void
+    private readonly onStarted: () => void,
+    private readonly servicesUrl: () => string = () => ''
   ) {}
 
   current(): GameState {
@@ -75,7 +76,8 @@ export class GameService {
       });
       await this.bridge.start();
       const plan = await this.installer.prepare(
-        { profile, target, session, launcherVersion: this.launcherVersion, bridge: { port: this.bridge.port, token: this.bridge.token } },
+        { profile, target, session, launcherVersion: this.launcherVersion, bridge: { port: this.bridge.port, token: this.bridge.token },
+          servicesUrl: this.servicesUrl() },
         progress
       );
       await this.spawn(profileId, target.id, plan.java, plan.args, plan.gameDir, session.accessToken);

@@ -10,6 +10,8 @@ interface ImportMetaEnv {
   readonly MAIN_VITE_DISCORD_APP_ID?: string;
   /** Default release manifest URL of the stable channel, injected at build time (MAIN_VITE_MANIFEST_URL). */
   readonly MAIN_VITE_MANIFEST_URL?: string;
+  /** Meridian services URL passed to the client, injected at build time (MAIN_VITE_SERVICES_URL). */
+  readonly MAIN_VITE_SERVICES_URL?: string;
 }
 
 interface ImportMeta {

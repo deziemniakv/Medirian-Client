@@ -28,6 +28,8 @@ export interface LaunchContext {
   session: LaunchSession;
   launcherVersion: string;
   bridge: { port: number; token: string } | null;
+  /** Meridian services for the client (-Dmeridian.api); empty = services off. */
+  servicesUrl?: string;
 }
 
 type ProgressFn = (progress: TaskProgress) => void;
@@ -220,7 +222,8 @@ export class Installer {
       `-Dmeridian.home=${this.paths.root}`,
       `-Dmeridian.target=${target.id}`,
       ...(profile.configProfile ? [`-Dmeridian.profile=${profile.configProfile}`] : []),
-      ...(ctx.bridge ? [`-Dmeridian.launcher.port=${ctx.bridge.port}`, `-Dmeridian.launcher.token=${ctx.bridge.token}`] : [])
+      ...(ctx.bridge ? [`-Dmeridian.launcher.port=${ctx.bridge.port}`, `-Dmeridian.launcher.token=${ctx.bridge.token}`] : []),
+      ...(ctx.servicesUrl ? [`-Dmeridian.api=${ctx.servicesUrl}`] : [])
     );
 
     const game: string[] = version.arguments?.game

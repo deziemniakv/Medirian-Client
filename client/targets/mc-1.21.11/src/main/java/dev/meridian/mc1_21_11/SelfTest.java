@@ -12,6 +12,8 @@ import dev.meridian.platform.Occluders;
 import dev.meridian.ui.HudEditorScreen;
 import dev.meridian.ui.ModMenuScreen;
 import dev.meridian.ui.SettingsScreen;
+import dev.meridian.ui.CosmeticsScreen;
+import net.minecraft.client.CameraType;
 import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.GuiMessage;
@@ -51,6 +53,9 @@ final class SelfTest {
     private static final boolean ENABLED = Boolean.getBoolean("meridian.selftest");
     static final String STACKED = "Meridian self-test: repeated line";
 
+    private static final String CAPE = "cape_moonlit";
+    /** Meridian services end to end, when a services URL is configured. */
+    private static dev.meridian.services.ServicesSelfTest servicesCheck;
     private static int step;
     private static int wait;
     /** Culling scene: a stone platform at this height above the player, so the result never depends on terrain. */
@@ -75,6 +80,9 @@ final class SelfTest {
             return;
         }
         Meridian meridian = Meridian.get();
+        if (servicesCheck != null) {
+            servicesCheck.poll();
+        }
         if (sampling) {
             sampleSum += meridian.performance().worldRenderMs();
             sampleCount++;
@@ -116,12 +124,20 @@ final class SelfTest {
                 return;
             case 4:
                 shot(minecraft, "3-settings");
+                // a cape for the cosmetics screen and the third-person shot
+                meridian.cosmetics().equip(meridian.cosmetics().byId(CAPE));
+                meridian.platform().openScreen(new CosmeticsScreen(null));
+                next(30);
+                return;
+            case 5:
+                shot(minecraft, "3b-cosmetics");
+                servicesCheck = new dev.meridian.services.ServicesSelfTest(meridian);
                 meridian.platform().openScreen(null);
                 meridian.config().loadProfile("PvP", false);
                 enterWorld(minecraft);
                 next(20);
                 return;
-            case 5:
+            case 6:
                 if (minecraft.player != null && minecraft.level != null && minecraft.screen == null) {
                     prepareScene(meridian);
                     minecraft.player.setXRot(30f); // the tagged pig's name and a selected block both in view
@@ -139,7 +155,7 @@ final class SelfTest {
                     next(120);
                 }
                 return;
-            case 6:
+            case 7:
                 // hurt the pig right before the screenshot to show the Hit Color flash
                 minecraft.player.connection.sendCommand("damage @e[type=pig,limit=1,sort=nearest] 1");
                 minecraft.player.setXRot(30f); // the tagged pig's name and a selected block both in view
@@ -148,16 +164,26 @@ final class SelfTest {
                 minecraft.player.connection.sendCommand("setblock ~ ~ ~ fire");
                 next(3);
                 return;
-            case 7:
+            case 8:
                 verifyChat(minecraft);
                 shot(minecraft, "4-hud");
                 minecraft.player.connection.sendCommand("gamemode creative");
                 minecraft.player.connection.sendCommand("setblock ~ ~ ~ air");
+                // third person from behind, in daylight: the Meridian cape
+                minecraft.player.connection.sendCommand("time set 1000");
+                minecraft.player.connection.sendCommand("weather clear");
+                minecraft.options.setCameraType(CameraType.THIRD_PERSON_BACK);
+                next(20);
+                return;
+            case 9:
+                verifyCape(minecraft);
+                shot(minecraft, "4b-cape");
+                minecraft.options.setCameraType(CameraType.FIRST_PERSON);
                 // press the mod menu key through the game's real keyboard handler
                 pressKey(minecraft, GLFW.GLFW_KEY_RIGHT_SHIFT);
                 next(30);
                 return;
-            case 8:
+            case 10:
                 if (minecraft.screen instanceof ScreenBridge bridge && bridge.meridian() instanceof ModMenuScreen) {
                     Log.info("Self-test: mod menu key OK");
                 } else {
@@ -168,7 +194,7 @@ final class SelfTest {
                 meridian.platform().openScreen(new HudEditorScreen(null));
                 next(30);
                 return;
-            case 9:
+            case 11:
                 shot(minecraft, "5b-hudeditor-ingame");
                 meridian.platform().openScreen(null);
                 verifyChatCopy(minecraft);
@@ -176,14 +202,14 @@ final class SelfTest {
                 buildCullingScene(minecraft.player);
                 next(40);
                 return;
-            case 10:
+            case 12:
                 verifyPolicy(meridian);
                 verifyCulling(minecraft);
                 shot(minecraft, "6-culling");
                 meridian.platform().openScreen(new WaypointsScreen(null));
                 next(30);
                 return;
-            case 11:
+            case 13:
                 shot(minecraft, "6b-waypoints");
                 meridian.platform().openScreen(null);
                 spawnCrowd(minecraft.player);
@@ -194,12 +220,12 @@ final class SelfTest {
                 minecraft.options.framerateLimit().set(260);
                 next(80);
                 return;
-            case 12:
+            case 14:
                 aimAtWall(minecraft.player);
                 startSampling();
                 next(BENCH_TICKS);
                 return;
-            case 13:
+            case 15:
                 shot(minecraft, "7-bench-occlusion");
                 Log.info("Self-test benchmark: {} pigs hidden by occlusion", hiddenPigs(minecraft));
                 onWorldMs = stopSampling();
@@ -207,12 +233,12 @@ final class SelfTest {
                 occlusion(meridian, false);
                 next(40);
                 return;
-            case 14:
+            case 16:
                 aimAtWall(minecraft.player);
                 startSampling();
                 next(BENCH_TICKS);
                 return;
-            case 15:
+            case 17:
                 shot(minecraft, "8-bench-no-occlusion");
                 float offWorldMs = stopSampling();
                 float offFrameMs = meridian.performance().frames().averageFrameMs();
@@ -228,7 +254,7 @@ final class SelfTest {
                 }
                 next(20);
                 return;
-            case 16:
+            case 18:
                 // the Christmas theme (runtime only, the setting is untouched)
                 dev.meridian.render.Theme.apply(dev.meridian.render.Theme.Mode.CHRISTMAS);
                 // and a translation other than English/Polish (umlauts in the font)
@@ -236,12 +262,15 @@ final class SelfTest {
                 meridian.platform().openScreen(new ModMenuScreen(null));
                 next(30);
                 return;
-            case 17:
+            case 19:
                 shot(minecraft, "9-christmas");
                 meridian.platform().openScreen(null);
                 next(10);
                 return;
             default:
+                if (servicesCheck != null && !servicesCheck.poll()) {
+                    return; // still waiting for Meridian services (the check times out by itself)
+                }
                 Log.info("Self-test finished; screenshots in {}", minecraft.gameDirectory);
                 step = -1;
                 minecraft.stop();
@@ -454,6 +483,16 @@ final class SelfTest {
 
     /** Three identical lines must have become one "(x3)" line with a timestamp. */
     @SuppressWarnings("unchecked")
+    /** The local player's skin must carry the Meridian cape. */
+    private static void verifyCape(Minecraft minecraft) {
+        net.minecraft.world.entity.player.PlayerSkin skin = minecraft.player.getSkin();
+        if (skin.cape() != null && skin.cape().texturePath().getPath().contains(CAPE)) {
+            Log.info("Self-test: cape OK ({})", skin.cape().texturePath());
+        } else {
+            Log.error("Self-test FAILED: cape (skin {})", skin);
+        }
+    }
+
     private static void verifyChat(Minecraft minecraft) {
         try {
             Field field = ChatComponent.class.getDeclaredField("allMessages");

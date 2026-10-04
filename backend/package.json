@@ -1,0 +1,14 @@
+{
+  "name": "meridian-services",
+  "version": "0.1.4",
+  "description": "Meridian services: accounts via the Mojang session handshake, cosmetics and cloud profiles",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/index.mjs",
+    "test": "node --test test/"
+  }
+}

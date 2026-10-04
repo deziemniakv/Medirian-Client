@@ -8,7 +8,7 @@
 
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -81,17 +81,24 @@ const sha1 = (file) => createHash('sha1').update(readFileSync(file)).digest('hex
 const version = readFileSync(join(root, 'VERSION'), 'utf8').trim();
 const launcherVersion = JSON.parse(readFileSync(join(root, 'launcher', 'package.json'), 'utf8')).version;
 const out = join(root, 'distribution');
-rmSync(out, { recursive: true, force: true });
-mkdirSync(out, { recursive: true });
+// The previous distribution stays untouched until every target has built: the new one is
+// assembled next to it and swapped in at the end.
+const staging = join(root, 'distribution.tmp');
 
-const targets = [];
-for (const target of TARGETS) {
-  if (!skipBuild) {
+if (!skipBuild) {
+  for (const target of TARGETS) {
     build(target.dir);
   }
-  const jar = findJar(target.dir, version);
+}
+const jars = TARGETS.map((target) => findJar(target.dir, version));
+
+rmSync(staging, { recursive: true, force: true });
+mkdirSync(staging, { recursive: true });
+const targets = [];
+for (const [index, target] of TARGETS.entries()) {
+  const jar = jars[index];
   const fileName = `meridian-${target.id}-${version}.jar`;
-  copyFileSync(jar, join(out, fileName));
+  copyFileSync(jar, join(staging, fileName));
   const artifact = { file: fileName, sha1: sha1(jar), size: statSync(jar).size };
   if (baseUrl) {
     artifact.url = baseUrl + fileName;
@@ -119,7 +126,9 @@ const manifest = {
   launcher: { version: launcherVersion },
   targets
 };
-writeFileSync(join(out, 'release-manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
+writeFileSync(join(staging, 'release-manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
+rmSync(out, { recursive: true, force: true });
+renameSync(staging, out);
 console.log(`Wrote ${join(out, 'release-manifest.json')} (${targets.length} targets, Meridian ${version})`);
 if (!existsSync(join(out, 'release-manifest.json'))) {
   process.exit(1);

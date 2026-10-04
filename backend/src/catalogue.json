@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "cosmetics": [
+    { "id": "cape_meridian", "type": "CAPE", "name": "Meridian", "access": "free" },
+    { "id": "cape_moonlit", "type": "CAPE", "name": "Moonlit", "access": "free" },
+    { "id": "cape_ember", "type": "CAPE", "name": "Ember", "access": "free", "seasonal": true },
+    { "id": "cape_frost", "type": "CAPE", "name": "Frost", "access": "free", "seasonal": true },
+    { "id": "cape_aurora", "type": "CAPE", "name": "Aurora", "access": "free" },
+    { "id": "cape_founder", "type": "CAPE", "name": "Founder", "access": "grant" }
+  ]
+}

@@ -23,6 +23,16 @@ public final class Loadout {
         }
     }
 
+    public boolean isEmpty() {
+        return equipped.isEmpty();
+    }
+
+    public Loadout copy() {
+        Loadout copy = new Loadout();
+        copy.equipped.putAll(equipped);
+        return copy;
+    }
+
     public JsonObject toJson() {
         JsonObject json = new JsonObject();
         for (Map.Entry<CosmeticType, String> entry : equipped.entrySet()) {

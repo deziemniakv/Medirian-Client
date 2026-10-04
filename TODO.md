@@ -47,15 +47,22 @@ Każdy wymaga hooka w obu adapterach (nowe `Capability`):
 
 ## Etap 3 — kosmetyki
 
-- [ ] `CosmeticRenderer` dla CAPE w obu adapterach (1.8.9: `AbstractClientPlayerEntity#getSkinId` — w Legacy Yarn 604 nazwy skin/cape są zamienione, modern: `PlayerSkin`).
-- [ ] Usługa kosmetyków (katalog, własność, loadouty innych graczy) — `CosmeticsProvider` sieciowy.
-- [ ] UI kosmetyków w mod menu (dopiero gdy istnieje renderer — wymóg „bez fake UI”).
+- [x] **Peleryny** (0.1.4) w obu adapterach — 1.8.9: getter peleryny (`getSkinId` w Legacy Yarn 604), modern:
+      `AbstractClientPlayer#getSkin` (`PlayerSkin.cape`, elytra korzysta z tej samej tekstury). 6 oryginalnych peleryn HD
+      (256×128, `scripts/generate-capes.mjs`), self-test sprawdza teksturę i robi zrzut z trzeciej osoby.
+- [x] **Usługa kosmetyków** (0.1.4) — `RemoteCosmetics`: posiadanie z serwera, loadouty innych graczy pobierane
+      partiami (≤ 100, cache 5 min), własny loadout wysyłany po zalogowaniu i po każdej zmianie. Backend: `backend/`.
+- [x] **UI kosmetyków** (0.1.4) — ekran „Cosmetics” z mod menu (tylko gdy wersja renderuje peleryny), podgląd, status widoczności.
 - [ ] WINGS / HAT jako warstwy renderera gracza, EMOTE, TRAIL.
 
 ## Etap 4 — konto Meridian
 
-- [ ] Backend kont (logowanie przez handshake sesji Mojang), `MeridianAccountService`.
-- [ ] Synchronizacja profili konfiguracji w chmurze.
+- [x] **Backend** (0.1.4, `backend/`, Node bez zależności, Dockerfile) — logowanie przez handshake sesji Mojang
+      (join/hasJoined, token gry trafia tylko do Mojang), kosmetyki, profile; opis: docs/SERVICES.md. Klient: `MeridianServices`.
+- [x] **Profile w chmurze** (0.1.4) — Ustawienia → Profile → Chmura Meridian: wyślij aktywny, pobierz, usuń.
+- [x] Test end-to-end (0.1.4): backend + atrapa serwera sesji + oba klienty w self-teście (logowanie, profil tam i z powrotem,
+      własna peleryna widoczna „jako inny gracz”).
+- [ ] **Wdrożenie usług** (właściciel): serwer z HTTPS, zmienna repozytorium `SERVICES_URL` dla buildów launchera.
 
 ## Etap 5 — kolejne wersje Minecrafta
 

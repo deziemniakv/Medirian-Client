@@ -253,6 +253,11 @@ public final class ModernPlatform implements Platform, GameView, InputView, Clie
     }
 
     @Override
+    public String accessToken() {
+        return minecraft.getUser().getAccessToken();
+    }
+
+    @Override
     public PlayerIdentity identity() {
         User user = minecraft.getUser();
         String token = user.getAccessToken();

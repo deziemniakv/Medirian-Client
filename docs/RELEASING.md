@@ -10,7 +10,8 @@ co robią i co musi raz skonfigurować właściciel repozytorium.
 | Shared core tests | `client/shared`: `./gradlew test` (JUnit) |
 | Client mc-1.8.9 / mc-1.21.11 | `./gradlew build` każdego targetu (jar jako artefakt) |
 | Launcher (Windows, macOS, Linux) | `npm ci`, `npm run build` (typecheck + bundle), `npm test` |
-| Release scripts | `node --test scripts/test/` (kodek PNG, notatki wydania, analiza logu self-testu) |
+| Meridian services | `backend`: `npm test` (logowanie z atrapą Mojang, kosmetyki, profile, limity) |
+| Release scripts | `node --test scripts/test/` (kodek PNG, notatki wydania, analiza logu self-testu, zgodność katalogu kosmetyków) |
 | Self-test and screenshots | `runClient -Pselftest` w Xvfb z programowym OpenGL (Mesa), `scripts/check-selftest.mjs`, `scripts/visual-test.mjs` |
 
 Job wizualny jest na razie **nieblokujący** (`continue-on-error`): wzorce w `client/visual-baselines/`
@@ -28,7 +29,7 @@ node scripts/visual-test.mjs --target mc-1.8.9
 Self-test startuje zawsze ze świeżym `run/selftest-home` (domyślna konfiguracja, angielski), bez animacji,
 powiadomień i motywu sezonowego, więc zrzuty menu są powtarzalne co do piksela (poza licznikiem FPS
 w podglądzie edytora HUD). Porównywane są ekrany bez świata w tle: `1-modmenu`, `2-hudeditor`,
-`3-settings`. Zamierzona zmiana wyglądu: uruchomić self-test i `node scripts/visual-test.mjs --update`,
+`3-settings`, `3b-cosmetics`. Zamierzona zmiana wyglądu: uruchomić self-test i `node scripts/visual-test.mjs --update`,
 a nowe wzorce zatwierdzić razem ze zmianą. Różnice zapisują się w `run/visual-diff/` (na czerwono).
 
 ## Wydanie (`release.yml`) — tag `v<wersja>`
@@ -60,6 +61,7 @@ Sprawdzone lokalnie (Windows): launcher 0.1.4 zbudowany z kanałem `generic` na 
 |---|---|---|
 | Zmienna `MSA_CLIENT_ID` | Settings → Secrets and variables → Actions → Variables | Logowanie Microsoft wyłączone w wydanych buildach (wymaga rejestracji aplikacji Azure + zgody Mojang) |
 | Zmienna `DISCORD_APP_ID` | jw. | Discord Rich Presence wymaga ręcznego wpisania ID w ustawieniach |
+| Zmienna `SERVICES_URL` (+ wdrożony `backend/`, docs/SERVICES.md) | jw. | Peleryny widzi tylko sam gracz, brak profili w chmurze |
 | Sekrety `CSC_LINK`, `CSC_KEY_PASSWORD` | Secrets | Instalatory niepodpisane (ostrzeżenie SmartScreen; na macOS auto-update **wymaga** podpisu) |
 | Sekrety `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID` | Secrets | Brak notaryzacji macOS (Gatekeeper blokuje pierwsze uruchomienie) |
 

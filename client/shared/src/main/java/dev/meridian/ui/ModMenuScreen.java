@@ -65,6 +65,8 @@ public final class ModMenuScreen extends MeridianScreen {
     private Button resetButton;
     private Button hudEditorButton;
     private Button settingsButton;
+    /** Only in versions that render cosmetics. */
+    private Button cosmeticsButton;
 
     public ModMenuScreen(MeridianScreen parent) {
         super(parent);
@@ -99,6 +101,11 @@ public final class ModMenuScreen extends MeridianScreen {
         settingsButton = new Button(I18n.tr("ui.settings", "Settings"), Button.Style.SECONDARY,
                 () -> Meridian.get().platform().openScreen(new SettingsScreen(this)))
                 .bounds(px + 10, py + ph - 26, SIDEBAR_W - 20, 16);
+        cosmeticsButton = Meridian.get().cosmetics().available()
+                ? new Button(I18n.tr("ui.cosmetics", "Cosmetics"), Button.Style.SECONDARY,
+                        () -> Meridian.get().platform().openScreen(new CosmeticsScreen(this)))
+                        .bounds(px + 10, py + ph - 66, SIDEBAR_W - 20, 16)
+                : null;
         refreshList();
         if (selected == null && !visibleModules.isEmpty()) {
             select(visibleModules.get(0));
@@ -172,6 +179,9 @@ public final class ModMenuScreen extends MeridianScreen {
         renderCategories(g, theme, mx, my - offset);
         hudEditorButton.render(g, mx, my - offset);
         settingsButton.render(g, mx, my - offset);
+        if (cosmeticsButton != null) {
+            cosmeticsButton.render(g, mx, my - offset);
+        }
 
         search.render(g, mx, my - offset);
         renderModuleList(g, theme, mx, my - offset);
@@ -206,7 +216,7 @@ public final class ModMenuScreen extends MeridianScreen {
         // footer: version and target
         String footer = "v" + BuildInfo.VERSION + " · " + Meridian.get().platform().minecraftVersion();
         g.push();
-        g.translate(px + 12, py + ph - 58);
+        g.translate(px + 12, py + ph - (cosmeticsButton != null ? 78 : 58));
         g.scale(0.75f, 0.75f);
         g.text(footer, 0, 0, theme.textMuted, false);
         g.pop();
@@ -338,7 +348,8 @@ public final class ModMenuScreen extends MeridianScreen {
     @Override
     protected boolean mouseClicked(float mx, float my, int button) {
         if (search.mouseClicked(mx, my, button) || hudEditorButton.mouseClicked(mx, my, button)
-                || settingsButton.mouseClicked(mx, my, button)) {
+                || settingsButton.mouseClicked(mx, my, button)
+                || (cosmeticsButton != null && cosmeticsButton.mouseClicked(mx, my, button))) {
             return true;
         }
         // categories

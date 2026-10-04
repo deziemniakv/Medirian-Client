@@ -76,6 +76,18 @@ jobs:
       - name: Tests
         run: npm test
 
+  backend:
+    name: Meridian services
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Tests
+        working-directory: backend
+        run: npm test
+
   scripts:
     name: Release scripts
     runs-on: ubuntu-latest

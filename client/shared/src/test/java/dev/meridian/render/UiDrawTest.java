@@ -147,6 +147,10 @@ class UiDrawTest {
         }
 
         @Override
+        public void textureRegion(String path, int x, int y, int width, int height, float u0, float v0, float u1, float v1, int argbTint) {
+        }
+
+        @Override
         public void richText(Object nativeText, float x, float y, int argb, boolean shadow) {
         }
 

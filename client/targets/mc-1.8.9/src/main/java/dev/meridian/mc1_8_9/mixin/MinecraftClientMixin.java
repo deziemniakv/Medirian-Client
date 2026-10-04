@@ -23,7 +23,7 @@ public abstract class MinecraftClientMixin {
 
     @Inject(method = "initializeGame", at = @At("TAIL"))
     private void meridian$boot(CallbackInfo ci) {
-        Meridian.boot(LegacyPlatform.create((MinecraftClient) (Object) this));
+        Meridian.boot(LegacyPlatform.create((MinecraftClient) (Object) this)).cosmetics().registerRenderer(dev.meridian.mc1_8_9.LegacyCapes.RENDERER);
         if (Boolean.getBoolean("meridian.mixinAudit")) {
             // Development only: force every mixin target to load so broken injections fail fast.
             MixinEnvironment.getCurrentEnvironment().audit();

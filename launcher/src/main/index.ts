@@ -9,7 +9,7 @@ import { CHANGELOG } from './changelog';
 import { runDevAutomation } from './devAutomation';
 import { initLog, log } from './core/log';
 import { instanceDir, meridianPaths } from './core/paths';
-import { defaultManifestUrl, defaultSettings, SettingsStore } from './core/settings';
+import { defaultManifestUrl, defaultServicesUrl, defaultSettings, SettingsStore } from './core/settings';
 import { buildActivity, DiscordPresenceService } from './discord/presence';
 import { Installer } from './install/installer';
 import { SetupService, systemInfo } from './install/setup';
@@ -113,7 +113,8 @@ async function bootstrap(): Promise<Services> {
       if (settings.get().afterLaunch === 'minimize') {
         window?.minimize();
       }
-    });
+    },
+    () => settings.get().servicesUrl || defaultServicesUrl());
   const setup = new SetupService(paths, updates);
 
   handle('app:info', () => ({
@@ -124,7 +125,8 @@ async function bootstrap(): Promise<Services> {
     packaged: app.isPackaged,
     home: paths.root,
     platform: process.platform,
-    defaultManifestUrl: defaultManifestUrl()
+    defaultManifestUrl: defaultManifestUrl(),
+    defaultServicesUrl: defaultServicesUrl()
   }));
   handle('window:minimize', () => window?.minimize());
   handle('window:close', () => window?.close());

@@ -252,6 +252,31 @@ public final class ConfigManager {
         return true;
     }
 
+    /** A profile's JSON for copying elsewhere (the active one includes unsaved changes), or null. */
+    public JsonObject exportProfile(String name) {
+        if (name.equalsIgnoreCase(activeProfile)) {
+            return snapshotProfile(activeProfile);
+        }
+        return JsonFiles.read(profileFile(name));
+    }
+
+    /**
+     * Stores a profile received from elsewhere (Meridian cloud), replacing a local profile of the
+     * same name; the active profile is applied right away. Returns false for an invalid name.
+     */
+    public boolean importProfile(String name, JsonObject json) {
+        String trimmed = name == null ? "" : name.trim();
+        if (trimmed.isEmpty() || trimmed.length() > 24 || !trimmed.matches("[A-Za-z0-9 _\\-]+") || json == null) {
+            return false;
+        }
+        json.addProperty("name", trimmed);
+        writeNow(profileFile(trimmed), json);
+        if (trimmed.equalsIgnoreCase(activeProfile)) {
+            loadProfile(trimmed, false);
+        }
+        return true;
+    }
+
     /** Deletes a profile. The Default profile cannot be deleted. Switches to Default when active. */
     public boolean deleteProfile(String name) {
         if (DEFAULT_PROFILE.equalsIgnoreCase(name) || !exists(name)) {

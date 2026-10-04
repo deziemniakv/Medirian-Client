@@ -9,6 +9,11 @@ export function defaultManifestUrl(): string {
   return process.env.MERIDIAN_MANIFEST_URL || import.meta.env.MAIN_VITE_MANIFEST_URL || '';
 }
 
+/** Meridian services when the user has not set a URL: MERIDIAN_SERVICES_URL, else the built-in one. */
+export function defaultServicesUrl(): string {
+  return process.env.MERIDIAN_SERVICES_URL || import.meta.env.MAIN_VITE_SERVICES_URL || '';
+}
+
 export function defaultSettings(localDistributionDir: string): LauncherSettings {
   return {
     version: 1,
@@ -23,6 +28,7 @@ export function defaultSettings(localDistributionDir: string): LauncherSettings 
     setupCompleted: false,
     selectedProfileId: null,
     msaClientId: '',
+    servicesUrl: '',
     discordPresence: true,
     discordShowServer: true,
     discordShowInLauncher: false,

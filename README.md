@@ -18,6 +18,7 @@
 | **Adapter Minecraft 1.21.11** | `client/targets/mc-1.21.11/` | Fabric, Mixin, Java 21 |
 | Dokumentacja | `docs/ARCHITECTURE.md`, `docs/PROTOCOL.md`, `docs/RELEASING.md`, `TODO.md` | |
 | CI i wydania | `.github/workflows/`, `scripts/` | GitHub Actions, Node |
+| **Usługi Meridian** (konta, kosmetyki, profile w chmurze) | `backend/` | Node 22+, bez zależności — [docs/SERVICES.md](docs/SERVICES.md) |
 | Branding | `branding/` (źródłowe logo w `branding/source/`) | |
 
 Pełny opis architektury i decyzji technologicznych: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
@@ -34,7 +35,8 @@ podgląd logu gry, status gry na żywo (kanał launcher ↔ klient), changelog, 
 **Klient** — mod menu (kategorie | moduły | ustawienia, wyszukiwarka), edytor HUD (przeciąganie,
 przyciąganie z liniami pomocniczymi, skalowanie, panel właściwości, dodawanie/usuwanie, reset),
 ustawienia globalne, profile konfiguracji (Default / PvP / Performance / własne) wspólne dla obu
-wersji gry, powiadomienia, i18n PL/EN/DE/ES, motywy sezonowe.
+wersji gry, powiadomienia, i18n PL/EN/DE/ES, motywy sezonowe, peleryny (ekran kosmetyków), konto Meridian
+(logowanie kontem Minecraft przez handshake sesji Mojang) i profile w chmurze.
 
 Moduły (41): CPS, Combo Counter, Reach Display, Target HUD, Hit Color, Health Tags, Toggle Sprint, Toggle Sneak, Zoom, Freelook,
 Armor Status, Potion Effects, Coordinates, Custom Crosshair, Block Overlay, Hurt Camera, Fire Overlay, Item Physics, Fullbright, Time Changer, Weather Changer,
@@ -88,6 +90,8 @@ wszystkich ekranów, `MERIDIAN_DEV_LAUNCH=<profil>` uruchamia grę przez pełny 
 | `MERIDIAN_MSA_CLIENT_ID` | build/uruchomienie launchera (lub *Ustawienia → Deweloperskie*) | identyfikator aplikacji Azure dla logowania Microsoft |
 | `MERIDIAN_MANIFEST_URL` / `MAIN_VITE_MANIFEST_URL` | uruchomienie / build launchera | domyślny URL manifestu wydań (kanał stabilny), gdy pole w ustawieniach jest puste |
 | `MERIDIAN_DISCORD_APP_ID` / `MAIN_VITE_DISCORD_APP_ID` | uruchomienie / build launchera (lub *Ustawienia → Discord*) | identyfikator aplikacji Discord dla Rich Presence |
+| `MERIDIAN_SERVICES_URL` / `MAIN_VITE_SERVICES_URL` | uruchomienie / build launchera (lub *Ustawienia → Deweloperskie*) | adres usług Meridian, przekazywany klientowi jako `-Dmeridian.api` |
+| `MERIDIAN_API_URL` | klient (bez launchera) | adres usług Meridian |
 | `MERIDIAN_HOME` | launcher i klient | zmiana folderu danych (domyślnie `%APPDATA%\.meridian`) |
 
 **Logowanie Microsoft** wymaga własnej rejestracji aplikacji w Azure (konta osobiste, przepływ

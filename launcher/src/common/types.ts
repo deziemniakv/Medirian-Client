@@ -22,6 +22,8 @@ export interface LauncherSettings {
   selectedProfileId: string | null;
   /** Developer override for the Azure application id used for Microsoft login. */
   msaClientId: string;
+  /** Meridian services (accounts, cosmetics, cloud profiles); empty = the built-in default. */
+  servicesUrl: string;
   /** Show the running game on the user's Discord profile (Rich Presence). */
   discordPresence: boolean;
   /** Include the server address in the Discord activity. */
@@ -226,6 +228,8 @@ export interface AppInfo {
   platform: string;
   /** Manifest URL used when the setting is empty (built in or from MERIDIAN_MANIFEST_URL). */
   defaultManifestUrl: string;
+  /** Services URL used when the setting is empty (built in or from MERIDIAN_SERVICES_URL). */
+  defaultServicesUrl: string;
 }
 
 export type OpenTarget = 'home' | 'logs' | 'instance' | 'screenshots';

@@ -237,6 +237,11 @@ public final class LegacyPlatform implements Platform, GameView, InputView, Clie
     }
 
     @Override
+    public String accessToken() {
+        return client.getSession().getAccessToken();
+    }
+
+    @Override
     public PlayerIdentity identity() {
         Session session = client.getSession();
         String token = session.getAccessToken();
@@ -249,7 +254,7 @@ public final class LegacyPlatform implements Platform, GameView, InputView, Clie
             }
         }
         // Microsoft-authenticated sessions carry a JWT access token; offline/dev sessions do not.
-        return new PlayerIdentity(session.getUsername(), session.getUuid(), dots == 2);
+        return new PlayerIdentity(session.getUsername(), PlayerIdentity.sessionUuid(session.getUuid(), session.getUsername()), dots == 2);
     }
 
     @Override

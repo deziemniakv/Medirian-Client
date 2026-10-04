@@ -5,8 +5,8 @@ package dev.meridian.cosmetics;
  * {@link CosmeticsManager#registerRenderer}. Cosmetic types without a renderer are not offered
  * in the UI.
  *
- * <p>TODO(cosmetics-render): implement CAPE first (1.8.9: AbstractClientPlayer#getLocationCape,
- * modern: PlayerSkin cape texture), then WINGS/HAT as layer renderers.
+ * <p>Capes: both adapters hand the texture from {@link CosmeticsManager#capeTexture} to the
+ * game's own cape rendering (1.8.9: the cape getter of the player, 1.21.11: the player's skin).
  */
 public interface CosmeticRenderer {
 
