@@ -63,6 +63,21 @@ class ProjectionTest {
     }
 
     @Test
+    void offScreenPointsGetAnEdgePosition() {
+        CameraView south = camera(0, 0, 70);
+        // far to the right (west), slightly up: right edge
+        Projection.edge(south, -100, 65, 10, 400, 200, 20, out);
+        assertEquals(380, out[0], 0.01);
+        assertTrue(out[1] < 100);
+        // behind and to the left (east): left edge
+        Projection.edge(south, 10, 64, -5, 400, 200, 20, out);
+        assertEquals(20, out[0], 0.01);
+        // straight behind: bottom edge
+        Projection.edge(south, 0, 64, -10, 400, 200, 20, out);
+        assertEquals(180, out[1], 0.01);
+    }
+
+    @Test
     void pointsBehindTheCameraAreRejected() {
         assertFalse(Projection.project(camera(0, 0, 70), 0, 64, -5, 400, 200, out));
     }

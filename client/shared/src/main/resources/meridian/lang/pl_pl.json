@@ -438,5 +438,16 @@
   "hud.speed": "Prędkość",
   "setting.chat.copy": "Prawy klik kopiuje wiadomość",
   "setting.chat.copy.desc": "W otwartym czacie kliknij linię prawym przyciskiem, aby skopiować całą wiadomość.",
-  "notify.chat.copied": "Skopiowano wiadomość"
+  "notify.chat.copied": "Skopiowano wiadomość",
+  "setting.waypoints.offScreen": "Wskazuj punkty poza ekranem",
+  "setting.waypoints.offScreen.desc": "Znacznik przy krawędzi ekranu pokazuje, w którą stronę się obrócić.",
+  "setting.waypoints.beam": "Promień w świecie",
+  "setting.waypoints.beam.desc": "Smuga światła nad każdym punktem, widoczna z daleka.",
+  "waypoints.export": "Eksportuj",
+  "waypoints.import": "Importuj",
+  "waypoints.transfer": "Schowek",
+  "waypoints.transfer.desc": "Eksport kopiuje punkty tego świata; import dodaje punkty ze schowka (JSON lub linie „nazwa x y z”).",
+  "notify.waypoint.exported": "Skopiowano punkty: {0}",
+  "notify.waypoint.imported": "Zaimportowano punkty: {0}",
+  "notify.waypoint.importNone": "W schowku nie ma punktów"
 }

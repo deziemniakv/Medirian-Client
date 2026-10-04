@@ -496,4 +496,10 @@ public final class LegacyPlatform implements Platform, GameView, InputView, Clie
     public void setClipboard(String text) {
         Screen.setClipboard(text);
     }
+
+    @Override
+    public String getClipboard() {
+        String text = Screen.getClipboard();
+        return text == null ? "" : text;
+    }
 }

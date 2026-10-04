@@ -508,4 +508,10 @@ public final class ModernPlatform implements Platform, GameView, InputView, Clie
     public void setClipboard(String text) {
         minecraft.keyboardHandler.setClipboard(text);
     }
+
+    @Override
+    public String getClipboard() {
+        String text = minecraft.keyboardHandler.getClipboard();
+        return text == null ? "" : text;
+    }
 }

@@ -19,6 +19,7 @@ import dev.meridian.ui.widget.Button;
 import dev.meridian.ui.widget.ScrollState;
 import dev.meridian.waypoint.Waypoint;
 import dev.meridian.waypoint.WaypointStore;
+import dev.meridian.waypoint.WaypointTransfer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,6 +40,8 @@ public final class WaypointsScreen extends MeridianScreen {
     private float listTop;
     private float listBottom;
     private Button addButton;
+    private Button exportButton;
+    private Button importButton;
     private Button backButton;
     private SettingsList details;
     private Waypoint selected;
@@ -67,7 +70,7 @@ public final class WaypointsScreen extends MeridianScreen {
         px = (width - pw) / 2f;
         py = (height - ph) / 2f;
         listTop = py + 44;
-        listBottom = py + ph - 50;
+        listBottom = py + ph - 70;
         addButton = new Button(I18n.tr("waypoints.addHere", "Add at my position"), Button.Style.PRIMARY, () -> {
             Waypoint added = module.addHere();
             if (added != null) {
@@ -75,12 +78,65 @@ public final class WaypointsScreen extends MeridianScreen {
                 scrollToEnd = true;
             }
         }).bounds(px + 10, py + ph - 46, LIST_W - 20, 16);
+        float half = (LIST_W - 24) / 2f;
+        exportButton = new Button(I18n.tr("waypoints.export", "Export"), Button.Style.SECONDARY, this::exportToClipboard)
+                .bounds(px + 10, py + ph - 66, half, 16);
+        importButton = new Button(I18n.tr("waypoints.import", "Import"), Button.Style.SECONDARY, this::importFromClipboard)
+                .bounds(px + 14 + half, py + ph - 66, half, 16);
         backButton = new Button(parent != null ? I18n.tr("ui.back", "Back") : I18n.tr("ui.done", "Done"),
                 Button.Style.SECONDARY, this::close).bounds(px + 10, py + ph - 26, LIST_W - 20, 16);
         if (selected == null && !waypoints().isEmpty()) {
             selected = waypoints().get(waypoints().size() - 1);
         }
         buildDetails();
+    }
+
+    /** Copies this world's waypoints (without the death point) as JSON. */
+    private void exportToClipboard() {
+        List<Waypoint> list = waypoints();
+        String text = WaypointTransfer.export(list);
+        Meridian meridian = Meridian.get();
+        meridian.platform().actions().setClipboard(text);
+        int count = 0;
+        for (Waypoint waypoint : list) {
+            count += waypoint.death ? 0 : 1;
+        }
+        meridian.notifications().post(I18n.tr("notify.waypoint.exported", "Waypoints copied: {0}", count), null);
+    }
+
+    /** Adds waypoints from the clipboard (exported JSON or "name x y z" lines), skipping exact duplicates. */
+    private void importFromClipboard() {
+        Meridian meridian = Meridian.get();
+        String world = world();
+        PlayerView player = meridian.game().player();
+        if (world == null || player == null) {
+            return;
+        }
+        List<Waypoint> parsed = WaypointTransfer.parse(meridian.platform().actions().getClipboard(), player.dimensionId());
+        int added = 0;
+        Waypoint last = null;
+        for (Waypoint candidate : parsed) {
+            boolean duplicate = false;
+            for (Waypoint existing : waypoints()) {
+                if (existing.x == candidate.x && existing.y == candidate.y && existing.z == candidate.z
+                        && existing.dimension.equals(candidate.dimension) && existing.name.equalsIgnoreCase(candidate.name)) {
+                    duplicate = true;
+                    break;
+                }
+            }
+            if (!duplicate) {
+                last = module.store().add(world, candidate);
+                added++;
+            }
+        }
+        if (added == 0) {
+            meridian.notifications().post(I18n.tr("notify.waypoint.importNone", "No waypoints on the clipboard"), null);
+            return;
+        }
+        meridian.notifications().post(I18n.tr("notify.waypoint.imported", "Waypoints imported: {0}", added), null,
+                dev.meridian.notify.NotificationManager.Level.SUCCESS);
+        select(last);
+        scrollToEnd = true;
     }
 
     private void select(Waypoint waypoint) {
@@ -210,6 +266,8 @@ public final class WaypointsScreen extends MeridianScreen {
         g.text(UiDraw.ellipsize(g, worldLabel, (int) LIST_W - 24), px + 12, py + 26, theme.textMuted, false);
         renderList(g, mx, my, theme);
         addButton.enabled(world != null).render(g, mx, my);
+        exportButton.enabled(world != null && !waypoints().isEmpty()).render(g, mx, my);
+        importButton.enabled(world != null).render(g, mx, my);
         backButton.render(g, mx, my);
 
         float dx = px + LIST_W + 14;
@@ -284,7 +342,8 @@ public final class WaypointsScreen extends MeridianScreen {
 
     @Override
     protected boolean mouseClicked(float mx, float my, int button) {
-        if (addButton.mouseClicked(mx, my, button) || backButton.mouseClicked(mx, my, button)) {
+        if (addButton.mouseClicked(mx, my, button) || exportButton.mouseClicked(mx, my, button)
+                || importButton.mouseClicked(mx, my, button) || backButton.mouseClicked(mx, my, button)) {
             return true;
         }
         if (mx >= px + 6 && mx < px + LIST_W - 6 && my >= listTop && my < listBottom) {

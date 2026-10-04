@@ -46,4 +46,7 @@ public interface ClientActions {
     void openFolder(File folder);
 
     void setClipboard(String text);
+
+    /** Text on the system clipboard, or "" when there is none. */
+    String getClipboard();
 }

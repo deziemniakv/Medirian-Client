@@ -24,7 +24,8 @@ Każdy wymaga hooka w obu adapterach (nowe `Capability`):
 - [ ] **Item Physics** — fizyka leżących przedmiotów.
 - [x] **Waypoints** (0.1.2) — dane per świat/wymiar (`waypoints.json`, wspólne dla obu wersji), ekran zarządzania,
       znaczniki rzutowane na HUD (`render/Projection`), klawisz dodawania, punkt śmierci.
-- [ ] Waypoints: promień (beam) w świecie, wskaźnik kierunku dla punktów poza ekranem, import/eksport.
+- [x] Waypoints (0.1.3): promień w świecie (1.8.9: `renderEntities`, modern: `renderBlockOutline` HEAD), znaczniki przy
+      krawędzi ekranu dla punktów poza widokiem (`Projection.edge`), eksport/import przez schowek (JSON lub „nazwa x y z”).
 - [x] **Chat** — znaczniki czasu, scalanie powtórzeń, dłuższa historia (0.1.2).
 - [x] **Chat: kopiowanie wiadomości** (0.1.3) — prawy klik linii w otwartym czacie kopiuje całą wiadomość
       (bez znacznika czasu i licznika); 1.8.9: mapa linia→wiadomość, modern: `endOfEntry`.

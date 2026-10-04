@@ -22,6 +22,7 @@ import dev.meridian.waypoint.Waypoint;
 import dev.meridian.waypoint.WaypointStore;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -40,7 +41,10 @@ public final class WaypointsModule extends Module {
     private final BooleanSetting showDistance;
     private final NumberSetting scale;
     private final BooleanSetting deathPoints;
+    private final BooleanSetting offScreen;
+    private final BooleanSetting beam;
     private final float[] projected = new float[3];
+    private final List<Waypoint> beams = new ArrayList<Waypoint>();
     private WaypointStore store;
 
     public WaypointsModule() {
@@ -55,6 +59,10 @@ public final class WaypointsModule extends Module {
         scale = add(new NumberSetting("scale", "Marker size", 1, 0.5, 2, 0.1).unit("x"));
         deathPoints = add(new BooleanSetting("deathPoints", "Death waypoint", true)
                 .description("Marks the place where you died last."));
+        offScreen = add(new BooleanSetting("offScreen", "Point to waypoints off screen", true)
+                .description("A marker at the edge of the screen shows where to turn."));
+        beam = add(new BooleanSetting("beam", "Beam in the world", true)
+                .description("A light beam above each waypoint, visible from afar."));
         on(Events.RenderHud.class, e -> render(e.gfx));
         on(Events.PlayerDeath.class, e -> onDeath());
     }
@@ -103,6 +111,30 @@ public final class WaypointsModule extends Module {
         Meridian.get().notifications().post(I18n.tr("notify.waypoint.death", "Death point saved"), coordinates(waypoint));
     }
 
+    /**
+     * Waypoints that get a beam in the world this frame (current world and dimension, visible).
+     * The list is reused: adapters read it right away on the render thread.
+     */
+    public List<Waypoint> beams() {
+        beams.clear();
+        if (!isEnabled() || !beam.on()) {
+            return beams;
+        }
+        GameView game = Meridian.get().game();
+        String world = game.worldKey();
+        PlayerView player = game.player();
+        if (world == null || player == null) {
+            return beams;
+        }
+        String dimension = player.dimensionId();
+        for (Waypoint waypoint : store().of(world)) {
+            if (waypoint.visible && waypoint.dimension.equals(dimension)) {
+                beams.add(waypoint);
+            }
+        }
+        return beams;
+    }
+
     private void render(Gfx g) {
         GameView game = Meridian.get().game();
         String world = game.worldKey();
@@ -119,18 +151,43 @@ public final class WaypointsModule extends Module {
         float width = g.width();
         float height = g.height();
         for (Waypoint waypoint : waypoints) {
-            if (!waypoint.visible || !waypoint.dimension.equals(dimension)
-                    || !Projection.project(camera, waypoint.x + 0.5, waypoint.y + 1.0, waypoint.z + 0.5, width, height, projected)) {
-                continue;
-            }
-            float sx = projected[0];
-            float sy = projected[1];
-            if (sx < -40 || sy < -40 || sx > width + 40 || sy > height + 40) {
+            if (!waypoint.visible || !waypoint.dimension.equals(dimension)) {
                 continue;
             }
             double distance = Math.sqrt(waypoint.distanceSq(player.x(), player.y(), player.z()));
-            drawMarker(g, sx, sy, waypoint, distance);
+            double x = waypoint.x + 0.5;
+            double y = waypoint.y + 1.0;
+            double z = waypoint.z + 0.5;
+            boolean onScreen = Projection.project(camera, x, y, z, width, height, projected)
+                    && projected[0] >= 0 && projected[1] >= 0 && projected[0] <= width && projected[1] <= height;
+            if (onScreen) {
+                drawMarker(g, projected[0], projected[1], waypoint, distance);
+            } else if (offScreen.on()) {
+                Projection.edge(camera, x, y, z, width, height, 12 * scale.floatValue(), projected);
+                drawEdgeMarker(g, projected[0], projected[1], waypoint, distance, width, height);
+            }
         }
+    }
+
+    /** A smaller marker at the screen edge; the distance sits on the side facing the screen centre. */
+    private void drawEdgeMarker(Gfx g, float sx, float sy, Waypoint waypoint, double distance, float width, float height) {
+        g.push();
+        g.translate(Math.round(sx), Math.round(sy));
+        float s = scale.floatValue();
+        g.scale(s, s);
+        diamond(g, 4, 0xC0101014);
+        diamond(g, 3, waypoint.color);
+        if (showDistance.on()) {
+            String text = formatDistance(distance);
+            int textWidth = g.textWidth(text);
+            boolean left = sx > width * 0.75f;
+            boolean right = sx < width * 0.25f;
+            float tx = left ? -textWidth - 7 : right ? 7 : -textWidth / 2f;
+            float ty = left || right ? -g.fontHeight() / 2f + 1 : sy > height / 2f ? -8 - g.fontHeight() : 7;
+            g.fill((int) tx - 2, (int) ty - 1, (int) tx + textWidth + 2, (int) ty + g.fontHeight(), 0x70000000);
+            g.text(text, tx, ty, 0xFFD0D0D8, true);
+        }
+        g.pop();
     }
 
     private void drawMarker(Gfx g, float sx, float sy, Waypoint waypoint, double distance) {

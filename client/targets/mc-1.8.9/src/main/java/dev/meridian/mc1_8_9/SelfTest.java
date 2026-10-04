@@ -408,6 +408,8 @@ public final class SelfTest {
             store.remove(world, old);
         }
         store.add(world, new Waypoint("Gold", x, y, z, meridian.game().player().dimensionId(), 0xFFE8C547));
+        // behind the camera (it looks east): shown as a marker at the screen edge
+        store.add(world, new Waypoint("Behind", x - 30, y, z + 4, meridian.game().player().dimensionId(), 0xFF4C8DFF));
     }
 
     private static void next(int ticks) {

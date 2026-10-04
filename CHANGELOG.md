@@ -7,6 +7,7 @@ All notable changes to Meridian Client. The launcher shows the newest entries on
 - New module: Health Tags — health next to player name tags (hearts or HP, coloured by what is left, absorption as +N).
 - New module: Hurt Camera — reduce or remove the camera shake when you take damage.
 - New module: Fire Overlay — lower and fade the flames on screen while you burn.
+- Waypoints: light beams in the world, markers at the screen edge for waypoints out of view, export and import through the clipboard.
 - Chat: right-click a line in the open chat to copy the whole message (without timestamps or counters).
 - New HUD module: Speed — blocks per second (or km/h) over the last half second.
 - Discord Rich Presence: your Discord profile shows the Minecraft version, Meridian profile, whether you are in the menus, in singleplayer or on a server (the address can be hidden) and how long you have been playing. Settings → Discord.
