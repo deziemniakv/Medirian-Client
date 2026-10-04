@@ -9,6 +9,7 @@ import type {
   DiskUsage,
   GameState,
   JavaInstall,
+  LauncherUpdateStatus,
   LaunchProfile,
   LauncherSettings,
   LoginResult,
@@ -63,6 +64,10 @@ export interface InvokeApi {
 
   'discord:status': () => DiscordStatus;
 
+  'launcherUpdate:status': () => LauncherUpdateStatus;
+  'launcherUpdate:check': () => LauncherUpdateStatus;
+  'launcherUpdate:install': () => void;
+
   'shell:open': (target: OpenTarget, targetId?: string) => void;
   'shell:openExternal': (url: string) => void;
 }
@@ -74,6 +79,7 @@ export interface EventApi {
   'account:changed': Account | null;
   'account:loginResult': LoginResult;
   'discord:status': DiscordStatus;
+  'launcherUpdate:status': LauncherUpdateStatus;
 }
 
 export type InvokeChannel = keyof InvokeApi;
@@ -90,10 +96,12 @@ export const INVOKE_CHANNELS: InvokeChannel[] = [
   'account:get', 'account:loginStart', 'account:loginCancel', 'account:logout', 'account:offline', 'account:offlineAllowed',
   'system:info', 'setup:run', 'setup:fix',
   'discord:status',
+  'launcherUpdate:status', 'launcherUpdate:check', 'launcherUpdate:install',
   'shell:open', 'shell:openExternal'
 ];
 
-export const EVENT_CHANNELS: EventChannel[] = ['game:state', 'game:log', 'account:changed', 'account:loginResult', 'discord:status'];
+export const EVENT_CHANNELS: EventChannel[] = ['game:state', 'game:log', 'account:changed', 'account:loginResult', 'discord:status',
+  'launcherUpdate:status'];
 
 /** Shape of `window.meridian` exposed by the preload script. */
 export interface MeridianBridge {

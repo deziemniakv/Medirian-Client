@@ -9,6 +9,13 @@ files:
 extraResources:
   - from: ../CHANGELOG.md
     to: CHANGELOG.md
+# No publish target here: local `npm run dist` builds do not update themselves. The release
+# workflow (.github/workflows/release.yml) adds one (-c.publish.*), which makes electron-builder
+# write app-update.yml and the latest*.yml feeds that the launcher's updater reads.
+#
+# Code signing comes from the environment, never from this file: CSC_LINK / CSC_KEY_PASSWORD
+# (Windows Authenticode and macOS Developer ID certificates), APPLE_ID / APPLE_APP_SPECIFIC_PASSWORD /
+# APPLE_TEAM_ID for notarization. See docs/RELEASING.md.
 win:
   target: nsis
   icon: resources/icon.png
@@ -17,10 +24,15 @@ nsis:
   allowToChangeInstallationDirectory: true
   artifactName: Meridian-Setup-${version}.${ext}
 mac:
-  target: dmg
+  # the zip is what electron-updater installs on macOS; the dmg is for first installs
+  target:
+    - dmg
+    - zip
   icon: resources/icon.png
   category: public.app-category.games
+  artifactName: Meridian-${version}-${arch}.${ext}
 linux:
   target: AppImage
   icon: resources/icon.png
   category: Game
+  artifactName: Meridian-${version}-${arch}.${ext}

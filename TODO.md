@@ -7,13 +7,20 @@ Poniżej kolejne etapy. Zasada bez zmian: funkcja trafia do UI dopiero, gdy napr
 
 - [ ] **Rejestracja aplikacji Azure + zgoda Mojang** dla logowania Microsoft (`MERIDIAN_MSA_CLIENT_ID`).
       Kod device-code flow jest gotowy (`launcher/src/main/auth`), brakuje wyłącznie identyfikatora.
-- [ ] **Hosting wydań**: opublikować `release-manifest.json` + jary (np. GitHub Releases / CDN),
-      `node scripts/build-clients.mjs --base-url <url>`; ustawić domyślny `manifestUrl` (`MERIDIAN_MANIFEST_URL`).
-- [ ] **Podpisywanie kodu** launchera (Windows Authenticode, macOS notarization) i **auto-update launchera**
-      (`electron-updater`) — interfejs aktualizacji klienta już istnieje, launcher sam się jeszcze nie aktualizuje.
+- [x] **Hosting wydań** (0.1.4) — `.github/workflows/release.yml`: tag `v<wersja>` → GitHub Release z jarami,
+      `release-manifest.json` (adresy z `--base-url`), instalatorami i notatkami z CHANGELOG; domyślny manifest
+      wbudowany przez `MAIN_VITE_MANIFEST_URL` (`releases/latest/download/release-manifest.json`). Opis: docs/RELEASING.md.
+- [x] **Auto-update launchera** (0.1.4) — `electron-updater` (`main/updates/launcherUpdate.ts`), feed z GitHub Releases;
+      sprawdzone lokalnie end-to-end (0.1.4 wykrył i pobrał 0.1.5 z lokalnego serwera).
+- [ ] **Podpisywanie kodu** — konfiguracja gotowa (sekrety `CSC_LINK`, `CSC_KEY_PASSWORD`, `APPLE_*` w workflow),
+      brakuje certyfikatów właściciela (Authenticode, Apple Developer ID). Bez podpisu auto-update na macOS nie działa.
 - [ ] Licencja projektu (do wyboru przez właściciela) i pola `license` w `fabric.mod.json` / `package.json`.
-- [ ] CI: build wszystkich targetów + testy Shared + `npm run build` launchera na każdym PR.
-- [ ] Test na macOS (arm64: `jre-legacy` przez Rosettę) i Linux.
+- [x] CI (0.1.4) — `.github/workflows/ci.yml`: testy Shared, build obu targetów, launcher (build + testy) na
+      Windows/macOS/Linux, testy skryptów, self-test w Xvfb z porównaniem zrzutów.
+- [ ] Test na macOS (arm64: `jre-legacy` przez Rosettę) i Linux — launcher jest budowany i testowany na wszystkich
+      trzech systemach w CI, a self-test klienta działa w Xvfb; ręczny test gry na prawdziwym macOS nadal potrzebny.
+- [ ] Job wizualny CI jest nieblokujący, dopóki pierwszy przebieg na GitHubie nie potwierdzi wzorców (renderowanie
+      Mesa/llvmpipe nie mogło być sprawdzone lokalnie).
 
 ## Etap 2 — moduły (zaplanowane, jeszcze nierejestrowane)
 
@@ -63,6 +70,8 @@ Każdy wymaga hooka w obu adapterach (nowe `Capability`):
       wersjach, bez GLSL w 1.8.9 i bez własnego `RenderPipeline` w 1.21.11.
 - [x] Batchowanie wypełnień w `LegacyGfx` (0.1.4) — jeden bufor `POSITION_COLOR`, opróżniany przed tekstem/teksturą/scissorem
       i na końcu klatki: 586 wypełnień → 14 draw calli, HUD 1,00 → 0,20 ms/klatkę (self-test, PvP profile).
-- [ ] Testy wizualne: porównywanie zrzutów z `runClient -Pselftest` w CI.
+- [x] Testy wizualne (0.1.4): `scripts/visual-test.mjs` porównuje zrzuty menu z `client/visual-baselines/`; self-test
+      startuje z czystą konfiguracją bez animacji/powiadomień/motywu sezonowego — dwa przebiegi lokalnie: 0 px różnicy
+      (edytor HUD: 148 px = licznik FPS).
 - [x] Więcej języków (0.1.3): niemiecki i hiszpański w kliencie i launcherze; test pilnuje kompletności plików `lang`.
 - [x] Sezonowe motywy: Christmas (0.1.3) — `Theme.CHRISTMAS` z opadami śniegu, tokeny CSS i śnieg w launcherze; AUTO: grudzień–6 stycznia.

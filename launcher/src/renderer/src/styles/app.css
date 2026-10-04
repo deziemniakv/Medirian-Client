@@ -161,6 +161,26 @@ textarea {
   -webkit-app-region: drag;
 }
 
+.titlebar__update {
+  -webkit-app-region: no-drag;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  margin-right: 8px;
+  padding: 0 12px;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.titlebar__update:hover {
+  background: color-mix(in srgb, var(--accent) 38%, transparent);
+}
+
 .titlebar__button {
   -webkit-app-region: no-drag;
   width: 40px;

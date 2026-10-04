@@ -1,0 +1,134 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shared:
+    name: Shared core tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Test
+        working-directory: client/shared
+        run: ./gradlew test --console=plain
+      - name: Test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shared-test-reports
+          path: client/shared/build/reports/tests/
+
+  client:
+    name: Client ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [mc-1.8.9, mc-1.21.11]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build
+        working-directory: client/targets/${{ matrix.target }}
+        run: ./gradlew build --console=plain
+      - uses: actions/upload-artifact@v4
+        with:
+          name: client-${{ matrix.target }}
+          path: client/targets/${{ matrix.target }}/build/libs/*.jar
+
+  launcher:
+    name: Launcher (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    defaults:
+      run:
+        working-directory: launcher
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: launcher/package-lock.json
+      - run: npm ci
+      - name: Typecheck and build
+        run: npm run build
+      - name: Tests
+        run: npm test
+
+  scripts:
+    name: Release scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: node --test scripts/test/
+
+  # Runs the in-game self-test (./gradlew runClient -Pselftest) in a virtual X server with Mesa's
+  # software OpenGL and compares the menu screenshots with client/visual-baselines/.
+  # Not blocking yet: the baselines were rendered on Windows; once a run on GitHub has passed (or its
+  # screenshots were reviewed and committed as baselines), remove continue-on-error.
+  visual:
+    name: Self-test and screenshots ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [mc-1.8.9, mc-1.21.11]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Virtual display and software OpenGL
+        run: |
+          sudo apt-get update
+          # xrandr and the X libraries are needed by LWJGL 2 (1.8.9)
+          sudo apt-get install -y xvfb libgl1-mesa-dri x11-xserver-utils libxxf86vm1 libxrandr2 libxcursor1 libxi6 libxtst6
+      - name: Self-test
+        working-directory: client/targets/${{ matrix.target }}
+        shell: bash
+        env:
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: xvfb-run -a -s "-screen 0 1920x1080x24" ./gradlew runClient -Pselftest --console=plain 2>&1 | tee selftest.log
+      - name: Self-test result
+        run: node scripts/check-selftest.mjs client/targets/${{ matrix.target }}/selftest.log
+      - name: Compare screenshots
+        run: node scripts/visual-test.mjs --target ${{ matrix.target }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: selftest-${{ matrix.target }}
+          path: |
+            client/targets/${{ matrix.target }}/selftest.log
+            client/targets/${{ matrix.target }}/run/screenshots/selftest-*.png
+            client/targets/${{ matrix.target }}/run/visual-diff/

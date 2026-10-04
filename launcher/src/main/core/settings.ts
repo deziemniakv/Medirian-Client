@@ -1,6 +1,14 @@
 import type { LauncherSettings } from '../../common/types';
 import { readJson, writeJson } from './json';
 
+/**
+ * Release manifest of the stable channel when the user has not set one: MERIDIAN_MANIFEST_URL at
+ * runtime, else the URL built in by the release workflow (MAIN_VITE_MANIFEST_URL).
+ */
+export function defaultManifestUrl(): string {
+  return process.env.MERIDIAN_MANIFEST_URL || import.meta.env.MAIN_VITE_MANIFEST_URL || '';
+}
+
 export function defaultSettings(localDistributionDir: string): LauncherSettings {
   return {
     version: 1,
@@ -8,7 +16,7 @@ export function defaultSettings(localDistributionDir: string): LauncherSettings 
     theme: 'auto',
     afterLaunch: 'keep',
     updateChannel: localDistributionDir ? 'local' : 'stable',
-    manifestUrl: process.env.MERIDIAN_MANIFEST_URL ?? '',
+    manifestUrl: '',
     localDistributionDir,
     concurrentDownloads: 12,
     reuseMinecraftAssets: true,

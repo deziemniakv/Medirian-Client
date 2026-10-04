@@ -132,6 +132,15 @@ export interface BridgeStatus {
   clientVersion?: string;
 }
 
+/** Self-update of the launcher (electron-updater); "unsupported" in development and unpublished builds. */
+export interface LauncherUpdateStatus {
+  state: 'unsupported' | 'idle' | 'checking' | 'latest' | 'downloading' | 'ready' | 'error';
+  version?: string;
+  percent?: number;
+  error?: string;
+  checkedAt?: number;
+}
+
 export interface DiscordStatus {
   state: 'disabled' | 'unconfigured' | 'connecting' | 'connected' | 'unavailable' | 'error';
   /** Discord user while connected. */
@@ -215,6 +224,8 @@ export interface AppInfo {
   packaged: boolean;
   home: string;
   platform: string;
+  /** Manifest URL used when the setting is empty (built in or from MERIDIAN_MANIFEST_URL). */
+  defaultManifestUrl: string;
 }
 
 export type OpenTarget = 'home' | 'logs' | 'instance' | 'screenshots';

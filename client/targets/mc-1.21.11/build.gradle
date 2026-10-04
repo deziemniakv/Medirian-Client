@@ -30,7 +30,12 @@ loom {
     runs {
         client {
             // Development runs keep their Meridian data inside run/ instead of the real MERIDIAN_HOME.
-            vmArg "-Dmeridian.home=${file('run/meridian-home').absolutePath}"
+            // The self-test starts from a fresh one every time, so its screenshots are reproducible.
+            def home = file(project.hasProperty('selftest') ? 'run/selftest-home' : 'run/meridian-home')
+            if (project.hasProperty('selftest')) {
+                project.delete(home)
+            }
+            vmArg "-Dmeridian.home=${home.absolutePath}"
             if (project.hasProperty('selftest')) {
                 // ./gradlew runClient -Pselftest : screenshot walkthrough + mixin audit (see SelfTest.java)
                 vmArg '-Dmeridian.selftest=true'

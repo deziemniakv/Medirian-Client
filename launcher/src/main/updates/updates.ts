@@ -3,6 +3,7 @@ import { readdir, rm } from 'node:fs/promises';
 import { dirname, isAbsolute, join } from 'node:path';
 import type { LauncherSettings, ReleaseManifest, ReleaseState, ReleaseTarget, TargetStatus } from '../../common/types';
 import { readJson, writeJson } from '../core/json';
+import { defaultManifestUrl } from '../core/settings';
 import { log } from '../core/log';
 import type { MeridianPaths } from '../core/paths';
 import { downloadAll, isValid, type DownloadProgress } from '../net/downloader';
@@ -49,7 +50,7 @@ export class UpdateService {
     if (s.updateChannel === 'local') {
       return { kind: 'file', location: join(s.localDistributionDir, 'release-manifest.json') };
     }
-    return { kind: 'url', location: s.manifestUrl };
+    return { kind: 'url', location: s.manifestUrl || defaultManifestUrl() };
   }
 
   async refresh(force = false): Promise<ReleaseState> {

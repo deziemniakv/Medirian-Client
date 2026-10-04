@@ -16,18 +16,19 @@
 | **Meridian Shared** (rdzeń klienta, bez zależności od Minecrafta) | `client/shared/` | Java 8, Gson |
 | **Adapter Minecraft 1.8.9** | `client/targets/mc-1.8.9/` | Legacy Fabric, Mixin, Java 8 |
 | **Adapter Minecraft 1.21.11** | `client/targets/mc-1.21.11/` | Fabric, Mixin, Java 21 |
-| Dokumentacja | `docs/ARCHITECTURE.md`, `docs/PROTOCOL.md`, `TODO.md` | |
+| Dokumentacja | `docs/ARCHITECTURE.md`, `docs/PROTOCOL.md`, `docs/RELEASING.md`, `TODO.md` | |
+| CI i wydania | `.github/workflows/`, `scripts/` | GitHub Actions, Node |
 | Branding | `branding/` (źródłowe logo w `branding/source/`) | |
 
 Pełny opis architektury i decyzji technologicznych: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
 
-## Funkcje (0.1.2)
+## Funkcje (0.1.4)
 
 **Launcher** — kreator pierwszego uruchomienia z diagnostyką i automatycznymi naprawami, automatyczna
 instalacja Javy (Mojang: Java 8 dla 1.8.9, Java 21 dla 1.21.11), pobieranie i weryfikacja SHA-1 plików
 gry, ponowne użycie assetów z istniejącego `.minecraft`, profile uruchomieniowe (wersja, RAM, Java,
 argumenty JVM, rozdzielczość, profil konfiguracji Meridian), logowanie Microsoft (device code),
-aktualizacje klienta z manifestu wydań (kanał stabilny / lokalny), naprawa instalacji, czyszczenie cache,
+aktualizacje klienta z manifestu wydań (kanał stabilny / lokalny), automatyczna aktualizacja samego launchera, naprawa instalacji, czyszczenie cache,
 podgląd logu gry, status gry na żywo (kanał launcher ↔ klient), changelog, Discord Rich Presence, motywy Halloween i Christmas, PL/EN/DE/ES.
 
 **Klient** — mod menu (kategorie | moduły | ustawienia, wyszukiwarka), edytor HUD (przeciąganie,
@@ -73,6 +74,8 @@ cd client/targets/mc-1.21.11 && ./gradlew runClient -Pselftest # zrzuty ekranów
 
 `-Pselftest` przechodzi przez mod menu, edytor HUD, ustawienia i HUD w świecie, zapisuje zrzuty do
 `run/screenshots/` i weryfikuje wszystkie wstrzyknięcia Mixin (`MixinEnvironment.audit()`).
+Zrzuty menu porównuje z wzorcami `node scripts/visual-test.mjs` (`--update` zapisuje nowe wzorce);
+`node scripts/check-selftest.mjs <log>` sprawdza log. Testy skryptów: `node --test scripts/test/`.
 
 Automatyzacja launchera (tylko build deweloperski): `MERIDIAN_DEV_CAPTURE=<dir>` robi zrzuty
 wszystkich ekranów, `MERIDIAN_DEV_LAUNCH=<profil>` uruchamia grę przez pełny pipeline instalacji
@@ -83,7 +86,7 @@ wszystkich ekranów, `MERIDIAN_DEV_LAUNCH=<profil>` uruchamia grę przez pełny 
 | Zmienna | Gdzie | Znaczenie |
 |---|---|---|
 | `MERIDIAN_MSA_CLIENT_ID` | build/uruchomienie launchera (lub *Ustawienia → Deweloperskie*) | identyfikator aplikacji Azure dla logowania Microsoft |
-| `MERIDIAN_MANIFEST_URL` | uruchomienie launchera | domyślny URL manifestu wydań (kanał stabilny) |
+| `MERIDIAN_MANIFEST_URL` / `MAIN_VITE_MANIFEST_URL` | uruchomienie / build launchera | domyślny URL manifestu wydań (kanał stabilny), gdy pole w ustawieniach jest puste |
 | `MERIDIAN_DISCORD_APP_ID` / `MAIN_VITE_DISCORD_APP_ID` | uruchomienie / build launchera (lub *Ustawienia → Discord*) | identyfikator aplikacji Discord dla Rich Presence |
 | `MERIDIAN_HOME` | launcher i klient | zmiana folderu danych (domyślnie `%APPDATA%\.meridian`) |
 
@@ -98,7 +101,9 @@ offline do testów w singleplayer.
 przez `MAIN_VITE_DISCORD_APP_ID`. Launcher łączy się z lokalnym Discordem (named pipe / unix socket) i pokazuje
 wersję gry, profil Meridian, menu / singleplayer / serwer (adres można ukryć) oraz czas gry.
 
-**Publikacja**: `node scripts/build-clients.mjs --base-url https://twoj-cdn/meridian/0.1.0/`, wgraj
+**Publikacja**: tag `v<wersja>` uruchamia `.github/workflows/release.yml` — jary, manifest, instalatory launchera
+i kanał jego auto-aktualizacji trafiają do GitHub Releases (szczegóły i sekrety podpisywania: [docs/RELEASING.md](docs/RELEASING.md)).
+Własny serwer: `node scripts/build-clients.mjs --base-url https://twoj-cdn/meridian/0.1.4/`, wgraj
 zawartość `distribution/` pod ten adres i ustaw URL manifestu w launcherze.
 
 ## Struktura danych

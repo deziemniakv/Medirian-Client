@@ -92,6 +92,11 @@ final class SelfTest {
         switch (step) {
             case 0:
                 if (minecraft.screen instanceof TitleScreen) {
+                    // the menu screenshots are compared with baselines (scripts/visual-test.mjs):
+                    // no animations, toasts or seasonal theme (runtime only, the settings are untouched)
+                    dev.meridian.render.Anim.setEnabled(false);
+                    dev.meridian.render.Theme.apply(dev.meridian.render.Theme.Mode.DEFAULT);
+                    meridian.notifications().setEnabled(false);
                     next(60);
                 }
                 return;

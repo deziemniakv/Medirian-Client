@@ -7,6 +7,8 @@ All notable changes to Meridian Client. The launcher shows the newest entries on
 - Smoother menus and HUD: rounded corners, switches and circles now have anti-aliased edges in both versions.
 - 1.8.9: the HUD is drawn with a handful of draw calls instead of one per rectangle — about 5× less time per frame in our test (0.20 ms instead of 1.00 ms).
 - 1.8.9: very faint shapes (shadows, highlights) are no longer cut off, so menus look the same as in 1.21.11.
+- The launcher updates itself: installed versions download new releases in the background and install them when you close the launcher or click "Restart to update".
+- Releases are built and published automatically, with release notes from this changelog.
 
 ## 0.1.3 — 2026-10-04 — Discord & PvP
 

@@ -103,12 +103,43 @@ export function Settings() {
   );
 }
 
+function LauncherUpdateRow() {
+  const t = useT();
+  const status = useStore((s) => s.launcherUpdate);
+  const version = useStore((s) => s.app?.version ?? '');
+  if (status.state === 'unsupported') {
+    return null;
+  }
+  const label = status.state === 'checking' ? t('launcherUpdate.checking')
+    : status.state === 'downloading' ? t('launcherUpdate.downloading', { version: status.version ?? '', percent: status.percent ?? 0 })
+    : status.state === 'ready' ? t('launcherUpdate.ready', { version: status.version ?? '' })
+    : status.state === 'latest' ? t('launcherUpdate.latest', { version })
+    : t('launcherUpdate.current', { version });
+  return (
+    <Row label={label} hint={status.state === 'error' ? t('launcherUpdate.error', { error: status.error ?? '' }) : undefined}>
+      {status.state === 'ready' ? (
+        <button className="btn btn--primary" onClick={() => void invoke('launcherUpdate:install')}>
+          <Icon name="refresh" size={15} />
+          {t('launcherUpdate.restartShort')}
+        </button>
+      ) : (
+        <button className="btn" disabled={status.state === 'checking' || status.state === 'downloading'}
+          onClick={() => void invoke('launcherUpdate:check')}>
+          {status.state === 'checking' ? <span className="spinner" /> : <Icon name="refresh" size={15} />}
+          {t('launcherUpdate.check')}
+        </button>
+      )}
+    </Row>
+  );
+}
+
 function UpdatesSection() {
   const t = useT();
   const settings = useStore((s) => s.settings)!;
   const update = useStore((s) => s.updateSettings);
   const releases = useStore((s) => s.releases);
   const refresh = useStore((s) => s.refreshReleases);
+  const app = useStore((s) => s.app);
   const [checking, setChecking] = useState(false);
 
   const check = async () => {
@@ -128,7 +159,7 @@ function UpdatesSection() {
       </Row>
       {settings.updateChannel === 'stable' ? (
         <Row label={t('settings.manifestUrl')}>
-          <input className="input mono settings__wide-input" value={settings.manifestUrl} placeholder="https://…/release-manifest.json"
+          <input className="input mono settings__wide-input" value={settings.manifestUrl} placeholder={app?.defaultManifestUrl || 'https://…/release-manifest.json'}
             onChange={(e) => void update({ manifestUrl: e.target.value.trim() })} />
         </Row>
       ) : (
@@ -144,6 +175,7 @@ function UpdatesSection() {
           {checking ? t('settings.checking') : t('settings.checkNow')}
         </button>
       </Row>
+      <LauncherUpdateRow />
     </>
   );
 }

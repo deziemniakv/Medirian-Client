@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { existsSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import type { EventApi, EventChannel, InvokeApi, InvokeChannel } from '../common/ipc';
@@ -8,7 +9,7 @@ import { CHANGELOG } from './changelog';
 import { runDevAutomation } from './devAutomation';
 import { initLog, log } from './core/log';
 import { instanceDir, meridianPaths } from './core/paths';
-import { defaultSettings, SettingsStore } from './core/settings';
+import { defaultManifestUrl, defaultSettings, SettingsStore } from './core/settings';
 import { buildActivity, DiscordPresenceService } from './discord/presence';
 import { Installer } from './install/installer';
 import { SetupService, systemInfo } from './install/setup';
@@ -19,6 +20,7 @@ import { GameService } from './launch/game';
 import { LoaderService } from './minecraft/loader';
 import { MojangService } from './minecraft/mojang';
 import { listClientConfigProfiles, ProfileStore } from './profiles/profiles';
+import { LauncherUpdateService, type Updater } from './updates/launcherUpdate';
 import { UpdateService } from './updates/updates';
 
 const EXTERNAL_ALLOWED = [/^https:\/\/(www\.)?microsoft\.com\//, /^https:\/\/(www\.)?minecraft\.net\//, /^https:\/\/login\.live\.com\//,
@@ -35,6 +37,24 @@ function handle<K extends InvokeChannel>(channel: K, handler: (...args: Paramete
 }
 
 type Services = Parameters<typeof runDevAutomation>[1];
+
+/** electron-updater, only in installed builds that were published with an update feed (app-update.yml). */
+async function loadUpdater(): Promise<Updater | null> {
+  if (!app.isPackaged || !existsSync(join(process.resourcesPath, 'app-update.yml'))) {
+    return null;
+  }
+  // a CommonJS module whose autoUpdater is a lazy getter, which import() does not expose as a named export
+  const updaterModule = await import('electron-updater');
+  const autoUpdater = (updaterModule.default as unknown as typeof updaterModule).autoUpdater;
+  // Windows: the full installer is published, not a web installer
+  (autoUpdater as { disableWebInstaller?: boolean }).disableWebInstaller = true;
+  autoUpdater.logger = {
+    info: (message: unknown) => log.info(`[updater] ${String(message)}`),
+    warn: (message: unknown) => log.warn(`[updater] ${String(message)}`),
+    error: (message: unknown) => log.warn(`[updater] ${String(message)}`)
+  };
+  return autoUpdater as unknown as Updater;
+}
 
 async function bootstrap(): Promise<Services> {
   const paths = meridianPaths();
@@ -80,6 +100,9 @@ async function bootstrap(): Promise<Services> {
     log
   });
   app.on('before-quit', () => discord.dispose());
+  const launcherUpdates = new LauncherUpdateService(await loadUpdater(), (status) => emit('launcherUpdate:status', status), log);
+  launcherUpdates.start();
+  app.on('before-quit', () => launcherUpdates.dispose());
   const game = new GameService(paths, installer, updates, profiles, accounts, app.getVersion(),
     (state) => {
       emit('game:state', state);
@@ -100,7 +123,8 @@ async function bootstrap(): Promise<Services> {
     node: process.versions.node,
     packaged: app.isPackaged,
     home: paths.root,
-    platform: process.platform
+    platform: process.platform,
+    defaultManifestUrl: defaultManifestUrl()
   }));
   handle('window:minimize', () => window?.minimize());
   handle('window:close', () => window?.close());
@@ -124,6 +148,9 @@ async function bootstrap(): Promise<Services> {
     return updates.statuses(paths.versions);
   });
   handle('changelog:get', () => CHANGELOG);
+  handle('launcherUpdate:status', () => launcherUpdates.current());
+  handle('launcherUpdate:check', () => launcherUpdates.check());
+  handle('launcherUpdate:install', () => launcherUpdates.install());
 
   handle('game:state', () => game.current());
   handle('game:launch', (profileId) => {
