@@ -1,7 +1,7 @@
 // Types shared by the main process and the renderer. Keep this file free of Node/DOM imports.
 
 export type Language = 'en' | 'pl';
-export type ThemeMode = 'auto' | 'default' | 'halloween';
+export type ThemeMode = 'auto' | 'default' | 'halloween' | 'christmas';
 export type AfterLaunch = 'keep' | 'minimize';
 export type UpdateChannel = 'stable' | 'local';
 

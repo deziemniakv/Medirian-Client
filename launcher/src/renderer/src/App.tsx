@@ -10,11 +10,16 @@ import { Settings } from './pages/Settings';
 import { useStore, type Page } from './store';
 
 /** Resolves the theme: AUTO uses Halloween during October (same rule as the client). */
-function resolveTheme(mode: string | undefined): 'default' | 'halloween' {
-  if (mode === 'halloween' || mode === 'default') {
+/** AUTO: Halloween in October, Christmas from December to 6 January (same rule as the client's Theme). */
+function resolveTheme(mode: string | undefined): 'default' | 'halloween' | 'christmas' {
+  if (mode === 'halloween' || mode === 'default' || mode === 'christmas') {
     return mode;
   }
-  return new Date().getMonth() === 9 ? 'halloween' : 'default';
+  const now = new Date();
+  if (now.getMonth() === 9) {
+    return 'halloween';
+  }
+  return now.getMonth() === 11 || (now.getMonth() === 0 && now.getDate() <= 6) ? 'christmas' : 'default';
 }
 
 export function App() {

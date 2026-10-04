@@ -12,7 +12,7 @@ import java.util.Calendar;
 public final class Theme {
 
     /** User choice in Settings → General → Theme. */
-    public enum Mode { AUTO, DEFAULT, HALLOWEEN }
+    public enum Mode { AUTO, DEFAULT, HALLOWEEN, CHRISTMAS }
 
     public static final Theme DEFAULT = new Theme("default", false,
             0xB0080610, 0xF4100D17, 0xFF16131F, 0xFF1D1928, 0xFF2A2438, 0xFF3A3150,
@@ -26,10 +26,17 @@ public final class Theme {
             0xFF9B55D6, 0xFFAE6FE3, 0x2E9B55D6, 0xFFE8833A,
             0xFF5BC98A, 0xFFE5B454, 0xFFE5566A, 0x8C0A0812);
 
+    /** Winter night: cooler panels, the brand violet stays, icy blue as the seasonal accent, snowfall. */
+    public static final Theme CHRISTMAS = new Theme("christmas", true,
+            0xB8070A14, 0xF40E1020, 0xFF131726, 0xFF1A1F31, 0xFF262C42, 0xFF353D58,
+            0xFFECEFF6, 0xFF97A0B6, 0xFF687089,
+            0xFF9B55D6, 0xFFAE6FE3, 0x2E9B55D6, 0xFF8FD3F4,
+            0xFF5BC98A, 0xFFE5B454, 0xFFE5566A, 0x8C090B14);
+
     private static volatile Theme current = resolve(Mode.AUTO);
 
     public final String id;
-    /** Enables seasonal decorations (fog, moon). */
+    /** Enables seasonal decorations (fog and moon, or snow). */
     public final boolean decorations;
     public final int backdrop;
     public final int panel;
@@ -82,16 +89,36 @@ public final class Theme {
         current = resolve(mode);
     }
 
-    /** AUTO picks the seasonal theme: Halloween during October, otherwise the default theme. */
+    /**
+     * AUTO picks the seasonal theme: Halloween during October, Christmas from December to
+     * 6 January, otherwise the default theme.
+     */
     public static Theme resolve(Mode mode) {
         switch (mode) {
             case HALLOWEEN:
                 return HALLOWEEN;
+            case CHRISTMAS:
+                return CHRISTMAS;
             case DEFAULT:
                 return DEFAULT;
             default:
-                int month = Calendar.getInstance().get(Calendar.MONTH);
-                return month == Calendar.OCTOBER ? HALLOWEEN : DEFAULT;
+                return seasonal(Calendar.getInstance());
         }
+    }
+
+    static Theme seasonal(Calendar date) {
+        int month = date.get(Calendar.MONTH);
+        if (month == Calendar.OCTOBER) {
+            return HALLOWEEN;
+        }
+        if (month == Calendar.DECEMBER || (month == Calendar.JANUARY && date.get(Calendar.DAY_OF_MONTH) <= 6)) {
+            return CHRISTMAS;
+        }
+        return DEFAULT;
+    }
+
+    /** Snow instead of fog in the seasonal decorations. */
+    public boolean snow() {
+        return this == CHRISTMAS;
     }
 }

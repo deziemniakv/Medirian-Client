@@ -12,6 +12,7 @@ All notable changes to Meridian Client. The launcher shows the newest entries on
 - New module: Item Physics — dropped items lie on the ground instead of floating and spinning.
 - New HUD module: Speed — blocks per second (or km/h) over the last half second.
 - Servers can switch off chosen Meridian modules (for example Freelook) through the meridian:policy plugin channel; they are restored when you leave.
+- Christmas theme for the client and the launcher, with snowfall; chosen automatically from December to 6 January.
 - Discord Rich Presence: your Discord profile shows the Minecraft version, Meridian profile, whether you are in the menus, in singleplayer or on a server (the address can be hidden) and how long you have been playing. Settings → Discord.
 
 ## 0.1.2 — 2026-10-03 — Chat & Waypoints

@@ -53,6 +53,22 @@
   --seasonal-soft: rgba(232, 131, 58, 0.14);
 }
 
+[data-theme='christmas'] {
+  --bg: #090b13;
+  --bg-deep: #06070d;
+  --panel: #0e1020;
+  --surface: #131726;
+  --elevated: #1a1f31;
+  --border: #262c42;
+  --border-strong: #353d58;
+  --text: #eceff6;
+  --text-dim: #97a0b6;
+  --text-muted: #687089;
+  --seasonal: #8fd3f4;
+  --seasonal-soft: rgba(143, 211, 244, 0.14);
+  --moon: #eaf4fb;
+}
+
 [data-animations='off'] * {
   transition: none !important;
   animation: none !important;

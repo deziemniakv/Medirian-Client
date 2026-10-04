@@ -1,7 +1,8 @@
 /**
  * Background of the home screen: violet moonlight, a crescent moon, faint stars, distant hills
  * and slowly drifting fog. Pure CSS/SVG — no images or canvas, negligible GPU cost.
- * The moon and warm horizon only appear in the Halloween theme.
+ * The moon and warm horizon appear in the Halloween theme; Christmas has the moon, snowy hills and
+ * slow snowfall (two CSS layers moving at different speeds).
  */
 export function Atmosphere() {
   return (
@@ -15,6 +16,8 @@ export function Atmosphere() {
       </svg>
       <div className="atmo__fog atmo__fog--a" />
       <div className="atmo__fog atmo__fog--b" />
+      <div className="atmo__snow atmo__snow--far" />
+      <div className="atmo__snow atmo__snow--near" />
     </div>
   );
 }

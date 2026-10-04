@@ -63,6 +63,11 @@ export async function runDevAutomation(
   await wait(600);
   await capture('page-settings-discord');
   await run("window.__meridianDev.navigate('home')");
+  // seasonal look without touching the saved theme setting
+  await run("document.documentElement.dataset.theme = 'christmas'");
+  await wait(900);
+  await capture('page-home-christmas');
+  await run('window.__meridianDev.reload()');
 
   if (!launch) {
     app.quit();

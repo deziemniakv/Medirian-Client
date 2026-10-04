@@ -67,7 +67,8 @@
   opacity: 0.92;
 }
 
-[data-theme='halloween'] .atmo__moon {
+[data-theme='halloween'] .atmo__moon,
+[data-theme='christmas'] .atmo__moon {
   display: block;
 }
 
@@ -114,6 +115,73 @@
 
 [data-theme='halloween'] .atmo__fog--b {
   background: radial-gradient(45% 55% at 40% 80%, rgba(232, 131, 58, 0.06), transparent 70%);
+}
+
+[data-theme='christmas'] .atmo {
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(24, 36, 72, 0.55), transparent 60%),
+    linear-gradient(180deg, var(--bg-deep), var(--bg) 70%);
+}
+
+[data-theme='christmas'] .atmo__glow {
+  background: radial-gradient(closest-side, rgba(120, 150, 230, 0.22), rgba(155, 85, 214, 0.08) 55%, transparent 75%);
+}
+
+[data-theme='christmas'] .atmo__hill--far {
+  fill: #1b2133;
+}
+
+[data-theme='christmas'] .atmo__hill--near {
+  fill: #121625;
+}
+
+[data-theme='christmas'] .atmo__fog--b {
+  background: radial-gradient(45% 55% at 40% 80%, rgba(143, 211, 244, 0.06), transparent 70%);
+}
+
+/* snowfall: tiled dot patterns scrolled down; only in the Christmas theme */
+.atmo__snow {
+  display: none;
+  position: absolute;
+  inset: -200px 0 0 0;
+  background-repeat: repeat;
+  animation: snow-fall linear infinite;
+}
+
+[data-theme='christmas'] .atmo__snow {
+  display: block;
+}
+
+.atmo__snow--far {
+  opacity: 0.45;
+  background-size: 200px 200px;
+  background-image:
+    radial-gradient(1px 1px at 20px 30px, #eaf4fb, transparent),
+    radial-gradient(1px 1px at 90px 110px, #eaf4fb, transparent),
+    radial-gradient(1px 1px at 150px 60px, #eaf4fb, transparent),
+    radial-gradient(1px 1px at 60px 170px, #eaf4fb, transparent),
+    radial-gradient(1px 1px at 180px 150px, #eaf4fb, transparent);
+  animation-duration: 26s;
+}
+
+.atmo__snow--near {
+  opacity: 0.7;
+  background-size: 260px 260px;
+  background-image:
+    radial-gradient(1.6px 1.6px at 40px 50px, #f4f9fd, transparent),
+    radial-gradient(1.4px 1.4px at 170px 120px, #f4f9fd, transparent),
+    radial-gradient(1.8px 1.8px at 110px 220px, #f4f9fd, transparent),
+    radial-gradient(1.4px 1.4px at 230px 30px, #f4f9fd, transparent);
+  animation-duration: 18s;
+}
+
+@keyframes snow-fall {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(200px);
+  }
 }
 
 @keyframes fog-drift {

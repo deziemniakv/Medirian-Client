@@ -71,6 +71,7 @@ export function Settings() {
                   <option value="auto">{t('settings.themeAuto')}</option>
                   <option value="default">{t('settings.themeDefault')}</option>
                   <option value="halloween">{t('settings.themeHalloween')}</option>
+                  <option value="christmas">{t('settings.themeChristmas')}</option>
                 </select>
               </Row>
               <Row label={t('settings.afterLaunch')}>

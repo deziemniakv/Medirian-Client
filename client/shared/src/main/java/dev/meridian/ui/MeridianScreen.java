@@ -2,6 +2,7 @@ package dev.meridian.ui;
 
 import dev.meridian.core.Meridian;
 import dev.meridian.input.Key;
+import dev.meridian.render.Anim;
 import dev.meridian.render.Colors;
 import dev.meridian.render.Gfx;
 import dev.meridian.render.Theme;
@@ -219,8 +220,34 @@ public abstract class MeridianScreen {
         // soft violet light from the bottom — the "fog"
         g.gradient(0, height / 2, width, height, 0x00000000, Colors.withAlpha(theme.accent, theme.decorations ? 0x2C : 0x16));
         if (theme.decorations) {
-            // a barely visible warm glow on the horizon (Halloween)
+            // a barely visible seasonal glow on the horizon (warm for Halloween, icy for Christmas)
             g.gradient(0, height * 3 / 4, width, height, 0x00000000, Colors.withAlpha(theme.seasonal, 0x10));
+            if (theme.snow()) {
+                renderSnow(g);
+            }
         }
+    }
+
+    private static final int SNOWFLAKES = 70;
+
+    /** Slow snowfall: every flake follows a fixed path derived from its index, so nothing is stored. */
+    private void renderSnow(Gfx g) {
+        double seconds = Anim.enabled() ? (System.nanoTime() / 1e9) : 0;
+        for (int i = 0; i < SNOWFLAKES; i++) {
+            double r1 = hash(i * 12.9898);
+            double r2 = hash(i * 78.233);
+            double r3 = hash(i * 37.719);
+            double speed = 6 + r2 * 10;
+            float y = (float) ((seconds * speed + r3 * (height + 10)) % (height + 10)) - 5;
+            float x = (float) (r1 * width + Math.sin(seconds * 0.6 + i) * 6);
+            int size = r2 > 0.7 ? 2 : 1;
+            int alpha = 0x30 + (int) (r3 * 0x60);
+            g.fill(Math.round(x), Math.round(y), Math.round(x) + size, Math.round(y) + size, (alpha << 24) | 0xEAF4FB);
+        }
+    }
+
+    private static double hash(double seed) {
+        double value = Math.sin(seed) * 43758.5453;
+        return value - Math.floor(value);
     }
 }

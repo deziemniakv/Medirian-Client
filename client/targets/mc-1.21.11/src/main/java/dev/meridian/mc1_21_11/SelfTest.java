@@ -223,6 +223,17 @@ final class SelfTest {
                 }
                 next(20);
                 return;
+            case 16:
+                // the Christmas theme (runtime only, the setting is untouched)
+                dev.meridian.render.Theme.apply(dev.meridian.render.Theme.Mode.CHRISTMAS);
+                meridian.platform().openScreen(new ModMenuScreen(null));
+                next(30);
+                return;
+            case 17:
+                shot(minecraft, "9-christmas");
+                meridian.platform().openScreen(null);
+                next(10);
+                return;
             default:
                 Log.info("Self-test finished; screenshots in {}", minecraft.gameDirectory);
                 step = -1;

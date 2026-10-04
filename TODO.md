@@ -62,4 +62,4 @@ Każdy wymaga hooka w obu adapterach (nowe `Capability`):
 - [ ] Batchowanie wypełnień w `LegacyGfx` (jeden draw call na klatkę HUD).
 - [ ] Testy wizualne: porównywanie zrzutów z `runClient -Pselftest` w CI.
 - [ ] Więcej języków (system i18n gotowy: `meridian/lang/*.json`, `launcher/src/renderer/src/i18n.ts`).
-- [ ] Sezonowe motywy: Christmas (nowa instancja `Theme` + tokeny CSS).
+- [x] Sezonowe motywy: Christmas (0.1.3) — `Theme.CHRISTMAS` z opadami śniegu, tokeny CSS i śnieg w launcherze; AUTO: grudzień–6 stycznia.
