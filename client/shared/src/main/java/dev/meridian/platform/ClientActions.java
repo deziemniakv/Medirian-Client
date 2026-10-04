@@ -49,4 +49,10 @@ public interface ClientActions {
 
     /** Text on the system clipboard, or "" when there is none. */
     String getClipboard();
+
+    /** Tells the server which plugin channels the client listens on (REGISTER / minecraft:register). */
+    void registerPluginChannels(List<String> channels);
+
+    /** Sends a plugin message to the server (play phase). Channels must be known to the adapter. */
+    void sendPluginMessage(String channel, byte[] data);
 }

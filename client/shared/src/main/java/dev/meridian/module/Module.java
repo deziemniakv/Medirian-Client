@@ -38,6 +38,8 @@ public abstract class Module implements SettingsOwner {
     private HudElement hud;
     private boolean enabled;
     private boolean enabledByDefault;
+    /** Set while a server policy forbids the module (see dev.meridian.policy). */
+    private String lockReason;
     ModuleManager manager;
 
     protected Module(String id, String name, Category category, String description) {
@@ -90,7 +92,7 @@ public abstract class Module implements SettingsOwner {
     }
 
     public final void setEnabled(boolean enable) {
-        if (enable == enabled) {
+        if (enable == enabled || (enable && lockReason != null)) {
             return;
         }
         enabled = enable;
@@ -101,6 +103,23 @@ public abstract class Module implements SettingsOwner {
             onDisable();
             unsubscribeAll();
         }
+        if (manager != null) {
+            manager.onModuleStateChanged(this);
+        }
+    }
+
+    /** Why the module cannot be enabled right now (a server's message), or null. */
+    public final String lockReason() {
+        return lockReason;
+    }
+
+    public final boolean isLocked() {
+        return lockReason != null;
+    }
+
+    /** Locks the module off ({@code reason} non-null) or lifts the lock; used by server policies. */
+    public final void lock(String reason) {
+        lockReason = reason;
         if (manager != null) {
             manager.onModuleStateChanged(this);
         }

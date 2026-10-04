@@ -35,7 +35,8 @@ Każdy wymaga hooka w obu adapterach (nowe `Capability`):
 - [x] **Culling block entities** (skrzynie, tabliczki, głowy, banery) tym samym `OcclusionCuller` (0.1.2).
 - [x] Pomiar zysku z okluzji w self-teście (160 świń za ścianą, okluzja wł./wył.; pomiar pomijany, gdy ktoś używa okna):
       1.8.9 — świat 2,99 → 1,57 ms, klatka 3,14 → 1,86 ms; 1.21.11 — świat 2,27 → 0,60 ms, klatka 2,80 → 0,91 ms.
-- [ ] **Polityki serwerów** (np. wyłączenie Freelook tam, gdzie serwer go zabrania) — kanał plugin message.
+- [x] **Polityki serwerów** (0.1.3) — kanał `meridian:policy` (JSON z listą modułów do wyłączenia), `meridian:hello`;
+      opis i przykład pluginu: docs/PROTOCOL.md §6.
 
 ## Etap 3 — kosmetyki
 

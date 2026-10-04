@@ -498,6 +498,23 @@ public final class LegacyPlatform implements Platform, GameView, InputView, Clie
     }
 
     @Override
+    public void registerPluginChannels(List<String> channels) {
+        StringBuilder names = new StringBuilder();
+        for (String channel : channels) {
+            names.append(names.length() > 0 ? "\0" : "").append(channel);
+        }
+        sendPluginMessage("REGISTER", names.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    }
+
+    @Override
+    public void sendPluginMessage(String channel, byte[] data) {
+        if (client.getNetworkHandler() != null) {
+            client.getNetworkHandler().sendPacket(new net.minecraft.network.packet.c2s.play.CustomPayloadC2SPacket(channel,
+                    new net.minecraft.util.PacketByteBuf(io.netty.buffer.Unpooled.wrappedBuffer(data))));
+        }
+    }
+
+    @Override
     public String getClipboard() {
         String text = Screen.getClipboard();
         return text == null ? "" : text;

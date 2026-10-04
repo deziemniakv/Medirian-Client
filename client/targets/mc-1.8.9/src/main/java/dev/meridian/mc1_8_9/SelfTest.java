@@ -170,10 +170,12 @@ public final class SelfTest {
                 shot(client, "5b-hudeditor-ingame");
                 meridian.platform().openScreen(null);
                 verifyChatCopy(client);
+                sendPolicy(client, "{\"disable\":[\"freelook\"],\"message\":\"Self-test policy\"}");
                 buildCullingScene(client.player);
                 next(40);
                 return;
             case 10:
+                verifyPolicy(meridian);
                 verifyCulling(client);
                 shot(client, "6-culling");
                 meridian.platform().openScreen(new WaypointsScreen(null));
@@ -245,6 +247,32 @@ public final class SelfTest {
             }
         }
         Log.error("Self-test FAILED: health tag pig not found");
+    }
+
+    /** Delivers a server policy to the network handler like a received plugin message. */
+    private static void sendPolicy(MinecraftClient client, String json) {
+        Meridian.get().modules().get("freelook").setEnabled(true);
+        client.getNetworkHandler().onCustomPayload(new net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket(
+                "meridian:policy", new net.minecraft.util.PacketByteBuf(io.netty.buffer.Unpooled.wrappedBuffer(
+                        json.getBytes(java.nio.charset.StandardCharsets.UTF_8)))));
+    }
+
+    /** The policy locked Freelook; lifting it restores the module as it was. */
+    private static void verifyPolicy(Meridian meridian) {
+        dev.meridian.module.Module freelook = meridian.modules().get("freelook");
+        boolean locked = freelook.isLocked() && !freelook.isEnabled();
+        meridian.policies().clear();
+        boolean restored = !freelook.isLocked() && freelook.isEnabled();
+        if (locked && restored) {
+            Log.info("Self-test: server policy OK (Freelook locked, then restored)");
+        } else {
+            Log.error("Self-test FAILED: server policy (locked {}, restored {})", locked, restored);
+        }
+        freelook.setEnabled(false);
+        // the client side of the protocol must not fail (singleplayer accepts any plugin message)
+        meridian.platform().actions().registerPluginChannels(java.util.Arrays.asList("meridian:policy", "meridian:hello"));
+        meridian.platform().actions().sendPluginMessage("meridian:hello", dev.meridian.policy.ServerPolicy.hello("test", "1.8.9"));
+        Log.info("Self-test: plugin channel hello sent");
     }
 
     /** Every line of a wrapped message must resolve to the whole message (right-click copy). */

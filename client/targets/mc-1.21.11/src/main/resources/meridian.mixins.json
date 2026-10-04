@@ -10,6 +10,8 @@
     "ChatComponentMixin",
     "ChatScreenMixin",
     "ClientLevelDataMixin",
+    "ClientPacketListenerMixin",
+    "ClientboundCustomPayloadPacketMixin",
     "EntityMixin",
     "EntityRenderDispatcherMixin",
     "EntityRendererMixin",
@@ -29,7 +31,8 @@
     "OverlayTextureAccessor",
     "ParticleEngineMixin",
     "ScreenEffectRendererMixin",
-    "ScreenshotMixin"
+    "ScreenshotMixin",
+    "ServerboundCustomPayloadPacketMixin"
   ],
   "injectors": {
     "defaultRequire": 1

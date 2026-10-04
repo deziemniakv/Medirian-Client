@@ -21,12 +21,15 @@ import dev.meridian.platform.GameView;
 import dev.meridian.platform.Hooks;
 import dev.meridian.platform.Platform;
 import dev.meridian.platform.PlayerView;
+import dev.meridian.policy.ServerPolicy;
+import dev.meridian.policy.ServerPolicyManager;
 import dev.meridian.render.Gfx;
 import dev.meridian.ui.HudEditorScreen;
 import dev.meridian.ui.ModMenuScreen;
 import dev.meridian.ui.SettingsScreen;
 import dev.meridian.ui.UiScale;
 
+import java.util.Arrays;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -50,6 +53,7 @@ public final class Meridian {
     private final InputStats inputStats = new InputStats();
     private final KeybindManager keybinds;
     private final CosmeticsManager cosmetics;
+    private final ServerPolicyManager policies;
     private final MeridianAccountService account = MeridianAccountService.UNAVAILABLE;
     private final ConcurrentLinkedQueue<Runnable> tasks = new ConcurrentLinkedQueue<Runnable>();
     private final long launchedAtMs = System.currentTimeMillis();
@@ -68,6 +72,9 @@ public final class Meridian {
         this.hud = new HudManager(modules, profileSettings);
         this.config = new ConfigManager(home, modules, global, profileSettings);
         this.cosmetics = new CosmeticsManager(home);
+        this.policies = new ServerPolicyManager(modules, notifications);
+        events.subscribe(Events.WorldJoin.class, e -> onServerJoin(e.serverAddress));
+        events.subscribe(Events.WorldLeave.class, e -> policies.clear());
         // Screens opened by a key are deferred to the next client tick: the game keeps dispatching the
         // current key event after our hook, and a screen opened immediately would receive the same
         // press (and close itself again, since the mod menu key also closes the menu).
@@ -177,6 +184,24 @@ public final class Meridian {
 
     public PerformanceManager performance() {
         return performance;
+    }
+
+    public ServerPolicyManager policies() {
+        return policies;
+    }
+
+    /** Announces Meridian's plugin channels so servers know they can send a {@link ServerPolicy}. */
+    private void onServerJoin(String serverAddress) {
+        if (serverAddress == null) {
+            return;
+        }
+        try {
+            platform.actions().registerPluginChannels(Arrays.asList(ServerPolicy.CHANNEL, ServerPolicy.HELLO_CHANNEL));
+            platform.actions().sendPluginMessage(ServerPolicy.HELLO_CHANNEL,
+                    ServerPolicy.hello(BuildInfo.VERSION, platform.minecraftVersion()));
+        } catch (RuntimeException e) {
+            Log.warn("Could not announce Meridian's plugin channels: {}", e.toString());
+        }
     }
 
     public NotificationManager notifications() {

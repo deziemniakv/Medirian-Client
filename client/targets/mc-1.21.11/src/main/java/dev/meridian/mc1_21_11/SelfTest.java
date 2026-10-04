@@ -167,10 +167,12 @@ final class SelfTest {
                 shot(minecraft, "5b-hudeditor-ingame");
                 meridian.platform().openScreen(null);
                 verifyChatCopy(minecraft);
+                sendPolicy(minecraft, "{\"disable\":[\"freelook\"],\"message\":\"Self-test policy\"}");
                 buildCullingScene(minecraft.player);
                 next(40);
                 return;
             case 10:
+                verifyPolicy(meridian);
                 verifyCulling(minecraft);
                 shot(minecraft, "6-culling");
                 meridian.platform().openScreen(new WaypointsScreen(null));
@@ -367,6 +369,49 @@ final class SelfTest {
 
     private static boolean visible(Occluders blocks, Vec3 eye, AABB box) {
         return OcclusionCuller.isVisible(blocks, eye.x, eye.y, eye.z, box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ);
+    }
+
+    /**
+     * Delivers a server policy the way the network does: encoded and decoded with vanilla's gameplay
+     * codec (so the payload type must be registered), then handled by the packet listener.
+     */
+    private static void sendPolicy(Minecraft minecraft, String json) {
+        Meridian.get().modules().get("freelook").setEnabled(true);
+        var connection = minecraft.getConnection();
+        var buf = new net.minecraft.network.RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.buffer(), connection.registryAccess());
+        net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket.GAMEPLAY_STREAM_CODEC.encode(buf,
+                new net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket(
+                        new MeridianPayload(MeridianPayload.POLICY, json.getBytes(java.nio.charset.StandardCharsets.UTF_8))));
+        var decoded = net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket.GAMEPLAY_STREAM_CODEC.decode(buf);
+        connection.handleCustomPayload(decoded);
+    }
+
+    /** The policy locked Freelook; lifting it restores the module as it was. */
+    private static void verifyPolicy(Meridian meridian) {
+        dev.meridian.module.Module freelook = meridian.modules().get("freelook");
+        boolean locked = freelook.isLocked() && !freelook.isEnabled();
+        meridian.policies().clear();
+        boolean restored = !freelook.isLocked() && freelook.isEnabled();
+        if (locked && restored) {
+            Log.info("Self-test: server policy OK (Freelook locked, then restored)");
+        } else {
+            Log.error("Self-test FAILED: server policy (locked {}, restored {})", locked, restored);
+        }
+        freelook.setEnabled(false);
+        // the client side of the protocol: hello must survive the serverbound codec, and sending must not fail
+        byte[] hello = dev.meridian.policy.ServerPolicy.hello("test", "1.21.11");
+        var buf = new net.minecraft.network.FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
+        net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket.STREAM_CODEC.encode(buf,
+                new net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket(new MeridianPayload(MeridianPayload.HELLO, hello)));
+        var decoded = net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket.STREAM_CODEC.decode(buf);
+        boolean roundTrip = decoded.payload() instanceof MeridianPayload p && java.util.Arrays.equals(p.data(), hello);
+        meridian.platform().actions().registerPluginChannels(java.util.Arrays.asList("meridian:policy", "meridian:hello"));
+        meridian.platform().actions().sendPluginMessage("meridian:hello", hello);
+        if (roundTrip) {
+            Log.info("Self-test: plugin channel hello OK");
+        } else {
+            Log.error("Self-test FAILED: hello payload did not survive the codec ({})", decoded.payload());
+        }
     }
 
     /** Every line of a wrapped message must resolve to the whole message (right-click copy). */

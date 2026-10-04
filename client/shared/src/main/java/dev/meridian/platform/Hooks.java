@@ -362,6 +362,14 @@ public final class Hooks {
         return healthTags != null && healthTags.appliesTo(isPlayer) ? healthTags : null;
     }
 
+    /** A {@link dev.meridian.policy.ServerPolicy} payload arrived. May be called from any thread. */
+    public static void serverPolicy(final byte[] payload) {
+        final Meridian m = meridian;
+        if (m != null) {
+            m.runOnClientThread(() -> m.policies().receive(payload));
+        }
+    }
+
     /** Waypoints that get a beam in the world this frame (reused list, read it right away). */
     public static java.util.List<dev.meridian.waypoint.Waypoint> waypointBeams() {
         return waypoints == null ? java.util.Collections.<dev.meridian.waypoint.Waypoint>emptyList() : waypoints.beams();

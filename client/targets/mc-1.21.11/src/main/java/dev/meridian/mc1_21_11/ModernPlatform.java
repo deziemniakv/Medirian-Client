@@ -510,6 +510,25 @@ public final class ModernPlatform implements Platform, GameView, InputView, Clie
     }
 
     @Override
+    public void registerPluginChannels(List<String> channels) {
+        send(MeridianPayload.REGISTER, String.join("\0", channels).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    }
+
+    @Override
+    public void sendPluginMessage(String channel, byte[] data) {
+        if (!MeridianPayload.HELLO.id().toString().equals(channel)) {
+            throw new IllegalArgumentException("No payload type for plugin channel " + channel);
+        }
+        send(MeridianPayload.HELLO, data);
+    }
+
+    private void send(net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type<MeridianPayload> type, byte[] data) {
+        if (minecraft.getConnection() != null) {
+            minecraft.getConnection().send(new net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket(new MeridianPayload(type, data)));
+        }
+    }
+
+    @Override
     public String getClipboard() {
         String text = minecraft.keyboardHandler.getClipboard();
         return text == null ? "" : text;

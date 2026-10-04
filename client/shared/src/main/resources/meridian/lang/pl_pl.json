@@ -451,5 +451,8 @@
   "notify.waypoint.imported": "Zaimportowano punkty: {0}",
   "notify.waypoint.importNone": "W schowku nie ma punktów",
   "module.itemphysics.name": "Fizyka przedmiotów",
-  "module.itemphysics.desc": "Upuszczone przedmioty leżą na ziemi zamiast unosić się i obracać."
+  "module.itemphysics.desc": "Upuszczone przedmioty leżą na ziemi zamiast unosić się i obracać.",
+  "policy.title": "Zasady serwera",
+  "policy.reason": "Wyłączone przez ten serwer",
+  "ui.modmenu.locked": "Zablokowane"
 }

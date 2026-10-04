@@ -141,3 +141,34 @@ Nieznane typy wiadomości są ignorowane (zgodność w przód).
 * Klucz świata (`GameView#worldKey`, `WorldKeys`): `server:<host[:port]>` (małe litery, bez domyślnego portu 25565)
   albo `local:<folder zapisu>`. Wymiary jako identyfikatory przestrzeni nazw (1.8.9 mapuje 0 / −1 / 1).
 * Dla każdego świata przechowywany jest tylko ostatni punkt śmierci (`death: true`).
+
+## 6. Polityki serwerów (kanały plugin message)
+
+Serwer może wyłączyć wybrane moduły Meridian na czas gry na nim (np. Freelook na serwerze, który go
+zabrania). Działa w obu wersjach gry, bez Fabric API.
+
+Po wejściu na serwer klient:
+
+1. rejestruje kanały `meridian:policy` i `meridian:hello` (`REGISTER` w 1.8.9, `minecraft:register` od 1.13),
+2. wysyła na `meridian:hello` JSON `{"client":"Meridian","version":"0.1.3","minecraft":"1.8.9"}`.
+
+Serwer → klient, kanał `meridian:policy`, treść UTF-8 JSON (≤ 32 KiB):
+
+```json
+{ "version": 1, "disable": ["freelook", "zoom"], "message": "Freelook jest tu zabroniony" }
+```
+
+* `disable` — identyfikatory modułów (jak w `config/profiles/*.json`); nieznane są ignorowane.
+  Wymienione moduły zostają wyłączone i zablokowane (w mod menu „Zablokowane” z komunikatem serwera).
+* Każda kolejna polityka zastępuje poprzednią; pusta lista `disable` znosi ograniczenia.
+* Po wyjściu z serwera moduły wracają do stanu sprzed blokady.
+
+Przykład dla pluginu Paper/Spigot (Java):
+
+```java
+getServer().getMessenger().registerOutgoingPluginChannel(this, "meridian:policy");
+getServer().getMessenger().registerIncomingPluginChannel(this, "meridian:hello", (channel, player, data) -> {
+    byte[] policy = "{\"disable\":[\"freelook\"],\"message\":\"No freelook here\"}".getBytes(StandardCharsets.UTF_8);
+    player.sendPluginMessage(this, "meridian:policy", policy);
+});
+```

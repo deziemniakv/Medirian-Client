@@ -133,7 +133,11 @@ public final class ModMenuScreen extends MeridianScreen {
             }
             module.keybind().reset();
         });
-        details.add(new SettingsList.ControlRow(I18n.tr("ui.modmenu.enabled", "Enabled"), null, enabledSwitch, 22));
+        if (module.isLocked()) {
+            details.add(new SettingsList.InfoRow(I18n.tr("ui.modmenu.enabled", "Enabled"), module::lockReason));
+        } else {
+            details.add(new SettingsList.ControlRow(I18n.tr("ui.modmenu.enabled", "Enabled"), null, enabledSwitch, 22));
+        }
         details.add(new SettingsList.ControlRow(
                 module.keybindWorksWhenDisabled() ? I18n.tr("ui.modmenu.keybind", "Keybind") : I18n.tr("ui.modmenu.keybindHold", "Activation key"),
                 null, keybindButton, 72));
@@ -262,13 +266,22 @@ public final class ModMenuScreen extends MeridianScreen {
         if (module.isEnabled()) {
             UiDraw.roundRect(g, listX + 4, y + 9, 2, CARD_H - 18, 1, theme.accent);
         }
-        Switch toggle = switches.get(module);
-        if (toggle == null) {
-            toggle = new Switch(module::isEnabled, module::setEnabled);
-            switches.put(module, toggle);
+        if (module.isLocked()) {
+            String locked = I18n.tr("ui.modmenu.locked", "Locked");
+            g.push();
+            g.translate(listX + listW - 8 - g.textWidth(locked) * 0.8f, y + (CARD_H - 7) / 2f);
+            g.scale(0.8f, 0.8f);
+            g.text(locked, 0, 0, theme.textMuted, false);
+            g.pop();
+        } else {
+            Switch toggle = switches.get(module);
+            if (toggle == null) {
+                toggle = new Switch(module::isEnabled, module::setEnabled);
+                switches.put(module, toggle);
+            }
+            toggle.bounds(listX + listW - 30, y + (CARD_H - 12) / 2f, 22, 12);
+            toggle.render(g, mx, my);
         }
-        toggle.bounds(listX + listW - 30, y + (CARD_H - 12) / 2f, 22, 12);
-        toggle.render(g, mx, my);
         float textW = listW - 50;
         g.text(UiDraw.ellipsize(g, module.displayName(), (int) textW), listX + 11, y + 6, theme.text, false);
         g.push();
@@ -353,7 +366,7 @@ public final class ModMenuScreen extends MeridianScreen {
             for (Module module : visibleModules) {
                 if (my >= cardY && my < cardY + CARD_H) {
                     Switch toggle = switches.get(module);
-                    if (toggle != null && toggle.mouseClicked(mx, my, button)) {
+                    if (toggle != null && !module.isLocked() && toggle.mouseClicked(mx, my, button)) {
                         return true;
                     }
                     if (button == 1) {
