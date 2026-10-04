@@ -64,6 +64,8 @@ export function Settings() {
                 <select className="select" value={settings.language} onChange={(e) => set({ language: e.target.value as LauncherSettings['language'] })}>
                   <option value="en">English</option>
                   <option value="pl">Polski</option>
+                  <option value="de">Deutsch</option>
+                  <option value="es">Español</option>
                 </select>
               </Row>
               <Row label={t('settings.theme')}>

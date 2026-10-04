@@ -23,7 +23,9 @@ public final class I18n {
     /** Supported languages; the first one is the default. */
     public enum Language implements dev.meridian.setting.ModeSetting.Labeled {
         EN_US("en_us", "English"),
-        PL_PL("pl_pl", "Polski");
+        PL_PL("pl_pl", "Polski"),
+        DE_DE("de_de", "Deutsch"),
+        ES_ES("es_es", "Español");
 
         private final String code;
         private final String nativeName;

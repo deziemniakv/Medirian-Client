@@ -32,6 +32,16 @@ public class Button extends Widget {
         this(() -> label, style, action);
     }
 
+    /** The current label. */
+    public String text() {
+        return label.get();
+    }
+
+    /** Width that shows the whole label, at least {@code min}. */
+    public float preferredWidth(dev.meridian.render.Gfx g, float min) {
+        return Math.max(min, g.textWidth(label.get()) + 14);
+    }
+
     public Button style(Style newStyle) {
         this.style = newStyle;
         return this;

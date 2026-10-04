@@ -318,7 +318,9 @@ public final class ModMenuScreen extends MeridianScreen {
         float listBottom = py + ph - 30;
         details.bounds(detailX, y, detailW + 6, listBottom - y);
         details.render(g, mx, my);
-        resetButton.bounds(detailX + detailW - 60, py + ph - 24, 60, 14);
+        // wide enough for longer translations ("Zurücksetzen", "Restablecer")
+        float resetW = Math.max(60, g.textWidth(I18n.tr("ui.modmenu.reset", "Reset")) + 14);
+        resetButton.bounds(detailX + detailW - resetW, py + ph - 24, resetW, 14);
         resetButton.render(g, mx, my);
     }
 

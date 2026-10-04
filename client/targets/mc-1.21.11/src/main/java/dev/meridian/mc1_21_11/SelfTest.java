@@ -226,6 +226,8 @@ final class SelfTest {
             case 16:
                 // the Christmas theme (runtime only, the setting is untouched)
                 dev.meridian.render.Theme.apply(dev.meridian.render.Theme.Mode.CHRISTMAS);
+                // and a translation other than English/Polish (umlauts in the font)
+                dev.meridian.i18n.I18n.setLanguage(dev.meridian.i18n.I18n.Language.DE_DE);
                 meridian.platform().openScreen(new ModMenuScreen(null));
                 next(30);
                 return;

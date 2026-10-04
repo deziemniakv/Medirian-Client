@@ -66,6 +66,21 @@ public final class HudEditorScreen extends MeridianScreen {
         }
     }
 
+    /** Centres the toolbar; with {@code g}, every button is as wide as its label needs. */
+    private void layoutToolbar(Gfx g) {
+        float total = -4;
+        float[] widths = new float[toolbar.size()];
+        for (int i = 0; i < toolbar.size(); i++) {
+            widths[i] = g == null ? 86 : toolbar.get(i).preferredWidth(g, 70);
+            total += widths[i] + 4;
+        }
+        float x = (width - total) / 2f;
+        for (int i = 0; i < toolbar.size(); i++) {
+            toolbar.get(i).bounds(x, height - 26, widths[i], 16);
+            x += widths[i] + 4;
+        }
+    }
+
     @Override
     protected void init() {
         toolbar.clear();
@@ -78,13 +93,7 @@ public final class HudEditorScreen extends MeridianScreen {
                 + (snapping ? I18n.tr("ui.on", "On") : I18n.tr("ui.off", "Off")), Button.Style.SECONDARY,
                 () -> snapping = !snapping));
         toolbar.add(new Button(I18n.tr("ui.done", "Done"), Button.Style.SECONDARY, this::close));
-        float buttonW = 86;
-        float total = toolbar.size() * buttonW + (toolbar.size() - 1) * 4;
-        float x = (width - total) / 2f;
-        for (Button button : toolbar) {
-            button.bounds(x, height - 26, buttonW, 16);
-            x += buttonW + 4;
-        }
+        layoutToolbar(null);
         if (selected != null) {
             buildProperties();
         }
@@ -242,6 +251,7 @@ public final class HudEditorScreen extends MeridianScreen {
     }
 
     private void renderToolbar(Gfx g, Theme theme, float mx, float my) {
+        layoutToolbar(g);
         Button first = toolbar.get(0);
         Button last = toolbar.get(toolbar.size() - 1);
         float x = first.x - 6;

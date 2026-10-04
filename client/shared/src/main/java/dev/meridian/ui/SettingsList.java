@@ -169,6 +169,16 @@ public final class SettingsList {
 
     // ------------------------------------------------------------------ rows
 
+    /** Widens a button to the left so its whole label shows (translations differ in length). */
+    static void fitButton(Gfx g, Widget control) {
+        if (control instanceof Button) {
+            float needed = ((Button) control).preferredWidth(g, control.w);
+            if (needed > control.w) {
+                control.bounds(control.x + control.w - needed, control.y, needed, control.h);
+            }
+        }
+    }
+
     /** One line of the list. */
     public abstract static class Row {
         protected float rx;
@@ -292,6 +302,7 @@ public final class SettingsList {
 
         @Override
         public void render(Gfx g, float mx, float my) {
+            fitButton(g, control);
             float labelWidth = control == null ? rw : rw - control.w - 10;
             label(g, setting.displayName(), setting.displayDescription(), labelWidth);
             if (control != null) {
@@ -353,7 +364,8 @@ public final class SettingsList {
 
         @Override
         public void render(Gfx g, float mx, float my) {
-            label(g, label, description, rw - controlWidth - 10);
+            fitButton(g, control);
+            label(g, label, description, rw - control.w - 10);
             control.render(g, mx, my);
         }
 

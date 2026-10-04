@@ -16,6 +16,26 @@ const TEXT = {
     multiplayer: 'Multiplayer',
     playingOn: (server: string) => `Playing on ${server}`
   },
+  de: {
+    launcher: 'Im Launcher',
+    starting: (game: string) => `Startet ${game}`,
+    preparing: 'Bereitet das Spiel vor',
+    loading: 'Lädt…',
+    menu: 'In den Menüs',
+    singleplayer: 'Einzelspieler',
+    multiplayer: 'Mehrspieler',
+    playingOn: (server: string) => `Spielt auf ${server}`
+  },
+  es: {
+    launcher: 'En el launcher',
+    starting: (game: string) => `Iniciando ${game}`,
+    preparing: 'Preparando el juego',
+    loading: 'Cargando…',
+    menu: 'En los menús',
+    singleplayer: 'Un jugador',
+    multiplayer: 'Multijugador',
+    playingOn: (server: string) => `Jugando en ${server}`
+  },
   pl: {
     launcher: 'W launcherze',
     starting: (game: string) => `Uruchamia ${game}`,

@@ -61,5 +61,5 @@ Każdy wymaga hooka w obu adapterach (nowe `Capability`):
 - [ ] Zaokrąglone prostokąty shaderem zamiast rasteryzacji linii (mniej draw calli w 1.8.9).
 - [ ] Batchowanie wypełnień w `LegacyGfx` (jeden draw call na klatkę HUD).
 - [ ] Testy wizualne: porównywanie zrzutów z `runClient -Pselftest` w CI.
-- [ ] Więcej języków (system i18n gotowy: `meridian/lang/*.json`, `launcher/src/renderer/src/i18n.ts`).
+- [x] Więcej języków (0.1.3): niemiecki i hiszpański w kliencie i launcherze; test pilnuje kompletności plików `lang`.
 - [x] Sezonowe motywy: Christmas (0.1.3) — `Theme.CHRISTMAS` z opadami śniegu, tokeny CSS i śnieg w launcherze; AUTO: grudzień–6 stycznia.

@@ -28,12 +28,12 @@ instalacja Javy (Mojang: Java 8 dla 1.8.9, Java 21 dla 1.21.11), pobieranie i we
 gry, ponowne użycie assetów z istniejącego `.minecraft`, profile uruchomieniowe (wersja, RAM, Java,
 argumenty JVM, rozdzielczość, profil konfiguracji Meridian), logowanie Microsoft (device code),
 aktualizacje klienta z manifestu wydań (kanał stabilny / lokalny), naprawa instalacji, czyszczenie cache,
-podgląd logu gry, status gry na żywo (kanał launcher ↔ klient), changelog, motyw Halloween, PL/EN.
+podgląd logu gry, status gry na żywo (kanał launcher ↔ klient), changelog, Discord Rich Presence, motywy Halloween i Christmas, PL/EN/DE/ES.
 
 **Klient** — mod menu (kategorie | moduły | ustawienia, wyszukiwarka), edytor HUD (przeciąganie,
 przyciąganie z liniami pomocniczymi, skalowanie, panel właściwości, dodawanie/usuwanie, reset),
 ustawienia globalne, profile konfiguracji (Default / PvP / Performance / własne) wspólne dla obu
-wersji gry, powiadomienia, i18n PL/EN, motywy sezonowe.
+wersji gry, powiadomienia, i18n PL/EN/DE/ES, motywy sezonowe.
 
 Moduły (41): CPS, Combo Counter, Reach Display, Target HUD, Hit Color, Health Tags, Toggle Sprint, Toggle Sneak, Zoom, Freelook,
 Armor Status, Potion Effects, Coordinates, Custom Crosshair, Block Overlay, Hurt Camera, Fire Overlay, Item Physics, Fullbright, Time Changer, Weather Changer,
