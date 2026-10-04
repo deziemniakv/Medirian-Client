@@ -2,6 +2,12 @@
 
 All notable changes to Meridian Client. The launcher shows the newest entries on its home screen.
 
+## 0.1.4 — 2026-10-04 — Polish & Platform
+
+- Smoother menus and HUD: rounded corners, switches and circles now have anti-aliased edges in both versions.
+- 1.8.9: the HUD is drawn with a handful of draw calls instead of one per rectangle — about 5× less time per frame in our test (0.20 ms instead of 1.00 ms).
+- 1.8.9: very faint shapes (shadows, highlights) are no longer cut off, so menus look the same as in 1.21.11.
+
 ## 0.1.3 — 2026-10-04 — Discord & PvP
 
 - New module: Health Tags — health next to player name tags (hearts or HP, coloured by what is left, absorption as +N).

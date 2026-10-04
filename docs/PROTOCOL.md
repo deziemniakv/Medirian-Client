@@ -150,7 +150,7 @@ zabrania). Działa w obu wersjach gry, bez Fabric API.
 Po wejściu na serwer klient:
 
 1. rejestruje kanały `meridian:policy` i `meridian:hello` (`REGISTER` w 1.8.9, `minecraft:register` od 1.13),
-2. wysyła na `meridian:hello` JSON `{"client":"Meridian","version":"0.1.3","minecraft":"1.8.9"}`.
+2. wysyła na `meridian:hello` JSON `{"client":"Meridian","version":"0.1.4","minecraft":"1.8.9"}`.
 
 Serwer → klient, kanał `meridian:policy`, treść UTF-8 JSON (≤ 32 KiB):
 

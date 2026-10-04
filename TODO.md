@@ -1,6 +1,6 @@
 # Meridian — roadmapa
 
-Stan: **0.1.3** (launcher, dwa targety klienta, HUD, 41 modułów, konfiguracja, wydajność).
+Stan: **0.1.4** (launcher, dwa targety klienta, HUD, 41 modułów, konfiguracja, wydajność).
 Poniżej kolejne etapy. Zasada bez zmian: funkcja trafia do UI dopiero, gdy naprawdę działa.
 
 ## Etap 1 — przed pierwszym publicznym wydaniem
@@ -58,8 +58,11 @@ Każdy wymaga hooka w obu adapterach (nowe `Capability`):
 ## Etap 6 — UI / jakość
 
 - [ ] Własny renderer czcionki (SDF/MSDF) dla ostrzejszego tekstu w HUD i menu.
-- [ ] Zaokrąglone prostokąty shaderem zamiast rasteryzacji linii (mniej draw calli w 1.8.9).
-- [ ] Batchowanie wypełnień w `LegacyGfx` (jeden draw call na klatkę HUD).
+- [x] Zaokrąglone prostokąty (0.1.4) — zamiast shadera: batchowanie (poniżej) sprawia, że zaokrąglenia nie kosztują
+      dodatkowych draw calli, a krawędzie są wygładzane na CPU (pokrycie piksela, `UiDraw.coverage`) — identycznie w obu
+      wersjach, bez GLSL w 1.8.9 i bez własnego `RenderPipeline` w 1.21.11.
+- [x] Batchowanie wypełnień w `LegacyGfx` (0.1.4) — jeden bufor `POSITION_COLOR`, opróżniany przed tekstem/teksturą/scissorem
+      i na końcu klatki: 586 wypełnień → 14 draw calli, HUD 1,00 → 0,20 ms/klatkę (self-test, PvP profile).
 - [ ] Testy wizualne: porównywanie zrzutów z `runClient -Pselftest` w CI.
 - [x] Więcej języków (0.1.3): niemiecki i hiszpański w kliencie i launcherze; test pilnuje kompletności plików `lang`.
 - [x] Sezonowe motywy: Christmas (0.1.3) — `Theme.CHRISTMAS` z opadami śniegu, tokeny CSS i śnieg w launcherze; AUTO: grudzień–6 stycznia.

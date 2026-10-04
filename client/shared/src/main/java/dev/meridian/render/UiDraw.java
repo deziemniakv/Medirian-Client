@@ -3,9 +3,11 @@ package dev.meridian.render;
 /**
  * Composite drawing helpers built on {@link Gfx} primitives.
  *
- * <p>Rounded corners are rasterised as horizontal spans at real-pixel resolution (the transform
- * is temporarily scaled by {@code 1 / pixelScale}), so corners are smooth-ish at every GUI scale
- * while costing only a handful of fills.
+ * <p>Rounded corners and circles are rasterised at real-pixel resolution (the transform is
+ * temporarily scaled by {@code 1 / pixelScale}): one span per scanline plus the edge pixels, which
+ * are drawn with an alpha proportional to how much of the pixel the shape covers (anti-aliasing).
+ * The result is identical in every version; the adapters batch fills, so the extra pixels do not
+ * cost extra draw calls.
  */
 public final class UiDraw {
 
@@ -31,14 +33,47 @@ public final class UiDraw {
         } else {
             g.fill(px, py + r, px + pw, py + ph - r, argb);
             for (int i = 0; i < r; i++) {
-                // horizontal inset of this scanline of the corner arc
+                // corner arc centred at (r, r): pixels left of the first fully covered one are edge pixels
                 double dy = r - i - 0.5;
-                int inset = (int) Math.round(r - Math.sqrt(Math.max(0, r * r - dy * dy)));
-                g.fill(px + inset, py + i, px + pw - inset, py + i + 1, argb);
-                g.fill(px + inset, py + ph - i - 1, px + pw - inset, py + ph - i, argb);
+                int solid = r;
+                for (int j = 0; j < r; j++) {
+                    double coverage = coverage(r - j - 0.5, dy, r);
+                    if (coverage >= 1) {
+                        solid = j;
+                        break;
+                    }
+                    int edge = withCoverage(argb, coverage);
+                    if (edge != 0) {
+                        pixel(g, px + j, py + i, edge);
+                        pixel(g, px + pw - 1 - j, py + i, edge);
+                        pixel(g, px + j, py + ph - 1 - i, edge);
+                        pixel(g, px + pw - 1 - j, py + ph - 1 - i, edge);
+                    }
+                }
+                g.fill(px + solid, py + i, px + pw - solid, py + i + 1, argb);
+                g.fill(px + solid, py + ph - i - 1, px + pw - solid, py + ph - i, argb);
             }
         }
         g.pop();
+    }
+
+    /**
+     * Share of a pixel covered by a disc of {@code radius}, the pixel centre being ({@code dx},
+     * {@code dy}) from the disc centre: 1 inside, 0 outside, a linear ramp one pixel wide across
+     * the edge (the usual signed-distance approximation).
+     */
+    static double coverage(double dx, double dy, double radius) {
+        return Math.max(0, Math.min(1, radius + 0.5 - Math.sqrt(dx * dx + dy * dy)));
+    }
+
+    /** {@code argb} with its alpha scaled by {@code coverage}; 0 when nothing would be visible. */
+    static int withCoverage(int argb, double coverage) {
+        int alpha = (int) Math.round(Colors.alpha(argb) * coverage);
+        return alpha <= 0 ? 0 : (alpha << 24) | (argb & 0xFFFFFF);
+    }
+
+    private static void pixel(Gfx g, int x, int y, int argb) {
+        g.fill(x, y, x + 1, y + 1, argb);
     }
 
     /** Rounded rectangle with a 1 real-pixel border. */
@@ -125,8 +160,11 @@ public final class UiDraw {
         circle(g, cx + radius * 0.45f, cy - radius * 0.25f, radius * 0.85f, background);
     }
 
-    /** Filled circle rasterised at real-pixel resolution. */
+    /** Filled, anti-aliased circle rasterised at real-pixel resolution. */
     public static void circle(Gfx g, float cx, float cy, float radius, int argb) {
+        if (Colors.alpha(argb) == 0) {
+            return;
+        }
         double scale = g.pixelScale();
         int pcx = (int) Math.round(cx * scale);
         int pcy = (int) Math.round(cy * scale);
@@ -134,11 +172,24 @@ public final class UiDraw {
         g.push();
         float inv = (float) (1.0 / scale);
         g.scale(inv, inv);
-        for (int dy = -pr; dy < pr; dy++) {
+        // the centre lies on a pixel corner: row/column k covers [k, k + 1) relative to it
+        for (int dy = -pr - 1; dy <= pr; dy++) {
             double yy = dy + 0.5;
-            int half = (int) Math.round(Math.sqrt(Math.max(0, pr * pr - yy * yy)));
-            if (half > 0) {
-                g.fill(pcx - half, pcy + dy, pcx + half, pcy + dy + 1, argb);
+            int solid = 0;
+            for (int dx = -pr - 1; dx < 0; dx++) {
+                double coverage = coverage(dx + 0.5, yy, pr);
+                if (coverage >= 1) {
+                    solid = dx;
+                    break;
+                }
+                int edge = withCoverage(argb, coverage);
+                if (edge != 0) {
+                    pixel(g, pcx + dx, pcy + dy, edge);
+                    pixel(g, pcx - 1 - dx, pcy + dy, edge);
+                }
+            }
+            if (solid < 0) {
+                g.fill(pcx + solid, pcy + dy, pcx - solid, pcy + dy + 1, argb);
             }
         }
         g.pop();

@@ -10,8 +10,8 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.BufferBuilder;
+import net.minecraft.client.render.BufferRenderer;
 import net.minecraft.client.render.DiffuseLighting;
-import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.Window;
 import net.minecraft.entity.effect.StatusEffect;
@@ -23,14 +23,22 @@ import org.lwjgl.opengl.GL11;
 /**
  * {@link Gfx} for 1.8.9 on fixed-function OpenGL ({@link GlStateManager} + {@link Tessellator}).
  *
- * <p>Fills are drawn with our own quad code (vanilla {@code DrawableHelper.fill} disables blending
- * afterwards, which would make following translucent text opaque). The 2D transform is mirrored
- * on the CPU so scissor rectangles and {@link #pixelScale()} can be computed.
+ * <p>Fills are batched: every {@link #fill} appends a coloured quad (already transformed on the CPU)
+ * to one buffer, which is drawn in a single call right before anything else is drawn (text,
+ * textures, items, scissor changes) and at the end of the frame. Rounded panels are made of many
+ * small spans, so a HUD frame that used to issue hundreds of draw calls now issues a few. The 2D
+ * transform is mirrored on the CPU for this, for scissor rectangles and for {@link #pixelScale()}.
  */
 public final class LegacyGfx implements Gfx {
 
     private static final Identifier INVENTORY = new Identifier("textures/gui/container/inventory.png");
     private static final int MAX_DEPTH = 64;
+    /**
+     * Quads per batch. 1.8.9's BufferBuilder does not grow while vertices are written with
+     * {@code vertex()} (only {@code putArray} moves the position its growth check looks at), so the
+     * buffer is sized up front and drawn early when full.
+     */
+    private static final int MAX_QUADS = 4096;
 
     /** Access to DrawableHelper's protected helpers. */
     private static final class Helper extends DrawableHelper {
@@ -40,7 +48,20 @@ public final class LegacyGfx implements Gfx {
     }
 
     private final Helper helper = new Helper();
+    private final BufferBuilder batch = new BufferBuilder(MAX_QUADS * 4 * 4);
+    private final BufferRenderer renderer = new BufferRenderer();
     private final MinecraftClient client;
+    /** Batching switch, only turned off by the self-test to measure the difference. */
+    private boolean batching = true;
+    /** Quads waiting in {@link #batch}. */
+    private int pending;
+    private long frameStart;
+    private long lastFrameNanos;
+    /** Fills and fill draw calls of the current and the last finished frame (self-test statistics). */
+    private int fills;
+    private int fillDraws;
+    private int lastFills;
+    private int lastFillDraws;
     private final float[] stack = new float[MAX_DEPTH * 3];
     private int depth;
     private float tx;
@@ -66,6 +87,10 @@ public final class LegacyGfx implements Gfx {
         tx = 0;
         ty = 0;
         scale = 1f;
+        pending = 0;
+        fills = 0;
+        fillDraws = 0;
+        frameStart = System.nanoTime();
         GlStateManager.enableBlend();
         GlStateManager.blendFuncSeparate(770, 771, 1, 0);
         GlStateManager.disableLighting();
@@ -73,9 +98,59 @@ public final class LegacyGfx implements Gfx {
         return this;
     }
 
-    /** Restores the state vanilla expects after our drawing. */
+    /** Draws what is still batched and restores the state vanilla expects after our drawing. */
     public void end() {
+        flush();
+        lastFills = fills;
+        lastFillDraws = fillDraws;
+        lastFrameNanos = System.nanoTime() - frameStart;
         GlStateManager.color(1f, 1f, 1f, 1f);
+        GlStateManager.enableTexture();
+        GlStateManager.enableAlphaTest();
+    }
+
+    /** Fills requested during the last finished frame. */
+    public int lastFills() {
+        return lastFills;
+    }
+
+    /** Draw calls those fills needed. */
+    public int lastFillDraws() {
+        return lastFillDraws;
+    }
+
+    /** CPU time between {@link #begin()} and {@link #end()} of the last finished frame. */
+    public long lastFrameNanos() {
+        return lastFrameNanos;
+    }
+
+    /** With batching off every fill is drawn at once (one draw call each), as before 0.1.4. */
+    public void setBatching(boolean on) {
+        batching = on;
+    }
+
+    /**
+     * Draws the batched quads. They hold GUI coordinates (the transform is already applied), so the
+     * GL matrix is temporarily undone to the frame's base: current = base · T(tx, ty) · S(scale).
+     */
+    private void flush() {
+        if (pending == 0) {
+            return;
+        }
+        pending = 0;
+        fillDraws++;
+        batch.end();
+        GlStateManager.enableBlend();
+        GlStateManager.disableTexture();
+        // translucent spans (shadows, anti-aliased corner pixels) are below vanilla's 0.1 alpha cut-off
+        GlStateManager.disableAlphaTest();
+        GlStateManager.blendFuncSeparate(770, 771, 1, 0);
+        GlStateManager.color(1f, 1f, 1f, 1f);
+        GlStateManager.pushMatrix();
+        GlStateManager.scale(1f / scale, 1f / scale, 1f);
+        GlStateManager.translate(-tx, -ty, 0f);
+        renderer.draw(batch);
+        GlStateManager.popMatrix();
         GlStateManager.enableTexture();
     }
 
@@ -105,20 +180,25 @@ public final class LegacyGfx implements Gfx {
         if (alpha == 0 || x2 <= x1 || y2 <= y1) {
             return;
         }
-        GlStateManager.enableBlend();
-        GlStateManager.disableTexture();
-        GlStateManager.blendFuncSeparate(770, 771, 1, 0);
-        GlStateManager.color(((argb >> 16) & 0xFF) / 255f, ((argb >> 8) & 0xFF) / 255f, (argb & 0xFF) / 255f, alpha / 255f);
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder buffer = tessellator.getBuffer();
-        buffer.begin(GL11.GL_QUADS, VertexFormats.POSITION);
-        buffer.vertex(x1, y2, 0).next();
-        buffer.vertex(x2, y2, 0).next();
-        buffer.vertex(x2, y1, 0).next();
-        buffer.vertex(x1, y1, 0).next();
-        tessellator.draw();
-        GlStateManager.enableTexture();
-        GlStateManager.color(1f, 1f, 1f, 1f);
+        if (pending == 0) {
+            batch.begin(GL11.GL_QUADS, VertexFormats.POSITION_COLOR);
+        }
+        int r = (argb >> 16) & 0xFF;
+        int gr = (argb >> 8) & 0xFF;
+        int b = argb & 0xFF;
+        double left = tx + x1 * scale;
+        double right = tx + x2 * scale;
+        double top = ty + y1 * scale;
+        double bottom = ty + y2 * scale;
+        batch.vertex(left, bottom, 0).color(r, gr, b, alpha).next();
+        batch.vertex(right, bottom, 0).color(r, gr, b, alpha).next();
+        batch.vertex(right, top, 0).color(r, gr, b, alpha).next();
+        batch.vertex(left, top, 0).color(r, gr, b, alpha).next();
+        pending++;
+        fills++;
+        if (!batching || pending == MAX_QUADS) {
+            flush();
+        }
     }
 
     @Override
@@ -126,6 +206,7 @@ public final class LegacyGfx implements Gfx {
         if (((topArgb | bottomArgb) >>> 24) == 0) {
             return;
         }
+        flush();
         GlStateManager.disableAlphaTest();
         helper.gradient(x1, y1, x2, y2, topArgb, bottomArgb);
         GlStateManager.enableBlend();
@@ -137,6 +218,7 @@ public final class LegacyGfx implements Gfx {
         if (text.isEmpty() || (argb >>> 24) < 4) {
             return (int) x;
         }
+        flush();
         GlStateManager.enableBlend();
         return font.draw(text, x, y, argb, shadow);
     }
@@ -193,12 +275,14 @@ public final class LegacyGfx implements Gfx {
         int pw = (int) Math.ceil((gx2 - gx1) * guiScale);
         int ph = (int) Math.ceil((gy2 - gy1) * guiScale);
         int py = client.height - (int) Math.ceil(gy2 * guiScale);
+        flush();
         GL11.glEnable(GL11.GL_SCISSOR_TEST);
         GL11.glScissor(px, py, Math.max(0, pw), Math.max(0, ph));
     }
 
     @Override
     public void disableScissor() {
+        flush();
         GL11.glDisable(GL11.GL_SCISSOR_TEST);
     }
 
@@ -208,6 +292,7 @@ public final class LegacyGfx implements Gfx {
         if (!(handle instanceof ItemStack)) {
             return;
         }
+        flush();
         GlStateManager.enableRescaleNormal();
         DiffuseLighting.enable();
         client.getItemRenderer().renderInGuiWithOverrides((ItemStack) handle, x, y);
@@ -229,6 +314,7 @@ public final class LegacyGfx implements Gfx {
         if (type == null || !type.hasIcon()) {
             return;
         }
+        flush();
         int index = type.getIconLevel();
         GlStateManager.color(1f, 1f, 1f, 1f);
         client.getTextureManager().bindTexture(INVENTORY);
@@ -247,6 +333,7 @@ public final class LegacyGfx implements Gfx {
         if (skin == null) {
             return;
         }
+        flush();
         GlStateManager.color(1f, 1f, 1f, 1f);
         client.getTextureManager().bindTexture(skin);
         DrawableHelper.drawTexture(x, y, 8f, 8f, 8, 8, size, size, 64f, 64f);
@@ -259,6 +346,7 @@ public final class LegacyGfx implements Gfx {
         if (entry == null) {
             return;
         }
+        flush();
         GlStateManager.enableBlend();
         GlStateManager.color(((argbTint >> 16) & 0xFF) / 255f, ((argbTint >> 8) & 0xFF) / 255f, (argbTint & 0xFF) / 255f,
                 (argbTint >>> 24) / 255f);

@@ -55,7 +55,9 @@ public final class SelfTest {
     private static final int BENCH_TICKS = 100;
     private static boolean sampling;
     private static double sampleSum;
+    private static double hudSum;
     private static int sampleCount;
+    private static float onHudMs;
     private static float onWorldMs;
     private static float onFrameMs;
     private static boolean disturbed;
@@ -70,6 +72,7 @@ public final class SelfTest {
         Meridian meridian = Meridian.get();
         if (sampling) {
             sampleSum += meridian.performance().worldRenderMs();
+            hudSum += LegacyPlatform.get().gfx().lastFrameNanos() / 1_000_000.0;
             sampleCount++;
             // a real keyboard / mouse used the window: the measurement no longer compares like with like
             if (!disturbed && (client.currentScreen != null || Math.abs(client.player.yaw + 90f) > 1f || Math.abs(client.player.pitch) > 1f)) {
@@ -200,9 +203,14 @@ public final class SelfTest {
                 return;
             case 13:
                 shot(client, "7-bench-occlusion");
+                onHudMs = sampleCount == 0 ? 0 : (float) (hudSum / sampleCount);
                 onWorldMs = stopSampling();
                 onFrameMs = meridian.performance().frames().averageFrameMs();
+                LegacyGfx gfx = LegacyPlatform.get().gfx();
+                Log.info("Self-test HUD: {} fills in {} draw calls", gfx.lastFills(), gfx.lastFillDraws());
                 occlusion(meridian, false);
+                // the second half also measures the HUD without fill batching
+                gfx.setBatching(false);
                 next(40);
                 return;
             case 14:
@@ -212,7 +220,9 @@ public final class SelfTest {
                 return;
             case 15:
                 shot(client, "8-bench-no-occlusion");
+                float offHudMs = sampleCount == 0 ? 0 : (float) (hudSum / sampleCount);
                 float offWorldMs = stopSampling();
+                LegacyPlatform.get().gfx().setBatching(true);
                 float offFrameMs = meridian.performance().frames().averageFrameMs();
                 occlusion(meridian, true);
                 // the saved test world would otherwise keep the crowd for the next run
@@ -224,6 +234,9 @@ public final class SelfTest {
                             BENCH_PIGS, String.format("%.2f", onWorldMs), String.format("%.2f", offWorldMs),
                             String.format("%.2f", onFrameMs), String.format("%.2f", offFrameMs));
                 }
+                // the HUD does not depend on where the camera looks
+                Log.info("Self-test HUD benchmark: {} ms per frame with fill batching vs {} ms without",
+                        String.format("%.3f", onHudMs), String.format("%.3f", offHudMs));
                 next(20);
                 return;
             case 16:
@@ -388,6 +401,7 @@ public final class SelfTest {
 
     private static void startSampling() {
         sampleSum = 0;
+        hudSum = 0;
         sampleCount = 0;
         sampling = true;
     }
