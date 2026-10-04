@@ -166,6 +166,7 @@ final class SelfTest {
             case 9:
                 shot(minecraft, "5b-hudeditor-ingame");
                 meridian.platform().openScreen(null);
+                verifyChatCopy(minecraft);
                 buildCullingScene(minecraft.player);
                 next(40);
                 return;
@@ -359,6 +360,26 @@ final class SelfTest {
 
     private static boolean visible(Occluders blocks, Vec3 eye, AABB box) {
         return OcclusionCuller.isVisible(blocks, eye.x, eye.y, eye.z, box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ);
+    }
+
+    /** Every line of a wrapped message must resolve to the whole message (right-click copy). */
+    private static void verifyChatCopy(Minecraft minecraft) {
+        String message = "Meridian self-test: a long chat message that wraps onto several lines of the chat, so copying has to find the whole message from any of its lines. The end.";
+        minecraft.gui.getChat().addMessage(Component.literal(message));
+        minecraft.setScreen(new net.minecraft.client.gui.screens.ChatScreen("", false));
+        ChatLookup chat = (ChatLookup) minecraft.gui.getChat();
+        double scale = minecraft.options.chatScale().get();
+        int base = net.minecraft.util.Mth.floor((minecraft.getWindow().getGuiScaledHeight() - 40) / (float) scale);
+        int lineHeight = (int) (9 * (minecraft.options.chatLineSpacing().get() + 1.0));
+        String bottom = chat.meridian$messageAt(20, (base - lineHeight / 2.0) * scale);
+        String above = chat.meridian$messageAt(20, (base - lineHeight * 1.5) * scale);
+        minecraft.setScreen(null);
+        String expected = dev.meridian.module.impl.misc.ChatModule.stripDecorations(bottom == null ? "" : bottom);
+        if (message.equals(expected) && bottom.equals(above)) {
+            Log.info("Self-test: chat copy OK (both lines of the wrapped message)");
+        } else {
+            Log.error("Self-test FAILED: chat copy (bottom line: {}, line above: {})", bottom, above);
+        }
     }
 
     /** Three identical lines must have become one "(x3)" line with a timestamp. */

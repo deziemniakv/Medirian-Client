@@ -3,6 +3,7 @@ package dev.meridian.platform;
 import dev.meridian.core.Log;
 import dev.meridian.core.Meridian;
 import dev.meridian.event.Events;
+import dev.meridian.i18n.I18n;
 import dev.meridian.input.Key;
 import dev.meridian.module.impl.combat.HealthTagsModule;
 import dev.meridian.module.impl.combat.HitColorModule;
@@ -193,6 +194,24 @@ public final class Hooks {
      */
     public static int chatStack(String plainText, boolean previousShown) {
         return chatModule == null ? 1 : chatModule.stack(plainText, previousShown);
+    }
+
+    /** Right-clicking a line in the open chat copies its message (the adapter finds the message). */
+    public static boolean chatCopyEnabled() {
+        return chatModule != null && chatModule.copyEnabled();
+    }
+
+    /**
+     * The text to put on the clipboard for a right-clicked chat message (Meridian's decorations
+     * removed); also confirms the copy with a notification.
+     */
+    public static String chatCopied(String plainText) {
+        String text = ChatModule.stripDecorations(plainText);
+        if (meridian != null) {
+            meridian.notifications().post(I18n.tr("notify.chat.copied", "Message copied"),
+                    text.length() > 60 ? text.substring(0, 59) + "…" : text);
+        }
+        return text;
     }
 
     /** Number of chat messages / lines to keep. */

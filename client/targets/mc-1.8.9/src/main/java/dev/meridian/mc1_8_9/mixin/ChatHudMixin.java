@@ -1,5 +1,6 @@
 package dev.meridian.mc1_8_9.mixin;
 
+import dev.meridian.mc1_8_9.ChatLookup;
 import dev.meridian.platform.Hooks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.hud.ChatHud;
@@ -8,7 +9,9 @@ import net.minecraft.text.LiteralText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
+import net.minecraft.client.util.Window;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -22,14 +25,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 /**
  * Chat messages for modules (Auto GG), screenshot detection (1.8.9 saves screenshots
  * synchronously and reports them as a "screenshot.success" chat message) and the Chat module:
- * timestamps, stacking of repeated lines and the history length.
+ * timestamps, stacking of repeated lines, the history length and finding the message under the
+ * mouse (copying).
  */
 @Mixin(ChatHud.class)
-public abstract class ChatHudMixin {
+public abstract class ChatHudMixin implements ChatLookup {
+
+    @Shadow @Final private MinecraftClient client;
 
     @Shadow @Final private List<ChatHudLine> messages;
     @Shadow @Final private List<ChatHudLine> visibleMessages;
@@ -38,6 +46,17 @@ public abstract class ChatHudMixin {
     @Shadow public abstract void reset();
 
     @Shadow public abstract void scroll(int lines);
+
+    @Shadow public abstract boolean isChatFocused();
+
+    @Shadow public abstract float getChatScale();
+
+    @Shadow public abstract int getWidth();
+
+    @Shadow public abstract int getVisibleLineCount();
+
+    /** The message every visible (wrapped) line belongs to; lines compare by identity. */
+    @Unique private final Map<ChatHudLine, Text> meridian$lineMessages = new WeakHashMap<ChatHudLine, Text>();
 
     /** The newest message added with id 0; stacking only replaces this one. */
     @Unique private ChatHudLine meridian$last;
@@ -97,10 +116,37 @@ public abstract class ChatHudMixin {
 
     @Inject(method = "addMessage(Lnet/minecraft/text/Text;IIZ)V", at = @At("TAIL"))
     private void meridian$afterAdd(Text message, int id, int ticks, boolean refresh, CallbackInfo ci) {
+        // the lines just added are the newest ones not mapped yet (also when the chat is re-wrapped)
+        for (int i = 0; i < visibleMessages.size() && !meridian$lineMessages.containsKey(visibleMessages.get(i)); i++) {
+            meridian$lineMessages.put(visibleMessages.get(i), message);
+        }
         if (!refresh) {
             meridian$last = id == 0 && !messages.isEmpty() ? messages.get(0) : null;
             meridian$lastBoundary = meridian$pendingBoundary;
         }
+    }
+
+    /** Same hit test as vanilla's getTextAt, but returns the whole message of the line. */
+    @Override
+    public String meridian$messageAt(int rawMouseX, int rawMouseY) {
+        if (!isChatFocused()) {
+            return null;
+        }
+        int scaleFactor = new Window(client).getScaleFactor();
+        float chatScale = getChatScale();
+        int x = MathHelper.floor((rawMouseX / scaleFactor - 3) / chatScale);
+        int y = MathHelper.floor((rawMouseY / scaleFactor - 27) / chatScale);
+        int fontHeight = client.textRenderer.fontHeight;
+        int lines = Math.min(getVisibleLineCount(), visibleMessages.size());
+        if (x < 0 || y < 0 || x > MathHelper.floor(getWidth() / chatScale) || y >= fontHeight * lines + lines) {
+            return null;
+        }
+        int index = y / fontHeight + scrolledLines;
+        if (index < 0 || index >= visibleMessages.size()) {
+            return null;
+        }
+        Text message = meridian$lineMessages.get(visibleMessages.get(index));
+        return message == null ? null : message.asUnformattedString();
     }
 
     /** Removes the newest message and its wrapped lines (all visible lines above its boundary). */

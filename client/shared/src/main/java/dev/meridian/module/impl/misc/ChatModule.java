@@ -46,6 +46,7 @@ public final class ChatModule extends Module {
     private final ModeSetting<TimeFormat> timeFormat;
     private final BooleanSetting stack;
     private final NumberSetting history;
+    private final BooleanSetting copy;
 
     private SimpleDateFormat format;
     private TimeFormat formatFor;
@@ -61,6 +62,8 @@ public final class ChatModule extends Module {
                 .description("A message identical to the previous one replaces it with a counter: (x2), (x3)…"));
         history = add(new NumberSetting("history", "History length", 500, VANILLA_HISTORY, 1000, 50)
                 .description("Messages kept in the chat history (vanilla: 100)."));
+        copy = add(new BooleanSetting("copy", "Right-click copies a message", true)
+                .description("In the open chat, right-click a line to copy its whole message."));
     }
 
     @Override
@@ -101,6 +104,16 @@ public final class ChatModule extends Module {
             count = 1;
         }
         return count;
+    }
+
+    /** Right-clicking a chat line copies its message. */
+    public boolean copyEnabled() {
+        return isEnabled() && copy.on();
+    }
+
+    /** The message text without Meridian's own decorations (timestamp prefix, "(xN)" counter). */
+    public static String stripDecorations(String text) {
+        return text.replaceFirst("^\\[\\d{1,2}:\\d{2}(:\\d{2})?( [AP]M)?] ", "").replaceFirst(" \\(x\\d+\\)$", "");
     }
 
     /** Messages (and, in modern versions, wrapped lines) kept in the chat. */

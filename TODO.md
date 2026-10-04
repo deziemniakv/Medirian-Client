@@ -26,8 +26,8 @@ Każdy wymaga hooka w obu adapterach (nowe `Capability`):
       znaczniki rzutowane na HUD (`render/Projection`), klawisz dodawania, punkt śmierci.
 - [ ] Waypoints: promień (beam) w świecie, wskaźnik kierunku dla punktów poza ekranem, import/eksport.
 - [x] **Chat** — znaczniki czasu, scalanie powtórzeń, dłuższa historia (0.1.2).
-- [ ] **Chat: kopiowanie wiadomości** — kliknięcie linii w otwartym czacie kopiuje jej tekst
-      (1.8.9: `ChatHud#getTextAt` daje tylko fragment — potrzebny indeks linii; modern: `ChatComponent#captureClickableText`).
+- [x] **Chat: kopiowanie wiadomości** (0.1.3) — prawy klik linii w otwartym czacie kopiuje całą wiadomość
+      (bez znacznika czasu i licznika); 1.8.9: mapa linia→wiadomość, modern: `endOfEntry`.
 - [x] **Discord Rich Presence** (0.1.3) — launcher (`main/discord`), status z kanału live. Do zrobienia przez właściciela:
       aplikacja w Discord Developer Portal + asset `meridian`, identyfikator wbudowany przez `MAIN_VITE_DISCORD_APP_ID`.
 - [x] **Occlusion culling** w Entity Culling (0.1.2): promienie z kamery do środka i narożników hitboxa (`perf/OcclusionCuller`).

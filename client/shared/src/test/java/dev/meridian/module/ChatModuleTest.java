@@ -50,6 +50,13 @@ class ChatModuleTest {
     }
 
     @Test
+    void copiedTextLosesMeridianDecorations() {
+        assertEquals("hello (x2) world", ChatModule.stripDecorations("[14:05] hello (x2) world (x3)"));
+        assertEquals("<Steve> gg", ChatModule.stripDecorations("[2:05:09 PM] <Steve> gg"));
+        assertEquals("[Party] Steve: hi", ChatModule.stripDecorations("[Party] Steve: hi"));
+    }
+
+    @Test
     void timestampAndHistory() {
         ChatModule chat = enabled();
         String stamp = chat.timestamp("hello");
