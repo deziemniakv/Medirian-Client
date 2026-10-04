@@ -2,8 +2,12 @@
 
 All notable changes to Meridian Client. The launcher shows the newest entries on its home screen.
 
-## 0.1.3 — 2026-10-03 — Discord
+## 0.1.3 — 2026-10-04 — Discord & PvP
 
+- New module: Health Tags — health next to player name tags (hearts or HP, coloured by what is left, absorption as +N).
+- New module: Hurt Camera — reduce or remove the camera shake when you take damage.
+- New module: Fire Overlay — lower and fade the flames on screen while you burn.
+- New HUD module: Speed — blocks per second (or km/h) over the last half second.
 - Discord Rich Presence: your Discord profile shows the Minecraft version, Meridian profile, whether you are in the menus, in singleplayer or on a server (the address can be hidden) and how long you have been playing. Settings → Discord.
 
 ## 0.1.2 — 2026-10-03 — Chat & Waypoints

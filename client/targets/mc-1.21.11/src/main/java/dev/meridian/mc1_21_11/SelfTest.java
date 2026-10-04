@@ -119,8 +119,8 @@ final class SelfTest {
             case 5:
                 if (minecraft.player != null && minecraft.level != null && minecraft.screen == null) {
                     prepareScene(meridian);
-                    minecraft.player.setXRot(55f); // look at the ground so a block is selected
-                    minecraft.player.connection.sendCommand("summon pig ^ ^ ^3");
+                    minecraft.player.setXRot(30f); // the tagged pig's name and a selected block both in view
+                    minecraft.player.connection.sendCommand("summon pig ^ ^ ^3 {CustomName:\"Tagged\",CustomNameVisible:1b}");
                     // live data for Armor Status and Potion Effects
                     minecraft.player.connection.sendCommand("item replace entity @s armor.head with diamond_helmet");
                     minecraft.player.connection.sendCommand("item replace entity @s armor.chest with iron_chestplate");
@@ -137,11 +137,17 @@ final class SelfTest {
             case 6:
                 // hurt the pig right before the screenshot to show the Hit Color flash
                 minecraft.player.connection.sendCommand("damage @e[type=pig,limit=1,sort=nearest] 1");
+                minecraft.player.setXRot(30f); // the tagged pig's name and a selected block both in view
+                // really burning (creative players do not catch fire), only for the screenshot: Fire Overlay
+                minecraft.player.connection.sendCommand("gamemode survival");
+                minecraft.player.connection.sendCommand("setblock ~ ~ ~ fire");
                 next(3);
                 return;
             case 7:
                 verifyChat(minecraft);
                 shot(minecraft, "4-hud");
+                minecraft.player.connection.sendCommand("gamemode creative");
+                minecraft.player.connection.sendCommand("setblock ~ ~ ~ air");
                 // press the mod menu key through the game's real keyboard handler
                 pressKey(minecraft, GLFW.GLFW_KEY_RIGHT_SHIFT);
                 next(30);
@@ -226,6 +232,11 @@ final class SelfTest {
         meridian.modules().get("hitcolor").setEnabled(true);
         meridian.modules().get("chat").setEnabled(true);
         meridian.modules().get("entityculling").setEnabled(true);
+        meridian.modules().get("healthtags").setEnabled(true);
+        ((dev.meridian.setting.BooleanSetting) meridian.modules().get("healthtags").setting("mobs")).set(true);
+        meridian.modules().get("fireoverlay").setEnabled(true);
+        meridian.modules().get("hurtcam").setEnabled(true);
+        meridian.modules().get("speed").setEnabled(true);
     }
 
     /** A platform high above the player facing east with a stone wall; one pig in front of it, one behind it. */

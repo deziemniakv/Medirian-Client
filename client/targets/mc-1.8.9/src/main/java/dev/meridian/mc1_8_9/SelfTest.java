@@ -116,7 +116,16 @@ public final class SelfTest {
                     meridian.modules().get("hitcolor").setEnabled(true);
                     meridian.modules().get("chat").setEnabled(true);
                     meridian.modules().get("entityculling").setEnabled(true);
+                    meridian.modules().get("healthtags").setEnabled(true);
+                    ((BooleanSetting) meridian.modules().get("healthtags").setting("mobs")).set(true);
+                    meridian.modules().get("fireoverlay").setEnabled(true);
+                    meridian.modules().get("hurtcam").setEnabled(true);
+                    meridian.modules().get("speed").setEnabled(true);
                     client.player.sendChatMessage("/summon Pig ~1.5 ~ ~1.5");
+                    // a named pig five blocks in front of the player (farther than the Hit Color pig, so the damage effect skips it)
+                    double yaw = Math.toRadians(client.player.yaw);
+                    client.player.sendChatMessage(String.format(java.util.Locale.ROOT, "/summon Pig %.2f %.2f %.2f {CustomName:\"Tagged\",CustomNameVisible:1,NoAI:1}",
+                            client.player.x - Math.sin(yaw) * 5, client.player.y, client.player.z + Math.cos(yaw) * 5));
                     // live data for Armor Status and Potion Effects
                     client.player.sendChatMessage("/replaceitem entity @p slot.armor.head diamond_helmet");
                     client.player.sendChatMessage("/replaceitem entity @p slot.armor.chest iron_chestplate");
@@ -133,15 +142,21 @@ public final class SelfTest {
                 return;
             case 6:
                 // hurt the pig (instant damage) right before the screenshot to show the Hit Color flash
-                client.player.sendChatMessage("/effect @e[type=Pig,c=1] 7 1 0");
+                client.player.sendChatMessage("/effect @e[type=Pig,name=!Tagged,c=1] 7 1 0");
                 // look at the ground so a block is selected (set late: joining resets the rotation)
-                client.player.pitch = 55f;
-                client.player.prevPitch = 55f;
+                client.player.pitch = 30f;
+                client.player.prevPitch = 30f;
+                // really burning (creative players do not catch fire), only for the screenshot: Fire Overlay
+                client.player.sendChatMessage("/gamemode 0");
+                client.player.sendChatMessage("/setblock ~ ~ ~ fire");
                 next(3);
                 return;
             case 7:
+                verifyHealthTag(client);
                 verifyChat(client);
                 shot(client, "4-hud");
+                client.player.sendChatMessage("/gamemode 1");
+                client.player.sendChatMessage("/setblock ~ ~ ~ air");
                 meridian.platform().openScreen(new ModMenuScreen(null));
                 next(30);
                 return;
@@ -211,6 +226,22 @@ public final class SelfTest {
                 step = -1;
                 client.scheduleStop();
         }
+    }
+
+    /** The named pig's label must end with its health in hearts (10 HP pig: "§a5❤" or less). */
+    private static void verifyHealthTag(MinecraftClient client) {
+        for (Entity entity : new ArrayList<Entity>(client.world.loadedEntities)) {
+            if (entity instanceof PigEntity && "Tagged".equals(((PigEntity) entity).getCustomName())) {
+                String label = NameTags.label("Tagged", (PigEntity) entity);
+                if (label.matches("Tagged §[ace][0-9.]+❤")) {
+                    Log.info("Self-test: health tag OK ({})", label);
+                } else {
+                    Log.error("Self-test FAILED: health tag ({})", label);
+                }
+                return;
+            }
+        }
+        Log.error("Self-test FAILED: health tag pig not found");
     }
 
     /** Three identical lines must have become one "(x3)" line with a timestamp. */

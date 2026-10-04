@@ -49,5 +49,11 @@ public enum Capability {
     /** Chat lines are decorated by {@link Hooks#chatTimestamp}/{@link Hooks#chatStack} and the history length comes from {@link Hooks#chatHistory}. */
     CHAT_UTILITIES,
     /** {@link GameView#camera()}, {@link GameView#worldKey()} and {@link PlayerView#dimensionId()} work. */
-    WAYPOINTS
+    WAYPOINTS,
+    /** Living entities' name tags get the text from {@link Hooks#healthTags(boolean)} appended. */
+    HEALTH_TAGS,
+    /** The hurt camera tilt is scaled by {@link Hooks#hurtCameraStrength()}. */
+    HURT_CAMERA,
+    /** The burning screen overlay uses {@link Hooks#fireOverlayOffset()} and {@link Hooks#fireOverlayAlpha(float)}. */
+    FIRE_OVERLAY
 }

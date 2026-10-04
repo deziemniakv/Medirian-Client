@@ -1,6 +1,6 @@
 # Meridian — roadmapa
 
-Stan: **0.1.2** (launcher, dwa targety klienta, HUD, 36 modułów, konfiguracja, wydajność).
+Stan: **0.1.3** (launcher, dwa targety klienta, HUD, 40 modułów, konfiguracja, wydajność).
 Poniżej kolejne etapy. Zasada bez zmian: funkcja trafia do UI dopiero, gdy naprawdę działa.
 
 ## Etap 1 — przed pierwszym publicznym wydaniem
@@ -19,7 +19,8 @@ Poniżej kolejne etapy. Zasada bez zmian: funkcja trafia do UI dopiero, gdy napr
 
 Każdy wymaga hooka w obu adapterach (nowe `Capability`):
 
-- [ ] **Damage Indicator** — zdrowie nad głowami (renderowanie nametagów 3D).
+- [x] **Damage Indicator** → moduł **Health Tags** (0.1.3): zdrowie doklejane do nametagu (1.8.9: `renderName`,
+      modern: `EntityRenderer#extractRenderState`), plus Hurt Camera, Fire Overlay i HUD Speed.
 - [ ] **Item Physics** — fizyka leżących przedmiotów.
 - [x] **Waypoints** (0.1.2) — dane per świat/wymiar (`waypoints.json`, wspólne dla obu wersji), ekran zarządzania,
       znaczniki rzutowane na HUD (`render/Projection`), klawisz dodawania, punkt śmierci.

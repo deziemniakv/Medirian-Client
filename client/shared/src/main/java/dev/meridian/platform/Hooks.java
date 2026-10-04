@@ -4,6 +4,7 @@ import dev.meridian.core.Log;
 import dev.meridian.core.Meridian;
 import dev.meridian.event.Events;
 import dev.meridian.input.Key;
+import dev.meridian.module.impl.combat.HealthTagsModule;
 import dev.meridian.module.impl.combat.HitColorModule;
 import dev.meridian.module.impl.misc.ChatModule;
 import dev.meridian.module.impl.misc.ScreenshotModule;
@@ -17,7 +18,9 @@ import dev.meridian.module.impl.performance.ParticleControlModule;
 import dev.meridian.module.impl.player.PotionEffectsModule;
 import dev.meridian.module.impl.render.BlockOverlayModule;
 import dev.meridian.module.impl.render.CrosshairModule;
+import dev.meridian.module.impl.render.FireOverlayModule;
 import dev.meridian.module.impl.render.FullbrightModule;
+import dev.meridian.module.impl.render.HurtCameraModule;
 import dev.meridian.module.impl.render.ScoreboardModule;
 import dev.meridian.module.impl.render.TimeChangerModule;
 import dev.meridian.module.impl.render.WeatherChangerModule;
@@ -52,6 +55,9 @@ public final class Hooks {
     private static BlockOverlayModule blockOverlay;
     private static HitColorModule hitColor;
     private static ChatModule chatModule;
+    private static HealthTagsModule healthTags;
+    private static HurtCameraModule hurtCamera;
+    private static FireOverlayModule fireOverlay;
 
     private Hooks() {
     }
@@ -75,6 +81,9 @@ public final class Hooks {
         blockOverlay = instance.modules().get(BlockOverlayModule.class);
         hitColor = instance.modules().get(HitColorModule.class);
         chatModule = instance.modules().get(ChatModule.class);
+        healthTags = instance.modules().get(HealthTagsModule.class);
+        hurtCamera = instance.modules().get(HurtCameraModule.class);
+        fireOverlay = instance.modules().get(FireOverlayModule.class);
     }
 
     // ------------------------------------------------------------------ lifecycle
@@ -319,6 +328,29 @@ public final class Hooks {
     /** Hurt overlay strength relative to vanilla (1 = vanilla). */
     public static float hitColorIntensity() {
         return hitColor == null ? 1f : hitColor.intensity();
+    }
+
+    /**
+     * Health Tags when they apply to this entity, otherwise null. The adapter appends
+     * {@link HealthTagsModule#text} (coloured with {@link HealthTagsModule#color}) and
+     * {@link HealthTagsModule#absorptionText} to the name tag.
+     */
+    public static HealthTagsModule healthTags(boolean isPlayer) {
+        return healthTags != null && healthTags.appliesTo(isPlayer) ? healthTags : null;
+    }
+
+    /** Multiplier for the camera tilt when hurt (1 = vanilla). */
+    public static float hurtCameraStrength() {
+        return hurtCamera == null ? 1f : hurtCamera.strength();
+    }
+
+    /** Vertical offset of the burning overlay (0 = vanilla). */
+    public static float fireOverlayOffset() {
+        return fireOverlay == null ? 0f : fireOverlay.offsetY();
+    }
+
+    public static float fireOverlayAlpha(float vanilla) {
+        return fireOverlay == null ? vanilla : fireOverlay.alpha(vanilla);
     }
 
     /** True when Toggle Sneak holds the sneak key down. */

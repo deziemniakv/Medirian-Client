@@ -11,10 +11,12 @@
     "EntityMixin",
     "EntityRenderDispatcherMixin",
     "GameRendererMixin",
+    "HeldItemRendererMixin",
     "InGameHudMixin",
     "KeyBindingMixin",
     "LivingEntityRendererMixin",
     "MinecraftClientMixin",
+    "NameTagMixin",
     "ParticleManagerMixin",
     "WorldMixin",
     "WorldRendererMixin"

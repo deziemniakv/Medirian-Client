@@ -11,12 +11,13 @@
     "ClientLevelDataMixin",
     "EntityMixin",
     "EntityRenderDispatcherMixin",
+    "EntityRendererMixin",
     "FramerateLimitTrackerMixin",
     "GameRendererMixin",
     "GuiMixin",
-    "KeyboardHandlerMixin",
     "KeyMappingAccessor",
     "KeyMappingMixin",
+    "KeyboardHandlerMixin",
     "LevelMixin",
     "LevelRendererMixin",
     "LightTextureMixin",
@@ -25,6 +26,7 @@
     "MultiPlayerGameModeMixin",
     "OverlayTextureAccessor",
     "ParticleEngineMixin",
+    "ScreenEffectRendererMixin",
     "ScreenshotMixin"
   ],
   "injectors": {

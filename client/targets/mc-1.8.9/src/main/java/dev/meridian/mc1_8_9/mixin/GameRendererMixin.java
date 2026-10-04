@@ -11,6 +11,7 @@ import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -30,6 +31,13 @@ public abstract class GameRendererMixin {
             LegacyCamera.fov = cir.getReturnValueF();
             LegacyCamera.tickDelta = tickDelta;
         }
+    }
+
+    /** Hurt Camera: the roll of the hurt tilt (ordinal 0 is the death animation, 1 and 3 turn to the hit direction and back). */
+    @ModifyArg(method = "bobViewWhenHurt", index = 0,
+            at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/GlStateManager;rotate(FFFF)V", ordinal = 2))
+    private float meridian$hurtTilt(float degrees) {
+        return degrees * Hooks.hurtCameraStrength();
     }
 
     @Redirect(method = "render(FJ)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/ClientPlayerEntity;increaseTransforms(FF)V"))

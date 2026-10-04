@@ -2,6 +2,7 @@ package dev.meridian.module;
 
 import dev.meridian.module.impl.combat.ComboModule;
 import dev.meridian.module.impl.combat.CpsModule;
+import dev.meridian.module.impl.combat.HealthTagsModule;
 import dev.meridian.module.impl.combat.HitColorModule;
 import dev.meridian.module.impl.combat.ReachModule;
 import dev.meridian.module.impl.combat.TargetHudModule;
@@ -10,6 +11,7 @@ import dev.meridian.module.impl.hud.FpsModule;
 import dev.meridian.module.impl.hud.KeystrokesModule;
 import dev.meridian.module.impl.hud.PingModule;
 import dev.meridian.module.impl.hud.SessionInfoModule;
+import dev.meridian.module.impl.hud.SpeedModule;
 import dev.meridian.module.impl.hud.StopwatchModule;
 import dev.meridian.module.impl.misc.AutoGgModule;
 import dev.meridian.module.impl.misc.ChatModule;
@@ -29,7 +31,9 @@ import dev.meridian.module.impl.player.CoordinatesModule;
 import dev.meridian.module.impl.player.PotionEffectsModule;
 import dev.meridian.module.impl.render.BlockOverlayModule;
 import dev.meridian.module.impl.render.CrosshairModule;
+import dev.meridian.module.impl.render.FireOverlayModule;
 import dev.meridian.module.impl.render.FullbrightModule;
+import dev.meridian.module.impl.render.HurtCameraModule;
 import dev.meridian.module.impl.render.ScoreboardModule;
 import dev.meridian.module.impl.render.TimeChangerModule;
 import dev.meridian.module.impl.render.WeatherChangerModule;
@@ -53,6 +57,7 @@ public final class BuiltinModules {
         modules.register(new ReachModule());
         modules.register(new TargetHudModule());
         modules.register(new HitColorModule());
+        modules.register(new HealthTagsModule());
         // MOVEMENT
         modules.register(new ToggleSprintModule());
         modules.register(new ToggleSneakModule());
@@ -65,6 +70,8 @@ public final class BuiltinModules {
         // RENDER
         modules.register(new CrosshairModule());
         modules.register(new BlockOverlayModule());
+        modules.register(new HurtCameraModule());
+        modules.register(new FireOverlayModule());
         modules.register(new FullbrightModule());
         modules.register(new TimeChangerModule());
         modules.register(new WeatherChangerModule());
@@ -77,6 +84,7 @@ public final class BuiltinModules {
         modules.register(new FpsModule());
         modules.register(new KeystrokesModule());
         modules.register(new PingModule());
+        modules.register(new SpeedModule());
         modules.register(new ClockModule());
         modules.register(new StopwatchModule());
         modules.register(new SessionInfoModule());

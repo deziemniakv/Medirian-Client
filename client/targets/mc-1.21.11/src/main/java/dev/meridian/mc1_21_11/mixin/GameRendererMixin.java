@@ -8,10 +8,11 @@ import net.minecraft.client.renderer.GameRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** Zoom (FOV multiplier) and world render timing. */
+/** Zoom (FOV multiplier), hurt camera and world render timing. */
 @Mixin(GameRenderer.class)
 public abstract class GameRendererMixin {
 
@@ -25,6 +26,13 @@ public abstract class GameRendererMixin {
             // the world projection's FOV (the hand uses its own): waypoint markers project with it
             ModernCamera.fov = cir.getReturnValueF();
         }
+    }
+
+    /** Hurt Camera: the roll of the hurt tilt (ordinal 0 is the death animation, 1 and 3 turn to the hit direction and back). */
+    @ModifyArg(method = "bobHurt", index = 0,
+            at = @At(value = "INVOKE", target = "Lcom/mojang/math/Axis;rotationDegrees(F)Lorg/joml/Quaternionf;", ordinal = 2))
+    private float meridian$hurtTilt(float degrees) {
+        return degrees * Hooks.hurtCameraStrength();
     }
 
     @Inject(method = "renderLevel", at = @At("HEAD"))
