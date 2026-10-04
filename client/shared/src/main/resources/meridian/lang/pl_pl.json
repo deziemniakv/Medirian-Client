@@ -496,5 +496,8 @@
   "cosmetics.hint.emote": "Naciśnij {0}, aby odtworzyć wybraną emotkę.",
   "notify.noEmote": "Nie wybrano emotki",
   "notify.noEmote.desc": "Wybierz ją w Kosmetyki → Emotki",
-  "setting.global.emoteKey": "Klawisz emotki"
+  "setting.global.emoteKey": "Klawisz emotki",
+  "setting.global.font": "Czcionka",
+  "setting.global.font.desc": "Gładka czcionka Meridian pozostaje ostra przy każdej skali GUI.",
+  "font.meridian": "Meridian (gładka)"
 }

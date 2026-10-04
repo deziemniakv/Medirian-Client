@@ -33,6 +33,7 @@ public abstract class MeridianScreen {
     // ------------------------------------------------------------------ adapter-facing API (GUI units)
 
     public final void renderFrame(Gfx g, double guiMouseX, double guiMouseY, float delta) {
+        g = Meridian.get().uiGfx(g);
         if (g.width() != guiWidth || g.height() != guiHeight || g.guiScale() != guiScale) {
             guiWidth = g.width();
             guiHeight = g.height();

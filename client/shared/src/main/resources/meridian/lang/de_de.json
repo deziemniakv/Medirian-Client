@@ -496,5 +496,8 @@
   "cosmetics.hint.emote": "Drücke {0}, um das gewählte Emote abzuspielen.",
   "notify.noEmote": "Kein Emote gewählt",
   "notify.noEmote.desc": "Wähle eines unter Kosmetik → Emotes",
-  "setting.global.emoteKey": "Emote-Taste"
+  "setting.global.emoteKey": "Emote-Taste",
+  "setting.global.font": "Schrift",
+  "setting.global.font.desc": "Meridians glatte Schrift bleibt bei jeder GUI-Skalierung scharf.",
+  "font.meridian": "Meridian (glatt)"
 }

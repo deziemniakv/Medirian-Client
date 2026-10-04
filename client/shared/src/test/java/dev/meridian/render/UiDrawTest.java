@@ -8,10 +8,10 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class UiDrawTest {
+public class UiDrawTest {
 
     /** Rasterises fills into a coverage map (GUI scale 2), counting how often each pixel is drawn. */
-    static final class RasterGfx implements Gfx {
+    public static class RasterGfx implements Gfx {
         final int size = 200;
         final double[] coverage = new double[size * size];
         final int[] draws = new int[size * size];
@@ -148,6 +148,14 @@ class UiDrawTest {
 
         @Override
         public void textureRegion(String path, int x, int y, int width, int height, float u0, float v0, float u1, float v1, int argbTint) {
+        }
+
+        @Override
+        public void uploadTexture(String id, int width, int height, int[] argb) {
+        }
+
+        @Override
+        public void dynamicTexture(String id, int x, int y, int width, int height, float u0, float v0, float u1, float v1, int argbTint) {
         }
 
         @Override

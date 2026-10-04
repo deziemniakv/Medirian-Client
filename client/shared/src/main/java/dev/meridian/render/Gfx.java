@@ -73,6 +73,15 @@ public interface Gfx {
      */
     void textureRegion(String path, int x, int y, int width, int height, float u0, float v0, float u1, float v1, int argbTint);
 
+    /**
+     * Creates or replaces a texture made by Meridian at runtime (e.g. the font atlas):
+     * {@code argb} holds width×height pixels, row by row.
+     */
+    void uploadTexture(String id, int width, int height, int[] argb);
+
+    /** Draws part of a texture created with {@link #uploadTexture} (region in fractions, tinted). */
+    void dynamicTexture(String id, int x, int y, int width, int height, float u0, float v0, float u1, float v1, int argbTint);
+
     /** Draws native rich text (e.g. scoreboard lines). */
     void richText(Object nativeText, float x, float y, int argb, boolean shadow);
 

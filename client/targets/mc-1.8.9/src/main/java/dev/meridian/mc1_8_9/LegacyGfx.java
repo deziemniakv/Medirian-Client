@@ -48,6 +48,8 @@ public final class LegacyGfx implements Gfx {
     }
 
     private final Helper helper = new Helper();
+    /** Textures made at runtime (font atlas pages), by id. */
+    private final java.util.Map<String, Object[]> dynamic = new java.util.HashMap<String, Object[]>();
     private final BufferBuilder batch = new BufferBuilder(MAX_QUADS * 4 * 4);
     private final BufferRenderer renderer = new BufferRenderer();
     private final MinecraftClient client;
@@ -368,6 +370,39 @@ public final class LegacyGfx implements Gfx {
         client.getTextureManager().bindTexture(entry.id);
         DrawableHelper.drawTexture(x, y, u0 * entry.width, v0 * entry.height, Math.round((u1 - u0) * entry.width),
                 Math.round((v1 - v0) * entry.height), width, height, entry.width, entry.height);
+        GlStateManager.color(1f, 1f, 1f, 1f);
+    }
+
+    @Override
+    public void uploadTexture(String id, int width, int height, int[] argb) {
+        Object[] entry = dynamic.get(id);
+        if (entry == null || ((net.minecraft.client.texture.NativeImageBackedTexture) entry[0]).getPixels().length != width * height) {
+            net.minecraft.client.texture.NativeImageBackedTexture texture = new net.minecraft.client.texture.NativeImageBackedTexture(width, height);
+            Identifier identifier = client.getTextureManager().registerDynamicTexture(id, texture);
+            entry = new Object[] {texture, identifier, width, height};
+            dynamic.put(id, entry);
+        }
+        net.minecraft.client.texture.NativeImageBackedTexture texture = (net.minecraft.client.texture.NativeImageBackedTexture) entry[0];
+        System.arraycopy(argb, 0, texture.getPixels(), 0, width * height);
+        texture.upload();
+    }
+
+    @Override
+    public void dynamicTexture(String id, int x, int y, int width, int height, float u0, float v0, float u1, float v1, int argbTint) {
+        Object[] entry = dynamic.get(id);
+        if (entry == null) {
+            return;
+        }
+        flush();
+        int texWidth = (Integer) entry[2];
+        int texHeight = (Integer) entry[3];
+        GlStateManager.enableBlend();
+        GlStateManager.blendFuncSeparate(770, 771, 1, 0);
+        GlStateManager.color(((argbTint >> 16) & 0xFF) / 255f, ((argbTint >> 8) & 0xFF) / 255f, (argbTint & 0xFF) / 255f,
+                (argbTint >>> 24) / 255f);
+        client.getTextureManager().bindTexture((Identifier) entry[1]);
+        DrawableHelper.drawTexture(x, y, u0 * texWidth, v0 * texHeight, Math.round((u1 - u0) * texWidth),
+                Math.round((v1 - v0) * texHeight), width, height, texWidth, texHeight);
         GlStateManager.color(1f, 1f, 1f, 1f);
     }
 

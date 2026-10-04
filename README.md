@@ -45,6 +45,11 @@ Scoreboard, Direction (kompas), Biome, Waypoints (punkty nawigacyjne), FPS, Keys
 Dynamic FPS, Particle Control, Entity Culling (odległość + okluzja), Memory Monitor, FPS Graph, Chat (znaczniki czasu, scalanie
 powtórzeń, dłuższa historia), Screenshot Tool, Auto GG, Server Info. Moduły zaplanowane (jeszcze bez UI): patrz [TODO.md](TODO.md).
 
+## Zasoby zewnętrzne
+
+* Czcionka **Lato** (Łukasz Dziedzic) — SIL Open Font License 1.1, plik licencji: `client/shared/src/main/resources/assets/meridian/fonts/OFL.txt`.
+* Pozostałe grafiki (logo, peleryny, czapki, skrzydła, ikony) są oryginalne i generowane skryptami w `scripts/`.
+
 ## Wymagania deweloperskie
 
 * **Node.js 22+** (launcher)

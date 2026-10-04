@@ -78,7 +78,9 @@ Każdy wymaga hooka w obu adapterach (nowe `Capability`):
 
 ## Etap 6 — UI / jakość
 
-- [ ] Własny renderer czcionki (SDF/MSDF) dla ostrzejszego tekstu w HUD i menu.
+- [x] **Własny renderer czcionki** (0.1.4) — zamiast SDF (shadery w trzech różnych backendach: GL2, potoki 1.21.11, Vulkan 26.3):
+      glify Lato (OFL) rasteryzowane przez AWT dokładnie w rozdzielczości ekranu i pakowane do atlasu (`render/font`),
+      więc tekst jest ostry przy każdej skali; opcja *Ustawienia → Ogólne → Czcionka*, symbole spoza czcionki z czcionki Minecrafta.
 - [x] Zaokrąglone prostokąty (0.1.4) — zamiast shadera: batchowanie (poniżej) sprawia, że zaokrąglenia nie kosztują
       dodatkowych draw calli, a krawędzie są wygładzane na CPU (pokrycie piksela, `UiDraw.coverage`) — identycznie w obu
       wersjach, bez GLSL w 1.8.9 i bez własnego `RenderPipeline` w 1.21.11.

@@ -58,6 +58,9 @@ public final class Meridian {
     private final dev.meridian.services.CloudProfiles cloudProfiles;
     private final dev.meridian.cosmetics.Trails trails = new dev.meridian.cosmetics.Trails();
     private final dev.meridian.cosmetics.emote.EmoteManager emotes;
+    private dev.meridian.render.font.MeridianFont font;
+    private boolean fontLoaded;
+    private dev.meridian.render.font.FontGfx fontGfx;
     private final ConcurrentLinkedQueue<Runnable> tasks = new ConcurrentLinkedQueue<Runnable>();
     private final long launchedAtMs = System.currentTimeMillis();
     private LauncherBridge bridge;
@@ -323,7 +326,29 @@ public final class Meridian {
     }
 
     /** Draws the in-game HUD. {@code g} is in Minecraft GUI space. */
+    /**
+     * The Gfx to draw Meridian's UI with: the version's, or one drawing text with Meridian's font
+     * when that is chosen (and available on this runtime).
+     */
+    public Gfx uiGfx(Gfx g) {
+        if (global.font.get() != dev.meridian.render.font.UiFont.MERIDIAN) {
+            return g;
+        }
+        if (!fontLoaded) {
+            fontLoaded = true;
+            font = dev.meridian.render.font.MeridianFont.load();
+        }
+        if (font == null) {
+            return g;
+        }
+        if (fontGfx == null || fontGfx.delegate() != g) {
+            fontGfx = new dev.meridian.render.font.FontGfx(font, g);
+        }
+        return fontGfx;
+    }
+
     public void renderHud(Gfx g, float partialTicks) {
+        g = uiGfx(g);
         long start = System.nanoTime();
         GameView game = platform.game();
         boolean hidden = game.hudHidden() || (game.debugOverlay() && global.hideHudInDebug.on());

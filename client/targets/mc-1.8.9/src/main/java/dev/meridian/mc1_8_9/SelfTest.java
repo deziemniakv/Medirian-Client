@@ -308,6 +308,18 @@ public final class SelfTest {
                 meridian.platform().openScreen(null);
                 next(10);
                 return;
+            case 22:
+                // Meridian's smooth font (the setting lives in the throwaway self-test home)
+                meridian.settings().font.set(dev.meridian.render.font.UiFont.MERIDIAN);
+                meridian.platform().openScreen(new ModMenuScreen(null));
+                next(20);
+                return;
+            case 23:
+                shot(client, "9c-font");
+                meridian.settings().font.set(dev.meridian.render.font.UiFont.MINECRAFT);
+                meridian.platform().openScreen(null);
+                next(10);
+                return;
             default:
                 if (servicesCheck != null && !servicesCheck.poll()) {
                     return; // still waiting for Meridian services (the check times out by itself)

@@ -25,6 +25,8 @@ public final class ModernGfx implements Gfx {
     private static final int MAX_DEPTH = 64;
 
     private final Minecraft minecraft;
+    /** Textures made at runtime (font atlas pages), by id. */
+    private final java.util.Map<String, net.minecraft.client.renderer.texture.DynamicTexture> dynamic = new java.util.HashMap<>();
     private final float[] scaleStack = new float[MAX_DEPTH];
     private GuiGraphicsExtractor graphics;
     private Font font;
@@ -177,6 +179,39 @@ public final class ModernGfx implements Gfx {
                     Math.round((u1 - u0) * texture.width()), Math.round((v1 - v0) * texture.height()),
                     texture.width(), texture.height(), argbTint);
         }
+    }
+
+    @Override
+    public void uploadTexture(String id, int width, int height, int[] argb) {
+        net.minecraft.client.renderer.texture.DynamicTexture texture = dynamic.get(id);
+        if (texture == null || texture.getPixels().getWidth() != width || texture.getPixels().getHeight() != height) {
+            texture = new net.minecraft.client.renderer.texture.DynamicTexture(() -> "meridian:" + id, width, height, false);
+            minecraft.getTextureManager().register(dynamicId(id), texture);
+            dynamic.put(id, texture);
+        }
+        com.mojang.blaze3d.platform.NativeImage image = texture.getPixels();
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                image.setPixel(x, y, argb[y * width + x]);
+            }
+        }
+        texture.upload();
+    }
+
+    private static net.minecraft.resources.Identifier dynamicId(String id) {
+        return net.minecraft.resources.Identifier.fromNamespaceAndPath("meridian", "runtime/" + id);
+    }
+
+    @Override
+    public void dynamicTexture(String id, int x, int y, int width, int height, float u0, float v0, float u1, float v1, int argbTint) {
+        net.minecraft.client.renderer.texture.DynamicTexture texture = dynamic.get(id);
+        if (texture == null) {
+            return;
+        }
+        int texWidth = texture.getPixels().getWidth();
+        int texHeight = texture.getPixels().getHeight();
+        graphics.blit(RenderPipelines.GUI_TEXTURED, dynamicId(id), x, y, u0 * texWidth, v0 * texHeight, width, height,
+                Math.round((u1 - u0) * texWidth), Math.round((v1 - v0) * texHeight), texWidth, texHeight, argbTint);
     }
 
     @Override

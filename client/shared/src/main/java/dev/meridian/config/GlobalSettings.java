@@ -26,6 +26,9 @@ public final class GlobalSettings implements SettingsOwner {
     public final ModeSetting<Theme.Mode> theme = add(new ModeSetting<Theme.Mode>("theme", "Theme", Theme.Mode.AUTO)
             .description("Auto switches to seasonal themes such as Halloween.")
             .onChange(Theme::apply));
+    public final ModeSetting<dev.meridian.render.font.UiFont> font = add(new ModeSetting<dev.meridian.render.font.UiFont>("font", "Font",
+            dev.meridian.render.font.UiFont.MINECRAFT)
+            .description("Meridian's smooth font stays sharp at every GUI scale."));
     public final BooleanSetting notifications = add(new BooleanSetting("notifications", "Notifications", true)
             .description("Small toasts for events like profile changes and screenshots."));
     public final BooleanSetting animations = add(new BooleanSetting("animations", "Animations", true)

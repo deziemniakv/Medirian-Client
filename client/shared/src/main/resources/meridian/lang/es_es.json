@@ -496,5 +496,8 @@
   "cosmetics.hint.emote": "Pulsa {0} para hacer el gesto elegido.",
   "notify.noEmote": "Ningún gesto elegido",
   "notify.noEmote.desc": "Elige uno en Cosméticos → Gestos",
-  "setting.global.emoteKey": "Tecla de gesto"
+  "setting.global.emoteKey": "Tecla de gesto",
+  "setting.global.font": "Fuente",
+  "setting.global.font.desc": "La fuente suave de Meridian se ve nítida con cualquier escala de interfaz.",
+  "font.meridian": "Meridian (suave)"
 }
