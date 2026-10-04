@@ -385,6 +385,20 @@ public final class Hooks {
         return meridian == null || player == null ? null : meridian.cosmetics().capeTexture(player, local);
     }
 
+    /** The cosmetic of {@code type} a player wears (hats, wings), or null. Called per rendered player every frame. */
+    public static dev.meridian.cosmetics.Cosmetic wornCosmetic(java.util.UUID player, boolean local, dev.meridian.cosmetics.CosmeticType type) {
+        return meridian == null || player == null ? null : meridian.cosmetics().worn(player, local, type);
+    }
+
+    /**
+     * The emote pose of a player (written into {@code out}); false when the player plays no emote.
+     * Called per rendered player every frame.
+     */
+    public static boolean emotePose(java.util.UUID player, boolean local, dev.meridian.cosmetics.emote.EmotePose out) {
+        return meridian != null && player != null && meridian.cosmetics().canRender(dev.meridian.cosmetics.CosmeticType.EMOTE)
+                && meridian.emotes().pose(player, local, out);
+    }
+
     /** Dropped items lie on the ground instead of floating and spinning. */
     public static boolean itemPhysics() {
         return itemPhysics != null && itemPhysics.active();

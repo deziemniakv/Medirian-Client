@@ -35,6 +35,8 @@ Wszystkie odpowiedzi to JSON; błędy: `{ "error": "…" }` z kodem 4xx/5xx.
 | GET 🔒 | `/v1/cosmetics/loadout` | własny loadout |
 | PUT 🔒 | `/v1/cosmetics/loadout` | `{ loadout: { CAPE: "cape_moonlit" } }` — tylko posiadane |
 | POST | `/v1/cosmetics/loadouts` | `{ players: [uuid…] }` (≤ 100) → `{ loadouts: { uuid: {…} } }` |
+| POST 🔒 | `/v1/emotes/play` | `{ emote }` — zaczyna emotkę (tylko posiadane) |
+| POST | `/v1/emotes/active` | `{ players: [uuid…] }` (≤ 100) → `{ emotes: { uuid: { emote, elapsedMs } } }` (emotki z ostatnich 10 s) |
 | GET 🔒 | `/v1/profiles` | `{ profiles: [{ name, updatedAt, size }] }` |
 | GET 🔒 | `/v1/profiles/<nazwa>` | `{ name, updatedAt, data }` |
 | PUT 🔒 | `/v1/profiles/<nazwa>` | `{ data: {…} }` (≤ 64 KiB, ≤ 20 profili) |
@@ -44,9 +46,14 @@ Klient pobiera loadouty innych graczy leniwie: pierwsza klatka, w której gracz 
 dodaje jego UUID do kolejki; kolejka jest wysyłana jednym zapytaniem (do 100 graczy, opóźnienie
 0,4 s), wynik jest buforowany 5 min (błąd → ponowienie po minucie).
 
+Emotki innych graczy klient odpytuje co sekundę (tylko o graczy, których widzi) i odtwarza je od momentu
+wskazanego przez `elapsedMs`, więc różnice zegarów nie mają znaczenia.
+
 Tekstury kosmetyków są w kliencie (`assets/meridian/textures/cosmetics/`); serwer przechowuje tylko
 identyfikatory. Nowa peleryna = PNG wygenerowany przez `node scripts/generate-capes.mjs` (albo
-własny, układ 64×32 w dowolnej skali 2:1) + wpis w obu `catalogue.json` (test pilnuje zgodności).
+własny, układ 64×32 w dowolnej skali 2:1) + wpis w obu `catalogue.json` (test pilnuje zgodności). Czapka = model z bryłami
+w `client/shared/src/main/resources/meridian/cosmetics/models/<id>.json` (układ UV jak w modelach Minecrafta); tekstury
+czapek, skrzydeł i ikony podglądu robi `node scripts/generate-cosmetics.mjs`.
 
 ## Uruchomienie
 

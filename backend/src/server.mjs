@@ -21,6 +21,7 @@ export const LIMITS = {
   profiles: 20,
   loadoutBatch: 100,
   challengeMs: 2 * 60 * 1000,
+  emoteMs: 10 * 1000,
   sessionMs: 24 * 60 * 60 * 1000,
   requestsPerMinute: 240,
   signInsPerMinute: 12
@@ -50,6 +51,8 @@ export function createServer({ dataDir, sessionServer = 'https://sessionserver.m
   const store = new Store(dataDir);
   const challenges = new Map();
   const sessions = new Map();
+  /** uuid → { emote, startedAt } of emotes being played (kept in memory: they last seconds). */
+  const emotes = new Map();
   const rate = new Map();
 
   function limit(key, perMinute) {
@@ -200,6 +203,44 @@ export function createServer({ dataDir, sessionServer = 'https://sessionserver.m
         }
       }
       return { loadouts };
+    }],
+
+    ['POST', /^\/v1\/emotes\/play$/, (req, body) => {
+      const session = authenticate(req);
+      const id = body?.emote;
+      const emote = CATALOGUE.find((c) => c.id === id && c.type === 'EMOTE');
+      if (!emote) {
+        throw new HttpError(400, 'Unknown emote');
+      }
+      if (!owned(session.uuid).includes(id)) {
+        throw new HttpError(403, `You do not own ${id}`);
+      }
+      const startedAt = now();
+      if (emotes.size > 10000) {
+        for (const [uuid, playing] of emotes) {
+          if (startedAt - playing.startedAt > LIMITS.emoteMs) emotes.delete(uuid);
+        }
+      }
+      emotes.set(session.uuid, { emote: id, startedAt });
+      return { emote: id, startedAt };
+    }],
+
+    ['POST', /^\/v1\/emotes\/active$/, (req, body) => {
+      const players = body?.players;
+      if (!Array.isArray(players) || players.length > LIMITS.loadoutBatch) {
+        throw new HttpError(400, `players must be an array of at most ${LIMITS.loadoutBatch} UUIDs`);
+      }
+      const t = now();
+      const active = {};
+      for (const player of players) {
+        const uuid = normalizeUuid(player);
+        const playing = uuid ? emotes.get(uuid) : null;
+        if (playing && t - playing.startedAt <= LIMITS.emoteMs) {
+          // how long ago it started, so clients play it in step whatever their clocks say
+          active[uuid] = { emote: playing.emote, elapsedMs: t - playing.startedAt };
+        }
+      }
+      return { emotes: active };
     }],
 
     ['GET', /^\/v1\/profiles$/, (req) => {

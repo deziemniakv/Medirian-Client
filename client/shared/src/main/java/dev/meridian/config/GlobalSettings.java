@@ -33,6 +33,7 @@ public final class GlobalSettings implements SettingsOwner {
     public final BooleanSetting hideHudInDebug = add(new BooleanSetting("hideHudInDebug", "Hide HUD with F3", true));
     public final KeySetting modMenuKey = add(new KeySetting("modMenuKey", "Mod menu key", Key.RSHIFT));
     public final KeySetting hudEditorKey = add(new KeySetting("hudEditorKey", "HUD editor key", Key.NONE));
+    public final KeySetting emoteKey = add(new KeySetting("emoteKey", "Emote key", Key.B));
 
     private <S extends Setting<?>> S add(S setting) {
         setting.attach(this);

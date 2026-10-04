@@ -56,6 +56,8 @@ public final class Meridian {
     private final ServerPolicyManager policies;
     private final dev.meridian.services.MeridianServices services;
     private final dev.meridian.services.CloudProfiles cloudProfiles;
+    private final dev.meridian.cosmetics.Trails trails = new dev.meridian.cosmetics.Trails();
+    private final dev.meridian.cosmetics.emote.EmoteManager emotes;
     private final ConcurrentLinkedQueue<Runnable> tasks = new ConcurrentLinkedQueue<Runnable>();
     private final long launchedAtMs = System.currentTimeMillis();
     private LauncherBridge bridge;
@@ -76,6 +78,7 @@ public final class Meridian {
         this.services = new dev.meridian.services.MeridianServices(dev.meridian.services.ServicesConfig.fromEnvironment(),
                 platform.identity(), platform::accessToken);
         this.cloudProfiles = new dev.meridian.services.CloudProfiles(services, config, this::runOnClientThread);
+        this.emotes = new dev.meridian.cosmetics.emote.EmoteManager(cosmetics, services);
         this.policies = new ServerPolicyManager(modules, notifications);
         events.subscribe(Events.WorldJoin.class, e -> onServerJoin(e.serverAddress));
         events.subscribe(Events.WorldLeave.class, e -> policies.clear());
@@ -91,6 +94,16 @@ public final class Meridian {
             @Override
             public void openHudEditor() {
                 runOnClientThread(Meridian.this::openHudEditor);
+            }
+
+            @Override
+            public void playEmote() {
+                runOnClientThread(() -> {
+                    if (!emotes.playEquipped() && cosmetics.canRender(dev.meridian.cosmetics.CosmeticType.EMOTE)) {
+                        notifications.post(I18n.tr("notify.noEmote", "No emote chosen"),
+                                I18n.tr("notify.noEmote.desc", "Pick one in Cosmetics → Emotes"));
+                    }
+                });
             }
         });
     }
@@ -239,6 +252,10 @@ public final class Meridian {
         return cloudProfiles;
     }
 
+    public dev.meridian.cosmetics.emote.EmoteManager emotes() {
+        return emotes;
+    }
+
     public boolean launcherConnected() {
         return bridge != null && bridge.connected();
     }
@@ -274,6 +291,8 @@ public final class Meridian {
         performance.onTick(now);
         events.post(Events.Tick.INSTANCE);
         hud.tick();
+        trails.tick(platform.game(), platform.actions(), cosmetics);
+        emotes.tick(platform.game(), platform.actions());
         config.tick(now);
     }
 

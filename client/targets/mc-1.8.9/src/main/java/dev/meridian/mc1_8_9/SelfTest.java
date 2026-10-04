@@ -121,19 +121,28 @@ public final class SelfTest {
                 shot(client, "3-settings");
                 // a cape for the cosmetics screen and the third-person shot
                 meridian.cosmetics().equip(meridian.cosmetics().byId(CAPE));
+                meridian.cosmetics().equip(meridian.cosmetics().byId("hat_tophat"));
+                meridian.cosmetics().equip(meridian.cosmetics().byId("wings_meridian"));
+                meridian.cosmetics().equip(meridian.cosmetics().byId("trail_sparkles"));
+                meridian.cosmetics().equip(meridian.cosmetics().byId("emote_wave"));
                 meridian.platform().openScreen(new CosmeticsScreen(null));
                 next(30);
                 return;
             case 5:
                 shot(client, "3b-cosmetics");
                 servicesCheck = new dev.meridian.services.ServicesSelfTest(meridian);
+                meridian.platform().openScreen(new CosmeticsScreen(null).showTab(dev.meridian.cosmetics.CosmeticType.HAT));
+                next(20);
+                return;
+            case 6:
+                shot(client, "3c-cosmetics-hats");
                 meridian.platform().openScreen(null);
                 meridian.config().loadProfile("PvP", false);
                 client.startIntegratedServer(WORLD, WORLD,
                         new LevelInfo(4242L, LevelInfo.GameMode.CREATIVE, true, false, LevelGeneratorType.DEFAULT).enableCommands());
                 next(20);
                 return;
-            case 6:
+            case 7:
                 if (client.player != null && client.world != null && client.currentScreen == null) {
                     meridian.modules().get("blockoverlay").setEnabled(true);
                     ((BooleanSetting) meridian.modules().get("blockoverlay").setting("fill")).set(true);
@@ -164,7 +173,7 @@ public final class SelfTest {
                     next(100);
                 }
                 return;
-            case 7:
+            case 8:
                 // hurt the pig (instant damage) right before the screenshot to show the Hit Color flash
                 client.player.sendChatMessage("/effect @e[type=Pig,name=!Tagged,c=1] 7 1 0");
                 // look at the ground so a block is selected (set late: joining resets the rotation)
@@ -175,7 +184,7 @@ public final class SelfTest {
                 client.player.sendChatMessage("/setblock ~ ~ ~ fire");
                 next(3);
                 return;
-            case 8:
+            case 9:
                 verifyHealthTag(client);
                 verifyChat(client);
                 shot(client, "4-hud");
@@ -185,22 +194,33 @@ public final class SelfTest {
                 client.player.sendChatMessage("/time set 1000");
                 client.player.sendChatMessage("/weather clear");
                 client.options.perspective = 1;
+                meridian.emotes().playEquipped();
                 next(20);
                 return;
-            case 9:
+            case 10:
                 verifyCape(client);
+                if (dev.meridian.mc1_8_9.LegacyCosmetics.drawn > 0) {
+                    Log.info("Self-test: hat and wings OK ({} drawn)", dev.meridian.mc1_8_9.LegacyCosmetics.drawn);
+                } else {
+                    Log.error("Self-test FAILED: hat and wings were not drawn");
+                }
+                if (dev.meridian.platform.Hooks.emotePose(client.player.getUuid(), true, new dev.meridian.cosmetics.emote.EmotePose())) {
+                    Log.info("Self-test: emote OK (waving)");
+                } else {
+                    Log.error("Self-test FAILED: the emote is not playing");
+                }
                 shot(client, "4b-cape");
                 client.options.perspective = 0;
                 meridian.platform().openScreen(new ModMenuScreen(null));
                 next(30);
                 return;
-            case 10:
+            case 11:
                 shot(client, "5-modmenu-ingame");
                 // in a world the Target HUD previews the local player's head
                 meridian.platform().openScreen(new HudEditorScreen(null));
                 next(30);
                 return;
-            case 11:
+            case 12:
                 shot(client, "5b-hudeditor-ingame");
                 meridian.platform().openScreen(null);
                 verifyChatCopy(client);
@@ -208,14 +228,14 @@ public final class SelfTest {
                 buildCullingScene(client.player);
                 next(40);
                 return;
-            case 12:
+            case 13:
                 verifyPolicy(meridian);
                 verifyCulling(client);
                 shot(client, "6-culling");
                 meridian.platform().openScreen(new WaypointsScreen(null));
                 next(30);
                 return;
-            case 13:
+            case 14:
                 shot(client, "6b-waypoints");
                 meridian.platform().openScreen(null);
                 spawnCrowd(client.player);
@@ -227,12 +247,12 @@ public final class SelfTest {
                 client.options.maxFramerate = 260;
                 next(80);
                 return;
-            case 14:
+            case 15:
                 aimAtWall(client.player);
                 startSampling();
                 next(BENCH_TICKS);
                 return;
-            case 15:
+            case 16:
                 shot(client, "7-bench-occlusion");
                 onHudMs = sampleCount == 0 ? 0 : (float) (hudSum / sampleCount);
                 onWorldMs = stopSampling();
@@ -244,12 +264,12 @@ public final class SelfTest {
                 gfx.setBatching(false);
                 next(40);
                 return;
-            case 16:
+            case 17:
                 aimAtWall(client.player);
                 startSampling();
                 next(BENCH_TICKS);
                 return;
-            case 17:
+            case 18:
                 shot(client, "8-bench-no-occlusion");
                 float offHudMs = sampleCount == 0 ? 0 : (float) (hudSum / sampleCount);
                 float offWorldMs = stopSampling();
@@ -270,7 +290,7 @@ public final class SelfTest {
                         String.format("%.3f", onHudMs), String.format("%.3f", offHudMs));
                 next(20);
                 return;
-            case 18:
+            case 19:
                 // the Christmas theme (runtime only, the setting is untouched)
                 dev.meridian.render.Theme.apply(dev.meridian.render.Theme.Mode.CHRISTMAS);
                 // and a translation other than English/Polish (umlauts in the font)
@@ -278,12 +298,12 @@ public final class SelfTest {
                 meridian.platform().openScreen(new ModMenuScreen(null));
                 next(30);
                 return;
-            case 19:
+            case 20:
                 shot(client, "9-christmas");
                 meridian.platform().openScreen(new HudEditorScreen(null));
                 next(20);
                 return;
-            case 20:
+            case 21:
                 shot(client, "9b-hudeditor-german");
                 meridian.platform().openScreen(null);
                 next(10);

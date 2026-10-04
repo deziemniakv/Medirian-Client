@@ -21,6 +21,9 @@ public abstract class MinecraftMixin {
     @Inject(method = "<init>", at = @At("TAIL"))
     private void meridian$boot(GameConfig config, CallbackInfo ci) {
         Meridian.boot(ModernPlatform.create((Minecraft) (Object) this)).cosmetics().registerRenderer(dev.meridian.mc26_3.ModernCapes.RENDERER);
+        for (dev.meridian.cosmetics.CosmeticRenderer renderer : dev.meridian.mc26_3.ModernCosmetics.RENDERERS) {
+            Meridian.get().cosmetics().registerRenderer(renderer);
+        }
         if (Boolean.getBoolean("meridian.mixinAudit")) {
             // Development only: force every mixin target to load so broken injections fail fast.
             MixinEnvironment.getCurrentEnvironment().audit();

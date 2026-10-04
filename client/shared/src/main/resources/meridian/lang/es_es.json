@@ -487,5 +487,14 @@
   "cosmetics.visible.signingIn": "Iniciando sesión en los servicios de Meridian...",
   "cosmetics.visible.offline": "Solo tú la ves: los servicios de Meridian necesitan una cuenta de Microsoft.",
   "cosmetics.visible.failed": "Solo tú la ves: no se pudo iniciar sesión en los servicios de Meridian.",
-  "cosmetics.visible.local": "Solo tú la ves: los servicios de Meridian no están configurados."
+  "cosmetics.visible.local": "Solo tú la ves: los servicios de Meridian no están configurados.",
+  "cosmetics.hats": "Sombreros",
+  "cosmetics.wings": "Alas",
+  "cosmetics.trails": "Estelas",
+  "cosmetics.hint.trail": "Las partículas te siguen mientras te mueves.",
+  "cosmetics.emotes": "Gestos",
+  "cosmetics.hint.emote": "Pulsa {0} para hacer el gesto elegido.",
+  "notify.noEmote": "Ningún gesto elegido",
+  "notify.noEmote.desc": "Elige uno en Cosméticos → Gestos",
+  "setting.global.emoteKey": "Tecla de gesto"
 }

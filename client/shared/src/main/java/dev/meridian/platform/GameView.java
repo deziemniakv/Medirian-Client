@@ -51,4 +51,12 @@ public interface GameView extends Occluders {
 
     /** Camera is in a third person perspective. */
     boolean thirdPerson();
+
+    /** One player in the loaded world. */
+    interface PlayerVisitor {
+        void visit(java.util.UUID uuid, boolean local, double x, double y, double z);
+    }
+
+    /** Calls {@code visitor} for every player in the loaded world (nothing when not in a world). */
+    void forEachPlayer(PlayerVisitor visitor);
 }

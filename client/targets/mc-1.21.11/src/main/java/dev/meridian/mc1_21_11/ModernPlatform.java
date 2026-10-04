@@ -364,6 +364,39 @@ public final class ModernPlatform implements Platform, GameView, InputView, Clie
     }
 
     @Override
+    public void forEachPlayer(PlayerVisitor visitor) {
+        if (minecraft.level == null) {
+            return;
+        }
+        for (net.minecraft.client.player.AbstractClientPlayer player : minecraft.level.players()) {
+            visitor.visit(player.getUUID(), player == minecraft.player, player.getX(), player.getY(), player.getZ());
+        }
+    }
+
+    @Override
+    public void spawnParticle(dev.meridian.platform.TrailParticle particle, double x, double y, double z, double vx, double vy, double vz) {
+        if (minecraft.level == null) {
+            return;
+        }
+        net.minecraft.core.particles.SimpleParticleType type;
+        switch (particle) {
+            case HEART:
+                type = net.minecraft.core.particles.ParticleTypes.HEART;
+                break;
+            case FLAME:
+                type = net.minecraft.core.particles.ParticleTypes.FLAME;
+                break;
+            case SNOW:
+                type = net.minecraft.core.particles.ParticleTypes.SNOWFLAKE;
+                break;
+            default:
+                type = net.minecraft.core.particles.ParticleTypes.END_ROD;
+                break;
+        }
+        minecraft.level.addParticle(type, x, y, z, vx, vy, vz);
+    }
+
+    @Override
     public boolean thirdPerson() {
         return !minecraft.options.getCameraType().isFirstPerson();
     }

@@ -487,5 +487,14 @@
   "cosmetics.visible.signingIn": "Anmeldung bei den Meridian-Diensten...",
   "cosmetics.visible.offline": "Nur du siehst ihn: Meridian-Dienste benötigen ein Microsoft-Konto.",
   "cosmetics.visible.failed": "Nur du siehst ihn: die Anmeldung bei den Meridian-Diensten ist fehlgeschlagen.",
-  "cosmetics.visible.local": "Nur du siehst ihn: Meridian-Dienste sind nicht eingerichtet."
+  "cosmetics.visible.local": "Nur du siehst ihn: Meridian-Dienste sind nicht eingerichtet.",
+  "cosmetics.hats": "Hüte",
+  "cosmetics.wings": "Flügel",
+  "cosmetics.trails": "Spuren",
+  "cosmetics.hint.trail": "Partikel folgen dir, während du dich bewegst.",
+  "cosmetics.emotes": "Emotes",
+  "cosmetics.hint.emote": "Drücke {0}, um das gewählte Emote abzuspielen.",
+  "notify.noEmote": "Kein Emote gewählt",
+  "notify.noEmote.desc": "Wähle eines unter Kosmetik → Emotes",
+  "setting.global.emoteKey": "Emote-Taste"
 }

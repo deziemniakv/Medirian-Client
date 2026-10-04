@@ -126,18 +126,27 @@ final class SelfTest {
                 shot(minecraft, "3-settings");
                 // a cape for the cosmetics screen and the third-person shot
                 meridian.cosmetics().equip(meridian.cosmetics().byId(CAPE));
+                meridian.cosmetics().equip(meridian.cosmetics().byId("hat_tophat"));
+                meridian.cosmetics().equip(meridian.cosmetics().byId("wings_meridian"));
+                meridian.cosmetics().equip(meridian.cosmetics().byId("trail_sparkles"));
+                meridian.cosmetics().equip(meridian.cosmetics().byId("emote_wave"));
                 meridian.platform().openScreen(new CosmeticsScreen(null));
                 next(30);
                 return;
             case 5:
                 shot(minecraft, "3b-cosmetics");
                 servicesCheck = new dev.meridian.services.ServicesSelfTest(meridian);
+                meridian.platform().openScreen(new CosmeticsScreen(null).showTab(dev.meridian.cosmetics.CosmeticType.HAT));
+                next(20);
+                return;
+            case 6:
+                shot(minecraft, "3c-cosmetics-hats");
                 meridian.platform().openScreen(null);
                 meridian.config().loadProfile("PvP", false);
                 enterWorld(minecraft);
                 next(20);
                 return;
-            case 6:
+            case 7:
                 if (minecraft.player != null && minecraft.level != null && minecraft.gui.screen() == null) {
                     prepareScene(meridian);
                     minecraft.player.setXRot(30f); // the tagged pig's name and a selected block both in view
@@ -155,7 +164,7 @@ final class SelfTest {
                     next(120);
                 }
                 return;
-            case 7:
+            case 8:
                 // hurt the pig right before the screenshot to show the Hit Color flash
                 minecraft.player.connection.sendCommand("damage @e[type=pig,limit=1,sort=nearest] 1");
                 minecraft.player.setXRot(30f); // the tagged pig's name and a selected block both in view
@@ -164,7 +173,7 @@ final class SelfTest {
                 minecraft.player.connection.sendCommand("setblock ~ ~ ~ fire");
                 next(3);
                 return;
-            case 8:
+            case 9:
                 verifyChat(minecraft);
                 shot(minecraft, "4-hud");
                 minecraft.player.connection.sendCommand("gamemode creative");
@@ -173,17 +182,28 @@ final class SelfTest {
                 minecraft.player.connection.sendCommand("time set 1000");
                 minecraft.player.connection.sendCommand("weather clear");
                 minecraft.options.setCameraType(CameraType.THIRD_PERSON_BACK);
+                meridian.emotes().playEquipped();
                 next(20);
                 return;
-            case 9:
+            case 10:
                 verifyCape(minecraft);
+                if (dev.meridian.mc26_3.ModernCosmetics.drawn > 0) {
+                    Log.info("Self-test: hat and wings OK ({} drawn)", dev.meridian.mc26_3.ModernCosmetics.drawn);
+                } else {
+                    Log.error("Self-test FAILED: hat and wings were not drawn");
+                }
+                if (dev.meridian.platform.Hooks.emotePose(minecraft.player.getUUID(), true, new dev.meridian.cosmetics.emote.EmotePose())) {
+                    Log.info("Self-test: emote OK (waving)");
+                } else {
+                    Log.error("Self-test FAILED: the emote is not playing");
+                }
                 shot(minecraft, "4b-cape");
                 minecraft.options.setCameraType(CameraType.FIRST_PERSON);
                 // press the mod menu key through the game's real keyboard handler
                 pressKey(minecraft, InputConstants.KEY_RSHIFT);
                 next(30);
                 return;
-            case 10:
+            case 11:
                 if (minecraft.gui.screen() instanceof ScreenBridge bridge && bridge.meridian() instanceof ModMenuScreen) {
                     Log.info("Self-test: mod menu key OK");
                 } else {
@@ -194,7 +214,7 @@ final class SelfTest {
                 meridian.platform().openScreen(new HudEditorScreen(null));
                 next(30);
                 return;
-            case 11:
+            case 12:
                 shot(minecraft, "5b-hudeditor-ingame");
                 meridian.platform().openScreen(null);
                 verifyChatCopy(minecraft);
@@ -202,14 +222,14 @@ final class SelfTest {
                 buildCullingScene(minecraft.player);
                 next(40);
                 return;
-            case 12:
+            case 13:
                 verifyPolicy(meridian);
                 verifyCulling(minecraft);
                 shot(minecraft, "6-culling");
                 meridian.platform().openScreen(new WaypointsScreen(null));
                 next(30);
                 return;
-            case 13:
+            case 14:
                 shot(minecraft, "6b-waypoints");
                 meridian.platform().openScreen(null);
                 spawnCrowd(minecraft.player);
@@ -220,12 +240,12 @@ final class SelfTest {
                 minecraft.options.framerateLimit().set(260);
                 next(80);
                 return;
-            case 14:
+            case 15:
                 aimAtWall(minecraft.player);
                 startSampling();
                 next(BENCH_TICKS);
                 return;
-            case 15:
+            case 16:
                 shot(minecraft, "7-bench-occlusion");
                 Log.info("Self-test benchmark: {} pigs hidden by occlusion", hiddenPigs(minecraft));
                 onWorldMs = stopSampling();
@@ -233,12 +253,12 @@ final class SelfTest {
                 occlusion(meridian, false);
                 next(40);
                 return;
-            case 16:
+            case 17:
                 aimAtWall(minecraft.player);
                 startSampling();
                 next(BENCH_TICKS);
                 return;
-            case 17:
+            case 18:
                 shot(minecraft, "8-bench-no-occlusion");
                 float offWorldMs = stopSampling();
                 float offFrameMs = meridian.performance().frames().averageFrameMs();
@@ -254,7 +274,7 @@ final class SelfTest {
                 }
                 next(20);
                 return;
-            case 18:
+            case 19:
                 // the Christmas theme (runtime only, the setting is untouched)
                 dev.meridian.render.Theme.apply(dev.meridian.render.Theme.Mode.CHRISTMAS);
                 // and a translation other than English/Polish (umlauts in the font)
@@ -262,7 +282,7 @@ final class SelfTest {
                 meridian.platform().openScreen(new ModMenuScreen(null));
                 next(30);
                 return;
-            case 19:
+            case 20:
                 shot(minecraft, "9-christmas");
                 meridian.platform().openScreen(null);
                 next(10);

@@ -53,14 +53,34 @@ class CosmeticsTest {
         return manager;
     }
 
+    static CosmeticRenderer renderer(final CosmeticType type) {
+        return new CosmeticRenderer() {
+            @Override
+            public CosmeticType type() {
+                return type;
+            }
+
+            @Override
+            public void onEquipped(Cosmetic cosmetic) {
+            }
+        };
+    }
+
     @Test
-    void theBundledCatalogueHasCapesWithTextures() {
-        List<Cosmetic> capes = new BundledCosmetics().catalogue();
-        assertTrue(capes.size() >= 5);
-        for (Cosmetic cape : capes) {
-            assertEquals(CosmeticType.CAPE, cape.type());
-            assertEquals("cosmetics/capes/" + cape.id() + ".png", cape.asset());
-            assertNotNull(getClass().getResource("/assets/meridian/textures/" + cape.asset()), cape.asset());
+    void theBundledCatalogueHasTexturesForEverything() {
+        List<Cosmetic> all = new BundledCosmetics().catalogue();
+        assertTrue(all.size() >= 15);
+        for (Cosmetic cosmetic : all) {
+            if (cosmetic.type() == CosmeticType.CAPE) {
+                assertEquals("cosmetics/capes/" + cosmetic.id() + ".png", cosmetic.asset());
+            }
+            if (cosmetic.asset() != null) {
+                assertNotNull(getClass().getResource("/assets/meridian/textures/" + cosmetic.asset()), cosmetic.asset());
+            }
+            if (cosmetic.type() != CosmeticType.CAPE) {
+                // previews for the cosmetics screen
+                assertNotNull(getClass().getResource("/assets/meridian/textures/cosmetics/icons/" + cosmetic.id() + ".png"), cosmetic.id());
+            }
         }
     }
 
@@ -100,6 +120,7 @@ class CosmeticsTest {
         loadout.addProperty("CAPE", "cape_frost");
         fake.loadouts.put(STEVE.toString().replace("-", ""), loadout);
         CosmeticsManager manager = manager();
+        manager.registerRenderer(renderer(CosmeticType.CAPE));
         manager.connect(services);
         // unknown at first: the lookups only queue the players
         assertNull(manager.capeTexture(STEVE, false));

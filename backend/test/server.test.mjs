@@ -173,3 +173,16 @@ test('uuid normalisation', () => {
   assert.equal(normalizeUuid('nope'), null);
   assert.equal(normalizeUuid(42), null);
 });
+
+test('emotes are shared for ten seconds', async () => {
+  clock += 60_000; // a new minute for the sign-in rate limit
+  const token = await signIn(ALEX);
+  assert.equal((await call('POST', '/v1/emotes/play', { body: { emote: 'emote_wave' } })).status, 401);
+  assert.equal((await call('POST', '/v1/emotes/play', { token, body: { emote: 'cape_moonlit' } })).status, 400);
+  assert.equal((await call('POST', '/v1/emotes/play', { token, body: { emote: 'emote_wave' } })).status, 200);
+  clock += 1500;
+  const active = await call('POST', '/v1/emotes/active', { body: { players: [ALEX.id, STEVE.id] } });
+  assert.deepEqual(active.body.emotes, { [ALEX.id]: { emote: 'emote_wave', elapsedMs: 1500 } });
+  clock += LIMITS.emoteMs;
+  assert.deepEqual((await call('POST', '/v1/emotes/active', { body: { players: [ALEX.id] } })).body.emotes, {});
+});

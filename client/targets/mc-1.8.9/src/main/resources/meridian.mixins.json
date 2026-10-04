@@ -18,10 +18,13 @@
     "InGameHudMixin",
     "ItemEntityRendererMixin",
     "KeyBindingMixin",
+    "LivingEntityRendererAccessor",
     "LivingEntityRendererMixin",
     "MinecraftClientMixin",
     "NameTagMixin",
     "ParticleManagerMixin",
+    "PlayerEntityModelMixin",
+    "PlayerEntityRendererMixin",
     "WorldMixin",
     "WorldRendererMixin"
   ],

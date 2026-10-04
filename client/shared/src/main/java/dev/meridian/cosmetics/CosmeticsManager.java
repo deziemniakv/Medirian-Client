@@ -167,9 +167,22 @@ public final class CosmeticsManager {
      * @param local whether this is the player of this client
      */
     public String capeTexture(UUID player, boolean local) {
+        Cosmetic cosmetic = worn(player, local, CosmeticType.CAPE);
+        return cosmetic == null ? null : cosmetic.asset();
+    }
+
+    /**
+     * The cosmetic of {@code type} a player wears, or null. Same rules as {@link #capeTexture}:
+     * the local player's own loadout (only owned cosmetics), other players' loadouts from the
+     * services once known. Only types this version renders are returned.
+     */
+    public Cosmetic worn(UUID player, boolean local, CosmeticType type) {
+        if (!renderers.containsKey(type)) {
+            return null;
+        }
         Cosmetic cosmetic;
         if (local) {
-            cosmetic = equipped(CosmeticType.CAPE);
+            cosmetic = equipped(type);
         } else {
             Loadout other = null;
             for (CosmeticsProvider provider : providers) {
@@ -178,8 +191,8 @@ public final class CosmeticsManager {
                     break;
                 }
             }
-            cosmetic = other == null ? null : byId(other.equipped(CosmeticType.CAPE));
+            cosmetic = other == null ? null : byId(other.equipped(type));
         }
-        return cosmetic != null && cosmetic.type() == CosmeticType.CAPE ? cosmetic.asset() : null;
+        return cosmetic != null && cosmetic.type() == type ? cosmetic : null;
     }
 }

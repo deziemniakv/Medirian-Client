@@ -78,6 +78,10 @@ class ModuleManagerTest {
             @Override
             public void openHudEditor() {
             }
+
+            @Override
+            public void playEmote() {
+            }
         });
         Module fullbright = modules.get("fullbright");
         fullbright.keybind().set(Key.G);

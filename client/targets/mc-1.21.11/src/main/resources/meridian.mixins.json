@@ -5,6 +5,8 @@
   "compatibilityLevel": "JAVA_21",
   "client": [
     "AbstractClientPlayerMixin",
+    "AvatarRenderStateMixin",
+    "AvatarRendererMixin",
     "BlockEntityMixin",
     "BlockEntityRenderDispatcherMixin",
     "CameraMixin",
@@ -25,12 +27,14 @@
     "KeyboardHandlerMixin",
     "LevelMixin",
     "LevelRendererMixin",
+    "LivingEntityRendererInvoker",
     "LightTextureMixin",
     "MinecraftMixin",
     "MouseHandlerMixin",
     "MultiPlayerGameModeMixin",
     "OverlayTextureAccessor",
     "ParticleEngineMixin",
+    "PlayerModelMixin",
     "ScreenEffectRendererMixin",
     "ScreenshotMixin",
     "ServerboundCustomPayloadPacketMixin"

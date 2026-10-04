@@ -487,5 +487,14 @@
   "cosmetics.visible.signingIn": "Logowanie do usług Meridian...",
   "cosmetics.visible.offline": "Widzisz ją tylko Ty: usługi Meridian wymagają konta Microsoft.",
   "cosmetics.visible.failed": "Widzisz ją tylko Ty: logowanie do usług Meridian nie powiodło się.",
-  "cosmetics.visible.local": "Widzisz ją tylko Ty: usługi Meridian nie są skonfigurowane."
+  "cosmetics.visible.local": "Widzisz ją tylko Ty: usługi Meridian nie są skonfigurowane.",
+  "cosmetics.hats": "Czapki",
+  "cosmetics.wings": "Skrzydła",
+  "cosmetics.trails": "Ślady",
+  "cosmetics.hint.trail": "Cząsteczki podążają za Tobą, gdy się poruszasz.",
+  "cosmetics.emotes": "Emotki",
+  "cosmetics.hint.emote": "Naciśnij {0}, aby odtworzyć wybraną emotkę.",
+  "notify.noEmote": "Nie wybrano emotki",
+  "notify.noEmote.desc": "Wybierz ją w Kosmetyki → Emotki",
+  "setting.global.emoteKey": "Klawisz emotki"
 }

@@ -49,8 +49,13 @@ public final class BundledCosmetics implements CosmeticsProvider {
         switch (type) {
             case CAPE:
                 return "cosmetics/capes/" + id + ".png";
+            case HAT:
+                return "cosmetics/hats/" + id + ".png";
+            case WINGS:
+                return "cosmetics/wings/" + id + ".png";
             default:
-                return "cosmetics/" + type.name().toLowerCase(java.util.Locale.ROOT) + "/" + id + ".png";
+                // trails and emotes have no texture
+                return null;
         }
     }
 

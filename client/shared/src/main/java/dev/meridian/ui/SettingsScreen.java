@@ -97,7 +97,7 @@ public final class SettingsScreen extends MeridianScreen {
                 list.addSettings(java.util.Arrays.<dev.meridian.setting.Setting<?>>asList(
                         global.language, global.theme, global.notifications, global.animations));
                 list.add(new SettingsList.HeaderRow(I18n.tr("settings.keys", "Keys")));
-                list.addSettings(java.util.Arrays.<dev.meridian.setting.Setting<?>>asList(global.modMenuKey, global.hudEditorKey));
+                list.addSettings(java.util.Arrays.<dev.meridian.setting.Setting<?>>asList(global.modMenuKey, global.hudEditorKey, global.emoteKey));
                 break;
             case HUD:
                 list.addSettings(java.util.Arrays.<dev.meridian.setting.Setting<?>>asList(

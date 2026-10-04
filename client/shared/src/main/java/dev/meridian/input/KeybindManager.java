@@ -20,6 +20,9 @@ public final class KeybindManager {
         void openModMenu();
 
         void openHudEditor();
+
+        /** Plays the equipped emote. */
+        void playEmote();
     }
 
     private final ModuleManager modules;
@@ -44,6 +47,10 @@ public final class KeybindManager {
             }
             if (key == global.hudEditorKey.key()) {
                 actions.openHudEditor();
+                return;
+            }
+            if (key == global.emoteKey.key()) {
+                actions.playEmote();
                 return;
             }
         }

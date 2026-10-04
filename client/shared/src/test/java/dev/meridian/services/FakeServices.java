@@ -46,6 +46,8 @@ public final class FakeServices implements AutoCloseable {
     public volatile int joinStatus = 204;
     /** Loadouts by UUID without dashes. */
     public final Map<String, JsonObject> loadouts = Collections.synchronizedMap(new HashMap<String, JsonObject>());
+    /** Emotes being played, by UUID without dashes. */
+    public final Map<String, String> emotes = Collections.synchronizedMap(new HashMap<String, String>());
     public final Map<String, JsonObject> profiles = Collections.synchronizedMap(new HashMap<String, JsonObject>());
     public volatile String validToken;
     private final Map<String, String> joined = Collections.synchronizedMap(new HashMap<String, String>());
@@ -114,10 +116,26 @@ public final class FakeServices implements AutoCloseable {
             JsonObject wrapper = new JsonObject();
             wrapper.add("loadouts", result);
             reply(exchange, 200, wrapper.toString());
+        } else if (path.equals("/v1/emotes/active")) {
+            JsonObject result = new JsonObject();
+            for (JsonElement player : json.getAsJsonArray("players")) {
+                String uuid = player.getAsString().replace("-", "");
+                if (emotes.containsKey(uuid)) {
+                    JsonObject playing = new JsonObject();
+                    playing.addProperty("emote", emotes.get(uuid));
+                    playing.addProperty("elapsedMs", 500);
+                    result.add(uuid, playing);
+                }
+            }
+            JsonObject wrapper = new JsonObject();
+            wrapper.add("emotes", result);
+            reply(exchange, 200, wrapper.toString());
         } else if (!authorized) {
             reply(exchange, 401, "{\"error\":\"Sign in required\"}");
         } else if (path.equals("/v1/cosmetics/owned")) {
             reply(exchange, 200, "{\"owned\":[\"cape_moonlit\",\"cape_founder\"]}");
+        } else if (path.equals("/v1/emotes/play")) {
+            reply(exchange, 200, json.toString());
         } else if (path.equals("/v1/cosmetics/loadout")) {
             reply(exchange, 200, json.toString());
         } else if (path.equals("/v1/profiles")) {

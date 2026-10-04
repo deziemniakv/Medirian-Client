@@ -53,7 +53,12 @@ Każdy wymaga hooka w obu adapterach (nowe `Capability`):
 - [x] **Usługa kosmetyków** (0.1.4) — `RemoteCosmetics`: posiadanie z serwera, loadouty innych graczy pobierane
       partiami (≤ 100, cache 5 min), własny loadout wysyłany po zalogowaniu i po każdej zmianie. Backend: `backend/`.
 - [x] **UI kosmetyków** (0.1.4) — ekran „Cosmetics” z mod menu (tylko gdy wersja renderuje peleryny), podgląd, status widoczności.
-- [ ] WINGS / HAT jako warstwy renderera gracza, EMOTE, TRAIL.
+- [x] **Czapki i skrzydła** (0.1.4) — warstwa renderera gracza we wszystkich wersjach (1.8.9: feature renderer, modern:
+      `RenderLayer` + `submitCustomGeometry`); modele czapek jako bryły w JSON (`meridian/cosmetics/models`), skrzydła
+      generowane z animacją machania; tekstury i ikony z `scripts/generate-cosmetics.mjs`.
+- [x] **Ślady** (0.1.4) — cząsteczki za poruszającymi się graczami (`Trails`), widoczne dla innych przez loadouty.
+- [x] **Emotki** (0.1.4) — Wave/Cheer/Dance, klawisz emotki (domyślnie B), widok z przodu podczas emotki; inni gracze
+      widzą emotki przez usługi (`/v1/emotes/play`, `/v1/emotes/active`, odpytywanie co sekundę).
 
 ## Etap 4 — konto Meridian
 

@@ -55,4 +55,7 @@ public interface ClientActions {
 
     /** Sends a plugin message to the server (play phase). Channels must be known to the adapter. */
     void sendPluginMessage(String channel, byte[] data);
+
+    /** Spawns a client-side particle (trail cosmetics). */
+    void spawnParticle(TrailParticle particle, double x, double y, double z, double vx, double vy, double vz);
 }

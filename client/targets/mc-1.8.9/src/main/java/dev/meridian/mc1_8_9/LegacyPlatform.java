@@ -354,6 +354,40 @@ public final class LegacyPlatform implements Platform, GameView, InputView, Clie
     }
 
     @Override
+    public void forEachPlayer(PlayerVisitor visitor) {
+        if (client.world == null) {
+            return;
+        }
+        for (Object entity : client.world.playerEntities) {
+            net.minecraft.entity.player.PlayerEntity player = (net.minecraft.entity.player.PlayerEntity) entity;
+            visitor.visit(player.getUuid(), player == client.player, player.x, player.y, player.z);
+        }
+    }
+
+    @Override
+    public void spawnParticle(dev.meridian.platform.TrailParticle particle, double x, double y, double z, double vx, double vy, double vz) {
+        if (client.world == null) {
+            return;
+        }
+        net.minecraft.client.particle.ParticleType type;
+        switch (particle) {
+            case HEART:
+                type = net.minecraft.client.particle.ParticleType.HEART;
+                break;
+            case FLAME:
+                type = net.minecraft.client.particle.ParticleType.FIRE;
+                break;
+            case SNOW:
+                type = net.minecraft.client.particle.ParticleType.SNOW_SHOVEL;
+                break;
+            default:
+                type = net.minecraft.client.particle.ParticleType.FIREWORK_SPARK;
+                break;
+        }
+        client.world.addParticle(type, x, y, z, vx, vy, vz);
+    }
+
+    @Override
     public boolean thirdPerson() {
         return client.options.perspective != 0;
     }
