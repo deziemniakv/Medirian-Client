@@ -55,5 +55,7 @@ public enum Capability {
     /** The hurt camera tilt is scaled by {@link Hooks#hurtCameraStrength()}. */
     HURT_CAMERA,
     /** The burning screen overlay uses {@link Hooks#fireOverlayOffset()} and {@link Hooks#fireOverlayAlpha(float)}. */
-    FIRE_OVERLAY
+    FIRE_OVERLAY,
+    /** Dropped items are positioned by {@link Hooks#itemPhysics()}. */
+    ITEM_PHYSICS
 }

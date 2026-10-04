@@ -1,6 +1,6 @@
 # Meridian — roadmapa
 
-Stan: **0.1.3** (launcher, dwa targety klienta, HUD, 40 modułów, konfiguracja, wydajność).
+Stan: **0.1.3** (launcher, dwa targety klienta, HUD, 41 modułów, konfiguracja, wydajność).
 Poniżej kolejne etapy. Zasada bez zmian: funkcja trafia do UI dopiero, gdy naprawdę działa.
 
 ## Etap 1 — przed pierwszym publicznym wydaniem
@@ -21,7 +21,7 @@ Każdy wymaga hooka w obu adapterach (nowe `Capability`):
 
 - [x] **Damage Indicator** → moduł **Health Tags** (0.1.3): zdrowie doklejane do nametagu (1.8.9: `renderName`,
       modern: `EntityRenderer#extractRenderState`), plus Hurt Camera, Fire Overlay i HUD Speed.
-- [ ] **Item Physics** — fizyka leżących przedmiotów.
+- [x] **Item Physics** (0.1.3) — przedmioty leżą płasko, bloki stoją na ziemi, bez unoszenia i obrotu.
 - [x] **Waypoints** (0.1.2) — dane per świat/wymiar (`waypoints.json`, wspólne dla obu wersji), ekran zarządzania,
       znaczniki rzutowane na HUD (`render/Projection`), klawisz dodawania, punkt śmierci.
 - [x] Waypoints (0.1.3): promień w świecie (1.8.9: `renderEntities`, modern: `renderBlockOutline` HEAD), znaczniki przy

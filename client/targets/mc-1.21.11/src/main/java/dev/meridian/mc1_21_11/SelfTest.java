@@ -210,6 +210,8 @@ final class SelfTest {
                 float offWorldMs = stopSampling();
                 float offFrameMs = meridian.performance().frames().averageFrameMs();
                 occlusion(meridian, true);
+                // the saved test world would otherwise keep the crowd for the next run
+                minecraft.player.connection.sendCommand("kill @e[type=pig]");
                 if (disturbed) {
                     Log.warn("Self-test benchmark skipped: the game window was used while measuring");
                 } else {
@@ -248,6 +250,7 @@ final class SelfTest {
         int z = sceneZ;
         int y = SCENE_Y;
         player.connection.sendCommand("kill @e[type=pig]");
+        player.connection.sendCommand("kill @e[type=item]");
         player.connection.sendCommand("fill " + (x - 2) + " " + (y - 1) + " " + (z - 4) + " " + (x + 11) + " " + (y + 4) + " " + (z + 4) + " air");
         player.connection.sendCommand("fill " + (x - 2) + " " + (y - 1) + " " + (z - 4) + " " + (x + 11) + " " + (y - 1) + " " + (z + 4) + " stone");
         player.connection.sendCommand("fill " + (x + 6) + " " + y + " " + (z - 4) + " " + (x + 6) + " " + (y + 4) + " " + (z + 4) + " stone");
@@ -258,6 +261,10 @@ final class SelfTest {
         player.connection.sendCommand("setblock " + (x + 9) + " " + y + " " + (z + 2) + " chest");
         // a waypoint on top of a gold block: its marker must sit on the block's top face
         player.connection.sendCommand("setblock " + (x + 5) + " " + y + " " + (z - 2) + " gold_block");
+        // dropped items for Item Physics: one flat item, one block
+        Meridian.get().modules().get("itemphysics").setEnabled(true);
+        player.connection.sendCommand("summon item " + (x + 4.5) + " " + y + " " + (z - 0.5) + " {Item:{id:\"minecraft:diamond\",count:1},PickupDelay:32767}");
+        player.connection.sendCommand("summon item " + (x + 4.5) + " " + y + " " + (z + 1.5) + " {Item:{id:\"minecraft:stone\",count:1},PickupDelay:32767}");
         addSceneWaypoint(x + 5, y, z - 2);
     }
 

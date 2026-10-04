@@ -213,6 +213,8 @@ public final class SelfTest {
                 float offWorldMs = stopSampling();
                 float offFrameMs = meridian.performance().frames().averageFrameMs();
                 occlusion(meridian, true);
+                // the saved test world would otherwise keep the crowd for the next run
+                client.player.sendChatMessage("/kill @e[type=Pig]");
                 if (disturbed) {
                     Log.warn("Self-test benchmark skipped: the game window was used while measuring");
                 } else {
@@ -299,6 +301,7 @@ public final class SelfTest {
         int z = sceneZ;
         int y = SCENE_Y;
         player.sendChatMessage("/kill @e[type=Pig]");
+        player.sendChatMessage("/kill @e[type=Item]");
         player.sendChatMessage("/fill " + (x - 2) + " " + (y - 1) + " " + (z - 4) + " " + (x + 11) + " " + (y + 4) + " " + (z + 4) + " air");
         player.sendChatMessage("/fill " + (x - 2) + " " + (y - 1) + " " + (z - 4) + " " + (x + 11) + " " + (y - 1) + " " + (z + 4) + " stone");
         player.sendChatMessage("/fill " + (x + 6) + " " + y + " " + (z - 4) + " " + (x + 6) + " " + (y + 4) + " " + (z + 4) + " stone");
@@ -309,6 +312,10 @@ public final class SelfTest {
         player.sendChatMessage("/setblock " + (x + 9) + " " + y + " " + (z + 2) + " chest");
         // a waypoint on top of a gold block: its marker must sit on the block's top face
         player.sendChatMessage("/setblock " + (x + 5) + " " + y + " " + (z - 2) + " gold_block");
+        // dropped items for Item Physics: one flat item, one block
+        Meridian.get().modules().get("itemphysics").setEnabled(true);
+        player.sendChatMessage("/summon Item " + (x + 4.5) + " " + y + " " + (z - 0.5) + " {Item:{id:\"minecraft:diamond\",Count:1},PickupDelay:32767}");
+        player.sendChatMessage("/summon Item " + (x + 4.5) + " " + y + " " + (z + 1.5) + " {Item:{id:\"minecraft:stone\",Count:1},PickupDelay:32767}");
         addSceneWaypoint(x + 5, y, z - 2);
     }
 

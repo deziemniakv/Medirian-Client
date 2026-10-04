@@ -57,6 +57,7 @@ public final class Hooks {
     private static HitColorModule hitColor;
     private static ChatModule chatModule;
     private static HealthTagsModule healthTags;
+    private static dev.meridian.module.impl.render.ItemPhysicsModule itemPhysics;
     private static dev.meridian.module.impl.world.WaypointsModule waypoints;
     private static HurtCameraModule hurtCamera;
     private static FireOverlayModule fireOverlay;
@@ -84,6 +85,7 @@ public final class Hooks {
         hitColor = instance.modules().get(HitColorModule.class);
         chatModule = instance.modules().get(ChatModule.class);
         healthTags = instance.modules().get(HealthTagsModule.class);
+        itemPhysics = instance.modules().get(dev.meridian.module.impl.render.ItemPhysicsModule.class);
         waypoints = instance.modules().get(dev.meridian.module.impl.world.WaypointsModule.class);
         hurtCamera = instance.modules().get(HurtCameraModule.class);
         fireOverlay = instance.modules().get(FireOverlayModule.class);
@@ -363,6 +365,11 @@ public final class Hooks {
     /** Waypoints that get a beam in the world this frame (reused list, read it right away). */
     public static java.util.List<dev.meridian.waypoint.Waypoint> waypointBeams() {
         return waypoints == null ? java.util.Collections.<dev.meridian.waypoint.Waypoint>emptyList() : waypoints.beams();
+    }
+
+    /** Dropped items lie on the ground instead of floating and spinning. */
+    public static boolean itemPhysics() {
+        return itemPhysics != null && itemPhysics.active();
     }
 
     /** Multiplier for the camera tilt when hurt (1 = vanilla). */

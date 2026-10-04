@@ -34,6 +34,7 @@ import dev.meridian.module.impl.render.CrosshairModule;
 import dev.meridian.module.impl.render.FireOverlayModule;
 import dev.meridian.module.impl.render.FullbrightModule;
 import dev.meridian.module.impl.render.HurtCameraModule;
+import dev.meridian.module.impl.render.ItemPhysicsModule;
 import dev.meridian.module.impl.render.ScoreboardModule;
 import dev.meridian.module.impl.render.TimeChangerModule;
 import dev.meridian.module.impl.render.WeatherChangerModule;
@@ -72,6 +73,7 @@ public final class BuiltinModules {
         modules.register(new BlockOverlayModule());
         modules.register(new HurtCameraModule());
         modules.register(new FireOverlayModule());
+        modules.register(new ItemPhysicsModule());
         modules.register(new FullbrightModule());
         modules.register(new TimeChangerModule());
         modules.register(new WeatherChangerModule());
