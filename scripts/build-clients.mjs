@@ -44,6 +44,17 @@ const TARGETS = [
     tags: ['modern']
   },
   {
+    id: '1.21.8',
+    dir: 'client/targets/mc-1.21.8',
+    displayName: 'Minecraft 1.21.8',
+    minecraftVersion: '1.21.8',
+    branch: 'modern',
+    loader: 'fabric',
+    java: { component: 'java-runtime-delta', majorVersion: 21 },
+    description: 'Servers still on 1.21.8',
+    tags: ['modern']
+  },
+  {
     id: '26.3',
     dir: 'client/targets/mc-26.3',
     displayName: 'Minecraft 26.3',

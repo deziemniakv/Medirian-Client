@@ -399,6 +399,11 @@ public final class Hooks {
                 && meridian.emotes().pose(player, local, out);
     }
 
+    /** Whether this version supports {@code capability} (true before Meridian has booted). */
+    public static boolean supports(Capability capability) {
+        return meridian == null || meridian.platform().supports(capability);
+    }
+
     /** Dropped items lie on the ground instead of floating and spinning. */
     public static boolean itemPhysics() {
         return itemPhysics != null && itemPhysics.active();

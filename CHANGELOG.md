@@ -8,6 +8,7 @@ All notable changes to Meridian Client. The launcher shows the newest entries on
 - 1.8.9: the HUD is drawn with a handful of draw calls instead of one per rectangle — about 5× less time per frame in our test (0.20 ms instead of 1.00 ms).
 - 1.8.9: very faint shapes (shadows, highlights) are no longer cut off, so menus look the same as in 1.21.11.
 - Minecraft 26.3: Meridian now supports the newest Minecraft, with every module, the HUD, capes and Meridian services. A "Latest 26.3" profile is created on first start (Java 25 is installed automatically).
+- Minecraft 1.21.8: for servers that have not moved to 1.21.11 yet — the same modules, HUD and cosmetics (the block outline keeps its fixed width there).
 - New smooth font for Meridian's menus and HUD (Settings → General → Font): text is drawn at the exact resolution of your screen, so it stays sharp at every GUI scale.
 - Hats, wings, trails and emotes: four hats (Top Hat, Crown, Witch Hat, Santa Hat), three pairs of animated wings, four particle trails and three emotes (Wave, Cheer, Dance — press B). All in the Cosmetics screen, all versions; other Meridian players see them when you are signed in.
 - Capes: six original Meridian capes (Meridian, Moonlit, Ember, Frost, Aurora and Founder) in a new Cosmetics screen in the mod menu. Your cape is shown in third person and in your inventory, and to other Meridian players when you are signed in to Meridian services.

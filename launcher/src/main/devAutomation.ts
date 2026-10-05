@@ -12,6 +12,7 @@ import type { ProfileStore } from './profiles/profiles';
  *
  *  MERIDIAN_DEV_CAPTURE=<dir>      screenshot every page (and the setup wizard) into <dir>
  *  MERIDIAN_DEV_LAUNCH=<profile>   sign in offline and launch the profile whose name contains <profile>
+ *                                  (otherwise a new profile for the target with that id, e.g. 1.21.8)
  *  MERIDIAN_DEV_OFFLINE=<name>     offline player name for MERIDIAN_DEV_LAUNCH (default MeridianDev)
  *  MERIDIAN_DEV_RUN_MS=<ms>        stop the game and quit this long after it started
  *
@@ -74,11 +75,10 @@ export async function runDevAutomation(
     return;
   }
   await deps.accounts.offline(process.env.MERIDIAN_DEV_OFFLINE || 'MeridianDev');
-  const profile = deps.profiles.list().find((p) => p.name.toLowerCase().includes(launch.toLowerCase()));
-  if (!profile) {
-    log.error(`[dev] no profile matching "${launch}"`);
-    return;
-  }
+  const profile =
+    deps.profiles.list().find((p) => p.name.toLowerCase().includes(launch.toLowerCase())) ??
+    deps.profiles.list().find((p) => p.targetId === launch) ??
+    (await deps.profiles.create({ name: `Dev ${launch}`, targetId: launch }));
   await deps.settings.update({ selectedProfileId: profile.id });
   await run('window.__meridianDev.reload()');
   log.info(`[dev] launching ${profile.name}`);

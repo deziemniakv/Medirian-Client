@@ -94,6 +94,12 @@ daje precyzyjne, wydajne hooki bez reflection w gorących ścieżkach.
   zapisywany z `MouseHandler#onButton`), GUI jako ekstrakcja stanu (`GuiGraphicsExtractor`, `extractRenderState`),
   HUD w osobnej klasie `Hud`, ekran w `Gui#screen()`, świat jako „submit” (`SubmitNodeCollector`), czas dnia
   w zegarach świata (`ClientClockManager`), lightmap w `LightmapRenderStateExtractor`.
+* **1.21.8** (0.1.4) — dodatkowy target dla serwerów, które zostały na 1.21.8; kopia adaptera 1.21.11.
+  Różnice: `ResourceLocation` zamiast `Identifier`, statyczne `RenderType`, stare sygnatury wejścia
+  (`keyPress(window, key, scanCode, action, mods)`, `mouseClicked(x, y, button)`), świat rysowany przez
+  `MultiBufferSource` (bez „submit”), gracz przez `PlayerRenderer`/`PlayerRenderState`, peleryna w
+  `client.resources.PlayerSkin`. Obrys bloku ma w 1.21.8 stałą grubość, więc adapter nie deklaruje
+  `Capability.BLOCK_OUTLINE_WIDTH` i suwak grubości jest ukryty.
 * Fabric API w 1.21.11 jest **zagnieżdżone (jar-in-jar)** — tylko potrzebne moduły — więc launcher
   dystrybuuje jeden plik na target.
 
@@ -156,6 +162,7 @@ Meridian/
 │   └── targets/
 │       ├── mc-1.8.9/            adapter Legacy Fabric 1.8.9
 │       ├── mc-1.21.11/          adapter Fabric 1.21.11
+│       ├── mc-1.21.8/           adapter Fabric 1.21.8 (kopia 1.21.11)
 │       └── mc-26.3/             adapter Fabric 26.3 (bez obfuskacji)
 └── launcher/                    Electron + React + TypeScript
     ├── src/main/                proces main: serwisy (install, launch, auth, java, updates…)

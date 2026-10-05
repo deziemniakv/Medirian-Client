@@ -1,6 +1,6 @@
 # Meridian — roadmapa
 
-Stan: **0.1.4** (launcher, dwa targety klienta, HUD, 41 modułów, konfiguracja, wydajność).
+Stan: **0.1.4** (launcher, cztery targety klienta — 1.8.9, 1.21.8, 1.21.11, 26.3 — HUD, 41 modułów, konfiguracja, wydajność).
 Poniżej kolejne etapy. Zasada bez zmian: funkcja trafia do UI dopiero, gdy naprawdę działa.
 
 ## Etap 1 — przed pierwszym publicznym wydaniem
@@ -15,7 +15,7 @@ Poniżej kolejne etapy. Zasada bez zmian: funkcja trafia do UI dopiero, gdy napr
 - [ ] **Podpisywanie kodu** — konfiguracja gotowa (sekrety `CSC_LINK`, `CSC_KEY_PASSWORD`, `APPLE_*` w workflow),
       brakuje certyfikatów właściciela (Authenticode, Apple Developer ID). Bez podpisu auto-update na macOS nie działa.
 - [ ] Licencja projektu (do wyboru przez właściciela) i pola `license` w `fabric.mod.json` / `package.json`.
-- [x] CI (0.1.4) — `.github/workflows/ci.yml`: testy Shared, build obu targetów, launcher (build + testy) na
+- [x] CI (0.1.4) — `.github/workflows/ci.yml`: testy Shared, build wszystkich targetów, launcher (build + testy) na
       Windows/macOS/Linux, testy skryptów, self-test w Xvfb z porównaniem zrzutów.
 - [ ] Test na macOS (arm64: `jre-legacy` przez Rosettę) i Linux — launcher jest budowany i testowany na wszystkich
       trzech systemach w CI, a self-test klienta działa w Xvfb; ręczny test gry na prawdziwym macOS nadal potrzebny.
@@ -74,7 +74,9 @@ Każdy wymaga hooka w obu adapterach (nowe `Capability`):
 - [x] Target **26.3** (0.1.4) — `client/targets/mc-26.3`, plugin `fabric-loom` bez remapowania, Java 25. Port objął SDL3
       (wejście), `GuiGraphicsExtractor`/`Hud`, submit świata, zegary świata; self-test (audyt mixinów, wszystkie kontrole,
       peleryny), wzorce wizualne, CI i pełna ścieżka launchera (Java 25 → gra → mostek) sprawdzone.
-- [ ] Opcjonalnie dodatkowe targety 1.21.x (np. 1.21.4/1.21.8) — kopia `mc-1.21.11` + poprawki API (zob. ARCHITECTURE §12).
+- [x] Dodatkowy target **1.21.8** (0.1.4) — `client/targets/mc-1.21.8`, kopia `mc-1.21.11` + poprawki API (zob. ARCHITECTURE §2.2);
+      self-test (audyt mixinów, peleryna, czapki i skrzydła, emotki, czat, polityka serwera, culling), wzorce wizualne i CI.
+      Kolejne wersje 1.21.x dodaje się tak samo (ARCHITECTURE §12).
 
 ## Etap 6 — UI / jakość
 

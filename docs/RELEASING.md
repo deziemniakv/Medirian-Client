@@ -8,7 +8,7 @@ co robią i co musi raz skonfigurować właściciel repozytorium.
 | Job | Co sprawdza |
 |---|---|
 | Shared core tests | `client/shared`: `./gradlew test` (JUnit) |
-| Client mc-1.8.9 / mc-1.21.11 | `./gradlew build` każdego targetu (jar jako artefakt) |
+| Client mc-1.8.9 / mc-1.21.8 / mc-1.21.11 / mc-26.3 | `./gradlew build` każdego targetu (jar jako artefakt) |
 | Launcher (Windows, macOS, Linux) | `npm ci`, `npm run build` (typecheck + bundle), `npm test` |
 | Meridian services | `backend`: `npm test` (logowanie z atrapą Mojang, kosmetyki, profile, limity) |
 | Release scripts | `node --test scripts/test/` (kodek PNG, notatki wydania, analiza logu self-testu, zgodność katalogu kosmetyków) |

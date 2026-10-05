@@ -44,6 +44,8 @@ public enum Capability {
     BIOME,
     /** Block outline colour, width and fill come from {@link Hooks#blockOutlineColor(int)} and friends. */
     BLOCK_OUTLINE,
+    /** The outline width can be changed too (not in 1.21.8, whose outline lines have a fixed width). */
+    BLOCK_OUTLINE_WIDTH,
     /** The hurt overlay colour comes from {@link Hooks#hitColor()}. */
     HIT_COLOR,
     /** Chat lines are decorated by {@link Hooks#chatTimestamp}/{@link Hooks#chatStack} and the history length comes from {@link Hooks#chatHistory}. */
