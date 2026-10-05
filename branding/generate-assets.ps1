@@ -1,15 +1,15 @@
 # Generates derived brand assets from the source logo (branding/source/MedirianClient.png).
 #
 # Outputs (branding/):
-#   meridian-mark.png          cropped mark, original colours (for light backgrounds)
-#   meridian-mark-on-dark.png  cropped mark recoloured for dark UI (moon lavender + bright violet)
-#   meridian-icon-512.png      app icon (dark rounded tile + on-dark mark)
-#   meridian-icon-256.png
-#   meridian-icon-128.png      Minecraft mod icon size
+#   medirian-mark.png          cropped mark, original colours (for light backgrounds)
+#   medirian-mark-on-dark.png  cropped mark recoloured for dark UI (moon lavender + bright violet)
+#   medirian-icon-512.png      app icon (dark rounded tile + on-dark mark)
+#   medirian-icon-256.png
+#   medirian-icon-128.png      Minecraft mod icon size
 #
 # and copies the in-game assets into the shared client resources:
-#   client/shared/src/main/resources/assets/meridian/icon.png              (mod icon, 128 px)
-#   client/shared/src/main/resources/assets/meridian/textures/gui/mark.png (menu logo, 96 px wide)
+#   client/shared/src/main/resources/assets/medirian/icon.png              (mod icon, 128 px)
+#   client/shared/src/main/resources/assets/medirian/textures/gui/mark.png (menu logo, 96 px wide)
 #
 # Usage: powershell -ExecutionPolicy Bypass -File branding/generate-assets.ps1
 
@@ -21,7 +21,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 
-public static class MeridianBrand {
+public static class MedirianBrand {
     // Brand colours sampled from the source logo.
     static readonly int[] Plum   = { 0x2B, 0x0E, 0x3A };
     static readonly int[] Purple = { 0x5C, 0x1D, 0x7C };
@@ -61,15 +61,15 @@ $source = Join-Path $root 'source\MedirianClient.png'
 if (-not (Test-Path $source)) { throw "Missing source logo: $source" }
 
 $src = [System.Drawing.Bitmap]::FromFile($source)
-$bounds = [MeridianBrand]::OpaqueBounds($src)
+$bounds = [MedirianBrand]::OpaqueBounds($src)
 $pad = 8
 $crop = New-Object System.Drawing.Rectangle ($bounds.X - $pad), ($bounds.Y - $pad), ($bounds.Width + 2 * $pad), ($bounds.Height + 2 * $pad)
 $mark = $src.Clone($crop, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
 $src.Dispose()
-$mark.Save((Join-Path $root 'meridian-mark.png'), [System.Drawing.Imaging.ImageFormat]::Png)
+$mark.Save((Join-Path $root 'medirian-mark.png'), [System.Drawing.Imaging.ImageFormat]::Png)
 
-$onDark = [MeridianBrand]::Recolor($mark, [System.Drawing.Color]::FromArgb(0xE9, 0xE2, 0xF5), [System.Drawing.Color]::FromArgb(0x9B, 0x55, 0xD6))
-$onDark.Save((Join-Path $root 'meridian-mark-on-dark.png'), [System.Drawing.Imaging.ImageFormat]::Png)
+$onDark = [MedirianBrand]::Recolor($mark, [System.Drawing.Color]::FromArgb(0xE9, 0xE2, 0xF5), [System.Drawing.Color]::FromArgb(0x9B, 0x55, 0xD6))
+$onDark.Save((Join-Path $root 'medirian-mark-on-dark.png'), [System.Drawing.Imaging.ImageFormat]::Png)
 
 function New-Icon([int]$size, [string]$out) {
     $bmp = New-Object System.Drawing.Bitmap $size, $size, ([System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
@@ -96,14 +96,14 @@ function New-Icon([int]$size, [string]$out) {
     $bmp.Dispose()
 }
 
-New-Icon 512 (Join-Path $root 'meridian-icon-512.png')
-New-Icon 256 (Join-Path $root 'meridian-icon-256.png')
-New-Icon 128 (Join-Path $root 'meridian-icon-128.png')
+New-Icon 512 (Join-Path $root 'medirian-icon-512.png')
+New-Icon 256 (Join-Path $root 'medirian-icon-256.png')
+New-Icon 128 (Join-Path $root 'medirian-icon-128.png')
 
 # In-game assets (shared by every Minecraft version adapter)
-$assets = Join-Path $root '../client/shared/src/main/resources/assets/meridian'
+$assets = Join-Path $root '../client/shared/src/main/resources/assets/medirian'
 New-Item -ItemType Directory -Force (Join-Path $assets 'textures/gui') | Out-Null
-Copy-Item (Join-Path $root 'meridian-icon-128.png') (Join-Path $assets 'icon.png') -Force
+Copy-Item (Join-Path $root 'medirian-icon-128.png') (Join-Path $assets 'icon.png') -Force
 $guiW = 96; $guiH = [int]($guiW * $onDark.Height / $onDark.Width)
 $gui = New-Object System.Drawing.Bitmap $guiW, $guiH, ([System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
 $gg = [System.Drawing.Graphics]::FromImage($gui)

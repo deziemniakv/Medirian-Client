@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Generates the textures and preview icons of worn cosmetics (original, procedural art):
-//   hats:  textures/cosmetics/hats/<id>.png  painted from the box models in meridian/cosmetics/models/<id>.json
+//   hats:  textures/cosmetics/hats/<id>.png  painted from the box models in medirian/cosmetics/models/<id>.json
 //   wings: textures/cosmetics/wings/<id>.png (left wing in the left half; the right wing mirrors it)
 //   icons: textures/cosmetics/icons/<id>.png (64×64 previews for the cosmetics screen: hats, wings, trails)
 // Capes come from scripts/generate-capes.mjs.
@@ -13,8 +13,8 @@ import { encodePng } from './lib/png.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const RES = join(ROOT, 'client/shared/src/main/resources');
-const TEX = join(RES, 'assets/meridian/textures/cosmetics');
-const MODELS = join(RES, 'meridian/cosmetics/models');
+const TEX = join(RES, 'assets/medirian/textures/cosmetics');
+const MODELS = join(RES, 'medirian/cosmetics/models');
 
 const hex = (value) => [parseInt(value.slice(1, 3), 16), parseInt(value.slice(3, 5), 16), parseInt(value.slice(5, 7), 16)];
 const shade = (rgb, f) => rgb.map((c) => Math.max(0, Math.min(255, Math.round(f >= 1 ? c + (255 - c) * (f - 1) : c * f))));
@@ -160,7 +160,7 @@ const wingTop = (t) => 7 - 5.5 * Math.sin(Math.PI * Math.min(1, t * 1.15)) + t *
 const wingBottom = (t) => 29 - 19 * t;
 
 const WINGS = {
-  wings_meridian: (u, v) => {
+  wings_medirian: (u, v) => {
     const t = 1 - u / 32;
     const top = wingTop(t);
     const bottom = wingBottom(t) - 3 * Math.abs(Math.sin(t * Math.PI * 3));

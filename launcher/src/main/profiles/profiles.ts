@@ -111,7 +111,7 @@ function validate(p: LaunchProfile): LaunchProfile {
   };
 }
 
-/** Names of Meridian client configuration profiles (config/profiles/*.json). */
+/** Names of Medirian client configuration profiles (config/profiles/*.json). */
 export async function listClientConfigProfiles(directory: string): Promise<string[]> {
   try {
     const files = (await readdir(directory)).filter((name) => name.endsWith('.json'));

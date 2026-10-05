@@ -25,7 +25,7 @@ const fakeMojang = async (url) => {
 };
 
 before(async () => {
-  dir = mkdtempSync(join(tmpdir(), 'meridian-services-'));
+  dir = mkdtempSync(join(tmpdir(), 'medirian-services-'));
   server = createServer({ dataDir: dir, fetch: fakeMojang, now: () => clock });
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   base = `http://127.0.0.1:${server.address().port}`;
@@ -55,7 +55,7 @@ async function signIn(profile) {
 test('status', async () => {
   const { status, body } = await call('GET', '/v1/status');
   assert.equal(status, 200);
-  assert.equal(body.name, 'meridian-services');
+  assert.equal(body.name, 'medirian-services');
 });
 
 test('sign-in works only after joining the challenge at the session server', async () => {

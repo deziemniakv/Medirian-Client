@@ -1,11 +1,11 @@
-# Meridian — roadmapa
+# Medirian — roadmapa
 
 Stan: **0.1.4** (launcher, cztery targety klienta — 1.8.9, 1.21.8, 1.21.11, 26.3 — HUD, 41 modułów, konfiguracja, wydajność).
 Poniżej kolejne etapy. Zasada bez zmian: funkcja trafia do UI dopiero, gdy naprawdę działa.
 
 ## Etap 1 — przed pierwszym publicznym wydaniem
 
-- [ ] **Rejestracja aplikacji Azure + zgoda Mojang** dla logowania Microsoft (`MERIDIAN_MSA_CLIENT_ID`).
+- [ ] **Rejestracja aplikacji Azure + zgoda Mojang** dla logowania Microsoft (`MEDIRIAN_MSA_CLIENT_ID`).
       Kod device-code flow jest gotowy (`launcher/src/main/auth`), brakuje wyłącznie identyfikatora.
 - [x] **Hosting wydań** (0.1.4) — `.github/workflows/release.yml`: tag `v<wersja>` → GitHub Release z jarami,
       `release-manifest.json` (adresy z `--base-url`), instalatorami i notatkami z CHANGELOG; domyślny manifest
@@ -37,12 +37,12 @@ Każdy wymaga hooka w obu adapterach (nowe `Capability`):
 - [x] **Chat: kopiowanie wiadomości** (0.1.3) — prawy klik linii w otwartym czacie kopiuje całą wiadomość
       (bez znacznika czasu i licznika); 1.8.9: mapa linia→wiadomość, modern: `endOfEntry`.
 - [x] **Discord Rich Presence** (0.1.3) — launcher (`main/discord`), status z kanału live. Do zrobienia przez właściciela:
-      aplikacja w Discord Developer Portal + asset `meridian`, identyfikator wbudowany przez `MAIN_VITE_DISCORD_APP_ID`.
+      aplikacja w Discord Developer Portal + asset `medirian`, identyfikator wbudowany przez `MAIN_VITE_DISCORD_APP_ID`.
 - [x] **Occlusion culling** w Entity Culling (0.1.2): promienie z kamery do środka i narożników hitboxa (`perf/OcclusionCuller`).
 - [x] **Culling block entities** (skrzynie, tabliczki, głowy, banery) tym samym `OcclusionCuller` (0.1.2).
 - [x] Pomiar zysku z okluzji w self-teście (160 świń za ścianą, okluzja wł./wył.; pomiar pomijany, gdy ktoś używa okna):
       1.8.9 — świat 2,99 → 1,57 ms, klatka 3,14 → 1,86 ms; 1.21.11 — świat 2,27 → 0,60 ms, klatka 2,80 → 0,91 ms.
-- [x] **Polityki serwerów** (0.1.3) — kanał `meridian:policy` (JSON z listą modułów do wyłączenia), `meridian:hello`;
+- [x] **Polityki serwerów** (0.1.3) — kanał `medirian:policy` (JSON z listą modułów do wyłączenia), `medirian:hello`;
       opis i przykład pluginu: docs/PROTOCOL.md §6.
 
 ## Etap 3 — kosmetyki
@@ -54,17 +54,17 @@ Każdy wymaga hooka w obu adapterach (nowe `Capability`):
       partiami (≤ 100, cache 5 min), własny loadout wysyłany po zalogowaniu i po każdej zmianie. Backend: `backend/`.
 - [x] **UI kosmetyków** (0.1.4) — ekran „Cosmetics” z mod menu (tylko gdy wersja renderuje peleryny), podgląd, status widoczności.
 - [x] **Czapki i skrzydła** (0.1.4) — warstwa renderera gracza we wszystkich wersjach (1.8.9: feature renderer, modern:
-      `RenderLayer` + `submitCustomGeometry`); modele czapek jako bryły w JSON (`meridian/cosmetics/models`), skrzydła
+      `RenderLayer` + `submitCustomGeometry`); modele czapek jako bryły w JSON (`medirian/cosmetics/models`), skrzydła
       generowane z animacją machania; tekstury i ikony z `scripts/generate-cosmetics.mjs`.
 - [x] **Ślady** (0.1.4) — cząsteczki za poruszającymi się graczami (`Trails`), widoczne dla innych przez loadouty.
 - [x] **Emotki** (0.1.4) — Wave/Cheer/Dance, klawisz emotki (domyślnie B), widok z przodu podczas emotki; inni gracze
       widzą emotki przez usługi (`/v1/emotes/play`, `/v1/emotes/active`, odpytywanie co sekundę).
 
-## Etap 4 — konto Meridian
+## Etap 4 — konto Medirian
 
 - [x] **Backend** (0.1.4, `backend/`, Node bez zależności, Dockerfile) — logowanie przez handshake sesji Mojang
-      (join/hasJoined, token gry trafia tylko do Mojang), kosmetyki, profile; opis: docs/SERVICES.md. Klient: `MeridianServices`.
-- [x] **Profile w chmurze** (0.1.4) — Ustawienia → Profile → Chmura Meridian: wyślij aktywny, pobierz, usuń.
+      (join/hasJoined, token gry trafia tylko do Mojang), kosmetyki, profile; opis: docs/SERVICES.md. Klient: `MedirianServices`.
+- [x] **Profile w chmurze** (0.1.4) — Ustawienia → Profile → Chmura Medirian: wyślij aktywny, pobierz, usuń.
 - [x] Test end-to-end (0.1.4): backend + atrapa serwera sesji + oba klienty w self-teście (logowanie, profil tam i z powrotem,
       własna peleryna widoczna „jako inny gracz”).
 - [ ] **Wdrożenie usług** (właściciel): serwer z HTTPS, zmienna repozytorium `SERVICES_URL` dla buildów launchera.

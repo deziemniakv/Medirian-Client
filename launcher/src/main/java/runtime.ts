@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { chmod, mkdir, readFile, symlink, writeFile } from 'node:fs/promises';
 import { arch, platform } from 'node:os';
 import { dirname, join } from 'node:path';
-import type { MeridianPaths } from '../core/paths';
+import type { MedirianPaths } from '../core/paths';
 import { downloadAll, type DownloadProgress } from '../net/downloader';
 import { fetchJson } from '../net/http';
 
@@ -43,7 +43,7 @@ function platformKeys(): string[] {
  * {@code java-runtime-epsilon} = Java 25 for 26.x).
  */
 export class JavaRuntimeService {
-  constructor(private readonly paths: MeridianPaths) {}
+  constructor(private readonly paths: MedirianPaths) {}
 
   private runtimeDir(component: string): string {
     return join(this.paths.runtime, component);
@@ -80,7 +80,7 @@ export class JavaRuntimeService {
       throw new Error(`Mojang does not publish Java runtime "${component}" for ${platform()}-${arch()}. Choose a Java installation in the profile settings.`);
     }
     const dir = this.runtimeDir(component);
-    const marker = join(dir, '.meridian-runtime');
+    const marker = join(dir, '.medirian-runtime');
     const executable = this.javaExecutable(component);
     if (existsSync(marker) && existsSync(executable) && (await readFile(marker, 'utf8')).trim() === entry.manifest.sha1) {
       return executable;

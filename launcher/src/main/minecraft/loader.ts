@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import type { LoaderType } from '../../common/types';
 import { readJson, writeJson } from '../core/json';
-import type { MeridianPaths } from '../core/paths';
+import type { MedirianPaths } from '../core/paths';
 import { fetchJson, fetchText } from '../net/http';
 import type { Argument, Library } from './mojang';
 import { mavenPath } from './maven';
@@ -26,7 +26,7 @@ const META: Record<LoaderType, string> = {
  * manifest, so a profile never changes once downloaded and is cached in game/versions.
  */
 export class LoaderService {
-  constructor(private readonly paths: MeridianPaths) {}
+  constructor(private readonly paths: MedirianPaths) {}
 
   async profile(type: LoaderType, minecraftVersion: string, loaderVersion: string): Promise<LoaderProfile> {
     const id = `${type}-loader-${loaderVersion}-${minecraftVersion}`;

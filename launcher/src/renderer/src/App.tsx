@@ -33,7 +33,7 @@ export function App() {
     void init();
     if (import.meta.env.DEV) {
       // development automation hooks (see src/main/devAutomation.ts)
-      (window as unknown as { __meridianDev: unknown }).__meridianDev = {
+      (window as unknown as { __medirianDev: unknown }).__medirianDev = {
         navigate: (page: Page) => useStore.getState().navigate(page),
         completeSetup: () => useStore.getState().updateSettings({ setupCompleted: true }),
         reload: () => useStore.getState().init()

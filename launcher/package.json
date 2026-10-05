@@ -1,11 +1,11 @@
 {
-  "name": "meridian-launcher",
-  "productName": "Meridian Client",
+  "name": "medirian-launcher",
+  "productName": "Medirian Client",
   "version": "0.1.4",
-  "description": "Meridian Client launcher",
+  "description": "Medirian Client launcher",
   "private": true,
   "main": "out/main/index.js",
-  "author": "Meridian",
+  "author": "Medirian",
   "scripts": {
     "dev": "electron-vite dev",
     "build": "npm run typecheck && electron-vite build",

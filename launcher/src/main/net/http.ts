@@ -12,7 +12,7 @@ export interface RequestOptions {
   init?: RequestInit;
 }
 
-export const USER_AGENT = 'MeridianLauncher/0.1 (+https://github.com/meridian-client)';
+export const USER_AGENT = 'MedirianLauncher/0.1 (+https://github.com/medirian-client)';
 
 export async function request(url: string, { timeoutMs = 20_000, retries = 2, init }: RequestOptions = {}): Promise<Response> {
   let lastError: unknown;

@@ -1,18 +1,18 @@
 # Changelog
 
-All notable changes to Meridian Client. The launcher shows the newest entries on its home screen.
+All notable changes to Medirian Client. The launcher shows the newest entries on its home screen.
 
 ## 0.1.4 — 2026-10-04 — Polish & Platform
 
 - Smoother menus and HUD: rounded corners, switches and circles now have anti-aliased edges in both versions.
 - 1.8.9: the HUD is drawn with a handful of draw calls instead of one per rectangle — about 5× less time per frame in our test (0.20 ms instead of 1.00 ms).
 - 1.8.9: very faint shapes (shadows, highlights) are no longer cut off, so menus look the same as in 1.21.11.
-- Minecraft 26.3: Meridian now supports the newest Minecraft, with every module, the HUD, capes and Meridian services. A "Latest 26.3" profile is created on first start (Java 25 is installed automatically).
+- Minecraft 26.3: Medirian now supports the newest Minecraft, with every module, the HUD, capes and Medirian services. A "Latest 26.3" profile is created on first start (Java 25 is installed automatically).
 - Minecraft 1.21.8: for servers that have not moved to 1.21.11 yet — the same modules, HUD and cosmetics (the block outline keeps its fixed width there).
-- New smooth font for Meridian's menus and HUD (Settings → General → Font): text is drawn at the exact resolution of your screen, so it stays sharp at every GUI scale.
-- Hats, wings, trails and emotes: four hats (Top Hat, Crown, Witch Hat, Santa Hat), three pairs of animated wings, four particle trails and three emotes (Wave, Cheer, Dance — press B). All in the Cosmetics screen, all versions; other Meridian players see them when you are signed in.
-- Capes: six original Meridian capes (Meridian, Moonlit, Ember, Frost, Aurora and Founder) in a new Cosmetics screen in the mod menu. Your cape is shown in third person and in your inventory, and to other Meridian players when you are signed in to Meridian services.
-- Meridian account: signs in with your Minecraft account automatically (no password; your game token only goes to Mojang). It shares your cape with other players and keeps configuration profiles in the cloud (Settings → Profiles → Meridian Cloud).
+- New smooth font for Medirian's menus and HUD (Settings → General → Font): text is drawn at the exact resolution of your screen, so it stays sharp at every GUI scale.
+- Hats, wings, trails and emotes: four hats (Top Hat, Crown, Witch Hat, Santa Hat), three pairs of animated wings, four particle trails and three emotes (Wave, Cheer, Dance — press B). All in the Cosmetics screen, all versions; other Medirian players see them when you are signed in.
+- Capes: six original Medirian capes (Medirian, Moonlit, Ember, Frost, Aurora and Founder) in a new Cosmetics screen in the mod menu. Your cape is shown in third person and in your inventory, and to other Medirian players when you are signed in to Medirian services.
+- Medirian account: signs in with your Minecraft account automatically (no password; your game token only goes to Mojang). It shares your cape with other players and keeps configuration profiles in the cloud (Settings → Profiles → Medirian Cloud).
 - The launcher updates itself: installed versions download new releases in the background and install them when you close the launcher or click "Restart to update".
 - Releases are built and published automatically, with release notes from this changelog.
 
@@ -25,10 +25,10 @@ All notable changes to Meridian Client. The launcher shows the newest entries on
 - Chat: right-click a line in the open chat to copy the whole message (without timestamps or counters).
 - New module: Item Physics — dropped items lie on the ground instead of floating and spinning.
 - New HUD module: Speed — blocks per second (or km/h) over the last half second.
-- Servers can switch off chosen Meridian modules (for example Freelook) through the meridian:policy plugin channel; they are restored when you leave.
+- Servers can switch off chosen Medirian modules (for example Freelook) through the medirian:policy plugin channel; they are restored when you leave.
 - German and Spanish for the client and the launcher.
 - Christmas theme for the client and the launcher, with snowfall; chosen automatically from December to 6 January.
-- Discord Rich Presence: your Discord profile shows the Minecraft version, Meridian profile, whether you are in the menus, in singleplayer or on a server (the address can be hidden) and how long you have been playing. Settings → Discord.
+- Discord Rich Presence: your Discord profile shows the Minecraft version, Medirian profile, whether you are in the menus, in singleplayer or on a server (the address can be hidden) and how long you have been playing. Settings → Discord.
 
 ## 0.1.2 — 2026-10-03 — Chat & Waypoints
 
@@ -46,7 +46,7 @@ All notable changes to Meridian Client. The launcher shows the newest entries on
 
 ## 0.1.0 — 2026-10-03 — Foundations
 
-- Meridian Launcher: first-run setup with diagnostics, automatic Java (8 and 21) and game installation, launch profiles, Microsoft sign-in, repair and cache tools.
+- Medirian Launcher: first-run setup with diagnostics, automatic Java (8 and 21) and game installation, launch profiles, Microsoft sign-in, repair and cache tools.
 - Two client targets from one codebase: Minecraft 1.8.9 (Legacy Fabric) and 1.21.11 (Fabric).
 - HUD system with a drag-and-drop HUD editor: snapping guides, scaling, per-element styling, add/remove and reset.
 - 32 modules including Keystrokes, CPS, Reach Display, Combo Counter, Target HUD, Armor Status, Potion Effects, Zoom, Freelook and Toggle Sprint.

@@ -9,7 +9,7 @@ import { Icon } from './Icon';
 const ORDER: SetupCheck['id'][] = ['system', 'memory', 'disk', 'network', 'directory', 'java', 'minecraft', 'config', 'integrity'];
 
 /**
- * First-run setup: checks requirements, Java, Minecraft, the Meridian folder, configuration and
+ * First-run setup: checks requirements, Java, Minecraft, the Medirian folder, configuration and
  * the release channel; offers automatic fixes for problems it can solve.
  */
 export function SetupWizard() {

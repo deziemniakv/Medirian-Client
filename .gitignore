@@ -15,7 +15,7 @@ node_modules/
 launcher/out/
 launcher/dist/
 *.log
-# Meridian build outputs
+# Medirian build outputs
 distribution/
 # OS
 Thumbs.db
@@ -27,6 +27,6 @@ Thumbs.db
 # TypeScript incremental build state
 *.tsbuildinfo
 
-# Meridian services data (local runs)
+# Medirian services data (local runs)
 backend/data/
 distribution.tmp/

@@ -32,7 +32,7 @@ export function StatusBar() {
   return (
     <footer className="statusbar">
       <span>
-        <b>{t('status.version')}</b> Meridian {version}
+        <b>{t('status.version')}</b> Medirian {version}
       </span>
       <span>
         <b>{t('status.profile')}</b> {profile?.name ?? t('home.noProfile')}

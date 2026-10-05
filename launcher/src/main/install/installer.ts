@@ -3,7 +3,7 @@ import { copyFile, mkdir, readdir, rm, writeFile } from 'node:fs/promises';
 import { delimiter, join } from 'node:path';
 import type { LaunchProfile, ReleaseTarget, RepairReport, TaskProgress } from '../../common/types';
 import { log } from '../core/log';
-import { detectMinecraftDir, instanceDir, type MeridianPaths } from '../core/paths';
+import { detectMinecraftDir, instanceDir, type MedirianPaths } from '../core/paths';
 import { probeJava } from '../java/detect';
 import type { JavaRuntimeService } from '../java/runtime';
 import { DEFAULT_GC_ARGS, expandArguments, mergeJvmArgs, splitArgs, substitute } from '../launch/arguments';
@@ -28,7 +28,7 @@ export interface LaunchContext {
   session: LaunchSession;
   launcherVersion: string;
   bridge: { port: number; token: string } | null;
-  /** Meridian services for the client (-Dmeridian.api); empty = services off. */
+  /** Medirian services for the client (-Dmedirian.api); empty = services off. */
   servicesUrl?: string;
 }
 
@@ -36,12 +36,12 @@ type ProgressFn = (progress: TaskProgress) => void;
 
 /**
  * Prepares everything a target needs (Java, Minecraft, loader, libraries, natives, assets,
- * Meridian jar) and builds the final command line. Re-running it is cheap: valid files are
+ * Medirian jar) and builds the final command line. Re-running it is cheap: valid files are
  * skipped, so the same code path is used for first install, updates and launches.
  */
 export class Installer {
   constructor(
-    private readonly paths: MeridianPaths,
+    private readonly paths: MedirianPaths,
     private readonly mojang: MojangService,
     private readonly loader: LoaderService,
     private readonly runtimes: JavaRuntimeService,
@@ -96,8 +96,8 @@ export class Installer {
     await mkdir(gameDir, { recursive: true });
     const assetsRoot = await this.prepareLegacyAssets(assets.index, assets.indexId, gameDir);
 
-    // 6. Meridian
-    const clientPath = await this.updates.ensureClient(target, report('client', 'Installing Meridian'));
+    // 6. Medirian
+    const clientPath = await this.updates.ensureClient(target, report('client', 'Installing Medirian'));
     await this.installMod(gameDir, clientPath);
 
     // 7. Command line
@@ -155,16 +155,16 @@ export class Installer {
     return root;
   }
 
-  /** Copies the Meridian jar into the instance's mods folder, removing older Meridian jars. */
+  /** Copies the Medirian jar into the instance's mods folder, removing older Medirian jars. */
   private async installMod(gameDir: string, clientPath: string): Promise<void> {
     const mods = join(gameDir, 'mods');
     await mkdir(mods, { recursive: true });
     for (const file of await readdir(mods)) {
-      if (file.startsWith('meridian-') && file.endsWith('.jar')) {
+      if (file.startsWith('medirian-') && file.endsWith('.jar')) {
         await rm(join(mods, file), { force: true });
       }
     }
-    await copyFile(clientPath, join(mods, 'meridian-client.jar'));
+    await copyFile(clientPath, join(mods, 'medirian-client.jar'));
   }
 
   private buildArgs(
@@ -204,7 +204,7 @@ export class Installer {
       user_properties: '{}',
       resolution_width: String(profile.resolution?.width ?? 854),
       resolution_height: String(profile.resolution?.height ?? 480),
-      launcher_name: 'meridian',
+      launcher_name: 'medirian',
       launcher_version: ctx.launcherVersion,
       natives_directory: nativesDir,
       library_directory: this.paths.libraries,
@@ -219,11 +219,11 @@ export class Installer {
     const memory = profile.memoryMb;
     jvm.push(`-Xms${Math.min(1024, memory)}M`, `-Xmx${memory}M`, ...DEFAULT_GC_ARGS);
     jvm.push(
-      `-Dmeridian.home=${this.paths.root}`,
-      `-Dmeridian.target=${target.id}`,
-      ...(profile.configProfile ? [`-Dmeridian.profile=${profile.configProfile}`] : []),
-      ...(ctx.bridge ? [`-Dmeridian.launcher.port=${ctx.bridge.port}`, `-Dmeridian.launcher.token=${ctx.bridge.token}`] : []),
-      ...(ctx.servicesUrl ? [`-Dmeridian.api=${ctx.servicesUrl}`] : [])
+      `-Dmedirian.home=${this.paths.root}`,
+      `-Dmedirian.target=${target.id}`,
+      ...(profile.configProfile ? [`-Dmedirian.profile=${profile.configProfile}`] : []),
+      ...(ctx.bridge ? [`-Dmedirian.launcher.port=${ctx.bridge.port}`, `-Dmedirian.launcher.token=${ctx.bridge.token}`] : []),
+      ...(ctx.servicesUrl ? [`-Dmedirian.api=${ctx.servicesUrl}`] : [])
     );
 
     const game: string[] = version.arguments?.game

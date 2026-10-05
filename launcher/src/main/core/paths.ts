@@ -1,23 +1,37 @@
-import { existsSync } from 'node:fs';
+import { existsSync, renameSync } from 'node:fs';
 import { homedir, platform } from 'node:os';
 import { join } from 'node:path';
 
 /**
- * MERIDIAN_HOME resolution. MUST match client/shared/.../core/MeridianHome.java:
- * MERIDIAN_HOME env → per-OS default.
+ * MEDIRIAN_HOME resolution. MUST match client/shared/.../core/MedirianHome.java:
+ * MEDIRIAN_HOME env → per-OS default.
  */
-export function resolveMeridianHome(): string {
-  const env = process.env.MERIDIAN_HOME?.trim();
+export function resolveMedirianHome(): string {
+  const env = process.env.MEDIRIAN_HOME?.trim();
   if (env) {
     return env;
   }
+  const home = defaultHome('medirian');
+  // data of builds released under the misspelled name 'meridian' moves over once
+  const legacy = defaultHome('meridian');
+  if (!existsSync(home) && existsSync(legacy)) {
+    try {
+      renameSync(legacy, home);
+    } catch {
+      return legacy;
+    }
+  }
+  return home;
+}
+
+function defaultHome(name: string): string {
   switch (platform()) {
     case 'win32':
-      return join(process.env.APPDATA ?? homedir(), '.meridian');
+      return join(process.env.APPDATA ?? homedir(), '.' + name);
     case 'darwin':
-      return join(homedir(), 'Library', 'Application Support', 'meridian');
+      return join(homedir(), 'Library', 'Application Support', name);
     default:
-      return join(homedir(), '.meridian');
+      return join(homedir(), '.' + name);
   }
 }
 
@@ -37,7 +51,7 @@ export function detectMinecraftDir(): string | null {
   return existsSync(dir) ? dir : null;
 }
 
-export interface MeridianPaths {
+export interface MedirianPaths {
   root: string;
   launcher: string;
   settingsFile: string;
@@ -57,7 +71,7 @@ export interface MeridianPaths {
   natives: string;
 }
 
-export function meridianPaths(root: string = resolveMeridianHome()): MeridianPaths {
+export function medirianPaths(root: string = resolveMedirianHome()): MedirianPaths {
   const launcher = join(root, 'launcher');
   const game = join(root, 'game');
   const config = join(root, 'config');
@@ -84,6 +98,6 @@ export function meridianPaths(root: string = resolveMeridianHome()): MeridianPat
 }
 
 /** Game directory of a target (separate per target: mods, options.txt and worlds differ). */
-export function instanceDir(paths: MeridianPaths, targetId: string): string {
+export function instanceDir(paths: MedirianPaths, targetId: string): string {
   return join(paths.instances, targetId);
 }

@@ -1,12 +1,12 @@
-# Usługi Meridian (`backend/`)
+# Usługi Medirian (`backend/`)
 
-Mały serwer HTTP/JSON (Node 22+, bez zależności): konta Meridian, kosmetyki widoczne dla innych
+Mały serwer HTTP/JSON (Node 22+, bez zależności): konta Medirian, kosmetyki widoczne dla innych
 graczy i profile konfiguracji w chmurze. Bez skonfigurowanego adresu usług klient działa w pełni
 lokalnie (peleryna widoczna tylko dla gracza, brak chmury) i mówi o tym w UI.
 
-## Logowanie bez hasła i bez wysyłania tokenu do Meridian
+## Logowanie bez hasła i bez wysyłania tokenu do Medirian
 
-Konto Meridian = konto Minecraft. Dowód tożsamości to ten sam mechanizm, którego używa każdy serwer
+Konto Medirian = konto Minecraft. Dowód tożsamości to ten sam mechanizm, którego używa każdy serwer
 Minecraft w trybie online:
 
 1. klient → `POST /v1/auth/challenge` → `{ "serverId": "<40 hex>" }` (ważne 2 min, jednorazowe),
@@ -49,10 +49,10 @@ dodaje jego UUID do kolejki; kolejka jest wysyłana jednym zapytaniem (do 100 gr
 Emotki innych graczy klient odpytuje co sekundę (tylko o graczy, których widzi) i odtwarza je od momentu
 wskazanego przez `elapsedMs`, więc różnice zegarów nie mają znaczenia.
 
-Tekstury kosmetyków są w kliencie (`assets/meridian/textures/cosmetics/`); serwer przechowuje tylko
+Tekstury kosmetyków są w kliencie (`assets/medirian/textures/cosmetics/`); serwer przechowuje tylko
 identyfikatory. Nowa peleryna = PNG wygenerowany przez `node scripts/generate-capes.mjs` (albo
 własny, układ 64×32 w dowolnej skali 2:1) + wpis w obu `catalogue.json` (test pilnuje zgodności). Czapka = model z bryłami
-w `client/shared/src/main/resources/meridian/cosmetics/models/<id>.json` (układ UV jak w modelach Minecrafta); tekstury
+w `client/shared/src/main/resources/medirian/cosmetics/models/<id>.json` (układ UV jak w modelach Minecrafta); tekstury
 czapek, skrzydeł i ikony podglądu robi `node scripts/generate-cosmetics.mjs`.
 
 ## Uruchomienie
@@ -60,10 +60,10 @@ czapek, skrzydeł i ikony podglądu robi `node scripts/generate-cosmetics.mjs`.
 ```bash
 cd backend
 npm test                                   # testy (Mojang zastąpiony atrapą)
-PORT=8080 DATA_DIR=/var/lib/meridian node src/index.mjs
+PORT=8080 DATA_DIR=/var/lib/medirian node src/index.mjs
 ```
 
-Docker: `docker build -t meridian-services backend && docker run -p 8080:8080 -v meridian-data:/data meridian-services`.
+Docker: `docker build -t medirian-services backend && docker run -p 8080:8080 -v medirian-data:/data medirian-services`.
 Dane to pliki JSON (`users/<uuid>.json`, `grants.json`), zapisywane atomowo. Przed serwerem
 powinien stać reverse proxy z HTTPS (np. Caddy/nginx).
 
@@ -72,9 +72,9 @@ Kosmetyki przyznawane (`"access": "grant"`, np. Founder): `DATA_DIR/grants.json`
 
 ## Klient i launcher
 
-* Klient czyta adres z `-Dmeridian.api` (launcher dodaje go sam) albo `MERIDIAN_API_URL`.
-* Launcher: *Ustawienia → Deweloperskie → Adres usług Meridian*, domyślnie wbudowany przy buildzie
-  (`MAIN_VITE_SERVICES_URL`, w workflow wydania zmienna repozytorium `SERVICES_URL`) albo `MERIDIAN_SERVICES_URL`.
+* Klient czyta adres z `-Dmedirian.api` (launcher dodaje go sam) albo `MEDIRIAN_API_URL`.
+* Launcher: *Ustawienia → Deweloperskie → Adres usług Medirian*, domyślnie wbudowany przy buildzie
+  (`MAIN_VITE_SERVICES_URL`, w workflow wydania zmienna repozytorium `SERVICES_URL`) albo `MEDIRIAN_SERVICES_URL`.
 
 ## Test end-to-end z kontem offline
 
@@ -82,7 +82,7 @@ Kosmetyki przyznawane (`"access": "grant"`, np. Founder): `DATA_DIR/grants.json`
 node backend/dev/fake-session-server.mjs 18091
 PORT=18080 MOJANG_SESSION_URL=http://127.0.0.1:18091/session/minecraft node backend/src/index.mjs
 cd client/targets/mc-1.8.9
-MERIDIAN_API_URL=http://127.0.0.1:18080 MERIDIAN_SESSION_SERVER=http://127.0.0.1:18091/session/minecraft ./gradlew runClient -Pselftest
+MEDIRIAN_API_URL=http://127.0.0.1:18080 MEDIRIAN_SESSION_SERVER=http://127.0.0.1:18091/session/minecraft ./gradlew runClient -Pselftest
 ```
 
 Self-test loguje wtedy `Self-test: services OK (cloud profile round trip, own cape visible to others…)`.

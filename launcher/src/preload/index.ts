@@ -1,11 +1,11 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
-import { EVENT_CHANNELS, INVOKE_CHANNELS, type MeridianBridge } from '../common/ipc';
+import { EVENT_CHANNELS, INVOKE_CHANNELS, type MedirianBridge } from '../common/ipc';
 
 const invokeAllowed = new Set<string>(INVOKE_CHANNELS);
 const eventsAllowed = new Set<string>(EVENT_CHANNELS);
 
 // Narrow, typed API: the renderer can only use the channels declared in common/ipc.ts.
-const bridge: MeridianBridge = {
+const bridge: MedirianBridge = {
   invoke(channel, ...args) {
     if (!invokeAllowed.has(channel)) {
       return Promise.reject(new Error(`Channel not allowed: ${channel}`));
@@ -22,4 +22,4 @@ const bridge: MeridianBridge = {
   }
 };
 
-contextBridge.exposeInMainWorld('meridian', bridge);
+contextBridge.exposeInMainWorld('medirian', bridge);

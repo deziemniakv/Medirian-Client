@@ -8,7 +8,7 @@ import { AccountService } from './auth/accounts';
 import { CHANGELOG } from './changelog';
 import { runDevAutomation } from './devAutomation';
 import { initLog, log } from './core/log';
-import { instanceDir, meridianPaths } from './core/paths';
+import { instanceDir, medirianPaths } from './core/paths';
 import { defaultManifestUrl, defaultServicesUrl, defaultSettings, SettingsStore } from './core/settings';
 import { buildActivity, DiscordPresenceService } from './discord/presence';
 import { Installer } from './install/installer';
@@ -57,10 +57,10 @@ async function loadUpdater(): Promise<Updater | null> {
 }
 
 async function bootstrap(): Promise<Services> {
-  const paths = meridianPaths();
+  const paths = medirianPaths();
   await mkdir(paths.launcher, { recursive: true });
   await initLog(paths.logs);
-  log.info(`Meridian Launcher ${app.getVersion()} starting (home: ${paths.root})`);
+  log.info(`Medirian Launcher ${app.getVersion()} starting (home: ${paths.root})`);
 
   // In development the local channel points at the repository's distribution folder.
   const devDistribution = app.isPackaged ? '' : resolve(app.getAppPath(), '..', 'distribution');
@@ -68,7 +68,7 @@ async function bootstrap(): Promise<Services> {
   const profiles = new ProfileStore(paths.profilesFile);
   await profiles.load();
 
-  const msaClientId = () => settings.get().msaClientId || import.meta.env.MAIN_VITE_MSA_CLIENT_ID || process.env.MERIDIAN_MSA_CLIENT_ID || '';
+  const msaClientId = () => settings.get().msaClientId || import.meta.env.MAIN_VITE_MSA_CLIENT_ID || process.env.MEDIRIAN_MSA_CLIENT_ID || '';
   const accounts = new AccountService(
     paths.accountsFile,
     msaClientId,
@@ -86,7 +86,7 @@ async function bootstrap(): Promise<Services> {
     () => settings.get().concurrentDownloads, () => settings.get().reuseMinecraftAssets);
   const discord = new DiscordPresenceService({
     enabled: () => settings.get().discordPresence,
-    applicationId: () => settings.get().discordAppId || import.meta.env.MAIN_VITE_DISCORD_APP_ID || process.env.MERIDIAN_DISCORD_APP_ID || '',
+    applicationId: () => settings.get().discordAppId || import.meta.env.MAIN_VITE_DISCORD_APP_ID || process.env.MEDIRIAN_DISCORD_APP_ID || '',
     activity: () => buildActivity({
       game: game.current(),
       targetName: (targetId) => updates.target(targetId)?.displayName ?? null,
@@ -210,7 +210,7 @@ async function bootstrap(): Promise<Services> {
 
 function createWindow(): void {
   // development screenshot runs place the window off-screen so nobody can interact with it
-  const offscreen = !app.isPackaged && !!process.env.MERIDIAN_DEV_CAPTURE && !process.env.MERIDIAN_DEV_LAUNCH;
+  const offscreen = !app.isPackaged && !!process.env.MEDIRIAN_DEV_CAPTURE && !process.env.MEDIRIAN_DEV_LAUNCH;
   window = new BrowserWindow({
     ...(offscreen ? { x: -5000, y: 0, focusable: false, skipTaskbar: true } : {}),
     width: 1180,

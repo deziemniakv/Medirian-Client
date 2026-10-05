@@ -1,4 +1,4 @@
-// Meridian Shared — version-independent client core.
+// Medirian Shared — version-independent client core.
 // Compiled for Java 8 because it runs inside Minecraft 1.8.9 as well as modern versions.
 // MUST NOT depend on Minecraft. Gson is provided by every supported Minecraft version
 // (1.8.9 ships Gson 2.2.4, so only APIs available in 2.2.4 may be used).
@@ -7,7 +7,7 @@ plugins {
     id 'java-library'
 }
 
-group = 'dev.meridian'
+group = 'dev.medirian'
 version = rootProject.file('../../VERSION').text.trim()
 
 repositories {
@@ -32,7 +32,7 @@ tasks.withType(JavaCompile).configureEach {
 processResources {
     def props = [version: project.version]
     inputs.properties props
-    filesMatching('meridian/build.properties') {
+    filesMatching('medirian/build.properties') {
         expand props
     }
 }

@@ -56,7 +56,7 @@ export function LaunchPanel() {
     <section className="launch">
       <div className="launch__target">
         <span className="launch__eyebrow">{target ? `Minecraft ${target.minecraftVersion}` : profile?.targetId ?? ''}</span>
-        <span className="launch__title">Meridian Client</span>
+        <span className="launch__title">Medirian Client</span>
         <select
           className="select launch__profile"
           value={profile?.id ?? ''}
@@ -95,7 +95,7 @@ export function LaunchPanel() {
           <div className="launch__detail launch__detail--error">{state.releases.error}</div>
         ) : (
           <div className="launch__detail">
-            {target ? `${target.displayName} · Meridian ${state.releases?.manifest?.client.version ?? ''}` : ''}
+            {target ? `${target.displayName} · Medirian ${state.releases?.manifest?.client.version ?? ''}` : ''}
           </div>
         )}
       </div>

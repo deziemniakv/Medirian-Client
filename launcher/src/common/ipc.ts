@@ -103,8 +103,8 @@ export const INVOKE_CHANNELS: InvokeChannel[] = [
 export const EVENT_CHANNELS: EventChannel[] = ['game:state', 'game:log', 'account:changed', 'account:loginResult', 'discord:status',
   'launcherUpdate:status'];
 
-/** Shape of `window.meridian` exposed by the preload script. */
-export interface MeridianBridge {
+/** Shape of `window.medirian` exposed by the preload script. */
+export interface MedirianBridge {
   invoke<K extends InvokeChannel>(channel: K, ...args: Parameters<InvokeApi[K]>): Promise<Awaited<ReturnType<InvokeApi[K]>>>;
   on<K extends EventChannel>(channel: K, listener: (payload: EventApi[K]) => void): () => void;
 }

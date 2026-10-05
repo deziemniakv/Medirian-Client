@@ -5,7 +5,7 @@ import type { LauncherSettings, ReleaseManifest, ReleaseState, ReleaseTarget, Ta
 import { readJson, writeJson } from '../core/json';
 import { defaultManifestUrl } from '../core/settings';
 import { log } from '../core/log';
-import type { MeridianPaths } from '../core/paths';
+import type { MedirianPaths } from '../core/paths';
 import { downloadAll, isValid, type DownloadProgress } from '../net/downloader';
 import { fetchJson } from '../net/http';
 
@@ -39,7 +39,7 @@ export function compareVersions(a: string, b: string): number {
 export class UpdateService {
   private state: ReleaseState = { manifest: null, error: null, source: '', checkedAt: 0 };
 
-  constructor(private readonly paths: MeridianPaths, private readonly settings: () => LauncherSettings) {}
+  constructor(private readonly paths: MedirianPaths, private readonly settings: () => LauncherSettings) {}
 
   private cacheFile(): string {
     return join(this.paths.cache, 'release-manifest.json');
@@ -120,7 +120,7 @@ export class UpdateService {
     }));
   }
 
-  /** Ensures the Meridian jar for {@code target} is installed and verified; returns its path. */
+  /** Ensures the Medirian jar for {@code target} is installed and verified; returns its path. */
   async ensureClient(target: ReleaseTarget, onProgress?: (p: DownloadProgress) => void): Promise<string> {
     const manifest = this.state.manifest!;
     const version = manifest.client.version;
@@ -128,7 +128,7 @@ export class UpdateService {
     if (installed && installed.sha1 === target.artifact.sha1 && (await isValid(installed.file, installed.sha1, target.artifact.size, 'quick'))) {
       return installed.file;
     }
-    const fileName = target.artifact.file ?? target.artifact.url?.split('/').pop() ?? `meridian-${target.id}.jar`;
+    const fileName = target.artifact.file ?? target.artifact.url?.split('/').pop() ?? `medirian-${target.id}.jar`;
     const destination = join(this.paths.clients, target.id, version, fileName.replace(/[\\/]/g, '_'));
     const src = this.source();
     const localSource = target.artifact.file
@@ -143,7 +143,7 @@ export class UpdateService {
     }], { concurrency: 1, verify: 'full', onProgress });
     await writeJson(this.installedFile(target.id), { version, sha1: target.artifact.sha1, file: destination });
     await this.removeOldVersions(target.id, version);
-    log.info(`Installed Meridian ${version} for ${target.id}`);
+    log.info(`Installed Medirian ${version} for ${target.id}`);
     return destination;
   }
 

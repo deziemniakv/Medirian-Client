@@ -1,4 +1,4 @@
-// Meridian services: accounts (Mojang session handshake), cosmetics and cloud profiles.
+// Medirian services: accounts (Mojang session handshake), cosmetics and cloud profiles.
 //
 // Sign-in never sees a Minecraft access token: the client asks for a challenge, "joins" it at
 // Mojang's session server with its own token (exactly like joining a Minecraft server) and the
@@ -115,7 +115,7 @@ export function createServer({ dataDir, sessionServer = 'https://sessionserver.m
   }
 
   const routes = [
-    ['GET', /^\/v1\/status$/, () => ({ name: 'meridian-services', version: VERSION })],
+    ['GET', /^\/v1\/status$/, () => ({ name: 'medirian-services', version: VERSION })],
 
     ['POST', /^\/v1\/auth\/challenge$/, (req) => {
       limit(`signin:${req.socket.remoteAddress}`, LIMITS.signInsPerMinute);

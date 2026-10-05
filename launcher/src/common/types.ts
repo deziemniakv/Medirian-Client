@@ -22,7 +22,7 @@ export interface LauncherSettings {
   selectedProfileId: string | null;
   /** Developer override for the Azure application id used for Microsoft login. */
   msaClientId: string;
-  /** Meridian services (accounts, cosmetics, cloud profiles); empty = the built-in default. */
+  /** Medirian services (accounts, cosmetics, cloud profiles); empty = the built-in default. */
   servicesUrl: string;
   /** Show the running game on the user's Discord profile (Rich Presence). */
   discordPresence: boolean;
@@ -39,7 +39,7 @@ export interface Resolution {
   height: number;
 }
 
-/** A launch profile ("installation"): which Meridian target to start and how. */
+/** A launch profile ("installation"): which Medirian target to start and how. */
 export interface LaunchProfile {
   id: string;
   name: string;
@@ -49,7 +49,7 @@ export interface LaunchProfile {
   javaPath: string | null;
   jvmArgs: string;
   resolution: Resolution | null;
-  /** Meridian client configuration profile to start with (null = last used in game). */
+  /** Medirian client configuration profile to start with (null = last used in game). */
   configProfile: string | null;
   createdAt: number;
   lastPlayed: number | null;
@@ -195,7 +195,7 @@ export interface JavaInstall {
   major: number;
   arch: string;
   vendor: string;
-  source: 'meridian' | 'system';
+  source: 'medirian' | 'system';
 }
 
 export interface SystemInfo {
@@ -226,9 +226,9 @@ export interface AppInfo {
   packaged: boolean;
   home: string;
   platform: string;
-  /** Manifest URL used when the setting is empty (built in or from MERIDIAN_MANIFEST_URL). */
+  /** Manifest URL used when the setting is empty (built in or from MEDIRIAN_MANIFEST_URL). */
   defaultManifestUrl: string;
-  /** Services URL used when the setting is empty (built in or from MERIDIAN_SERVICES_URL). */
+  /** Services URL used when the setting is empty (built in or from MEDIRIAN_SERVICES_URL). */
   defaultServicesUrl: string;
 }
 

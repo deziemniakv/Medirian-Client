@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Generates Meridian's cape textures (original, procedural art) into
-// client/shared/src/main/resources/assets/meridian/textures/cosmetics/capes/<id>.png
+// Generates Medirian's cape textures (original, procedural art) into
+// client/shared/src/main/resources/assets/medirian/textures/cosmetics/capes/<id>.png
 //
 // Layout: the vanilla 64×32 cape texture at 4× (256×128) — Minecraft normalises cape UVs, so HD
 // textures work in 1.8.9 and 1.21.11. Painted regions: the cape box (10×16×1 at 0,0) and the
@@ -13,12 +13,12 @@ import { fileURLToPath } from 'node:url';
 import { decodePng, encodePng } from './lib/png.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const OUT = join(ROOT, 'client/shared/src/main/resources/assets/meridian/textures/cosmetics/capes');
+const OUT = join(ROOT, 'client/shared/src/main/resources/assets/medirian/textures/cosmetics/capes');
 const S = 4;
 const W = 64 * S;
 const H = 32 * S;
 
-const MARK = decodePng(readFileSync(join(ROOT, 'client/shared/src/main/resources/assets/meridian/textures/gui/mark.png')));
+const MARK = decodePng(readFileSync(join(ROOT, 'client/shared/src/main/resources/assets/medirian/textures/gui/mark.png')));
 
 const hex = (value) => [parseInt(value.slice(1, 3), 16), parseInt(value.slice(3, 5), 16), parseInt(value.slice(5, 7), 16)];
 const mix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
@@ -37,7 +37,7 @@ const disc = (d, r) => clamp01(r + 0.5 - d);
 /** Draws {@code over} with coverage {@code a} on top of {@code base}. */
 const over = (base, color, a) => mix(base, color, clamp01(a));
 
-/** Bilinear sample of the Meridian mark's alpha at normalised coordinates. */
+/** Bilinear sample of the Medirian mark's alpha at normalised coordinates. */
 function markAlpha(u, v) {
   if (u < 0 || u > 1 || v < 0 || v > 1) return 0;
   const x = u * (MARK.width - 1);
@@ -98,7 +98,7 @@ function snowflake(x, y, cx, cy, r) {
 
 /** Each design paints a face of w×h pixels; (x, y) is the pixel centre. */
 const DESIGNS = {
-  cape_meridian: {
+  cape_medirian: {
     edge: hex('#1a0f2c'),
     paint(x, y, w, h) {
       const v = y / h;

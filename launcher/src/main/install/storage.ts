@@ -1,7 +1,7 @@
 import { readdir, rm, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { DiskUsage } from '../../common/types';
-import type { MeridianPaths } from '../core/paths';
+import type { MedirianPaths } from '../core/paths';
 
 async function directorySize(dir: string): Promise<number> {
   let total = 0;
@@ -22,7 +22,7 @@ async function directorySize(dir: string): Promise<number> {
   return total;
 }
 
-export async function diskUsage(paths: MeridianPaths): Promise<DiskUsage> {
+export async function diskUsage(paths: MedirianPaths): Promise<DiskUsage> {
   const [runtimeBytes, gameBytes, clientsBytes, cacheBytes] = await Promise.all([
     directorySize(paths.runtime),
     directorySize(paths.game),
@@ -36,7 +36,7 @@ export async function diskUsage(paths: MeridianPaths): Promise<DiskUsage> {
  * Clears re-creatable data: download cache, extracted natives and leftover partial downloads.
  * Game files, worlds, configuration and installed runtimes are kept.
  */
-export async function clearCache(paths: MeridianPaths): Promise<number> {
+export async function clearCache(paths: MedirianPaths): Promise<number> {
   const freed = await directorySize(paths.cache);
   await rm(paths.cache, { recursive: true, force: true });
   return freed;

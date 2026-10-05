@@ -40,10 +40,10 @@ test('self-test log check', () => {
 
 test('the client ships the same cosmetics catalogue as the services', () => {
   const root = new URL('../../', import.meta.url);
-  const client = readFileSync(new URL('client/shared/src/main/resources/meridian/cosmetics/catalogue.json', root), 'utf8');
+  const client = readFileSync(new URL('client/shared/src/main/resources/medirian/cosmetics/catalogue.json', root), 'utf8');
   const services = readFileSync(new URL('backend/src/catalogue.json', root), 'utf8');
   assert.deepEqual(JSON.parse(client), JSON.parse(services));
   for (const cosmetic of JSON.parse(client).cosmetics.filter((c) => c.type === 'CAPE')) {
-    readFileSync(new URL(`client/shared/src/main/resources/assets/meridian/textures/cosmetics/capes/${cosmetic.id}.png`, root));
+    readFileSync(new URL(`client/shared/src/main/resources/assets/medirian/textures/cosmetics/capes/${cosmetic.id}.png`, root));
   }
 });

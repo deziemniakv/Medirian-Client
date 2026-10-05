@@ -10,7 +10,7 @@ import { buildActivity, DiscordPresenceService, type PresenceContext } from '../
 let pipeCounter = 0;
 
 function pipePath(): string {
-  const name = `meridian-discord-test-${process.pid}-${pipeCounter++}`;
+  const name = `medirian-discord-test-${process.pid}-${pipeCounter++}`;
   return process.platform === 'win32' ? `\\\\?\\pipe\\${name}` : join(tmpdir(), `${name}.sock`);
 }
 
@@ -135,8 +135,8 @@ test('activity while playing', () => {
   assert.equal(activity?.details, 'Minecraft 1.8.9 · PvP');
   assert.equal(activity?.state, 'Playing on mc.example.net');
   assert.equal(activity?.timestamps?.start, 1_700_000_000_000);
-  assert.equal(activity?.assets?.large_image, 'meridian');
-  assert.equal(activity?.assets?.large_text, 'Meridian Client 0.1.2');
+  assert.equal(activity?.assets?.large_image, 'medirian');
+  assert.equal(activity?.assets?.large_text, 'Medirian Client 0.1.2');
 
   assert.equal(buildActivity(context(multiplayer, { showServer: false }))?.state, 'Multiplayer');
   assert.equal(buildActivity(context(multiplayer, { language: 'pl' }))?.state, 'Gra na mc.example.net');

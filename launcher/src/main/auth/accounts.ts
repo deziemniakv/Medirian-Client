@@ -83,7 +83,7 @@ export class AccountService {
   async startLogin(): Promise<DeviceCodeInfo> {
     const clientId = this.clientId();
     if (!clientId) {
-      throw new AuthError('Microsoft login is not configured: set MERIDIAN_MSA_CLIENT_ID (see README).');
+      throw new AuthError('Microsoft login is not configured: set MEDIRIAN_MSA_CLIENT_ID (see README).');
     }
     this.login?.abort();
     const controller = new AbortController();

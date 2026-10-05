@@ -4,7 +4,7 @@ import type { BridgeStatus } from '../../common/types';
 import { log } from '../core/log';
 
 /**
- * Local channel to the running Meridian client (protocol: docs/PROTOCOL.md).
+ * Local channel to the running Medirian client (protocol: docs/PROTOCOL.md).
  * Listens on 127.0.0.1 with a random port; the client must authenticate with a one-time token
  * in its first message.
  */
@@ -99,7 +99,7 @@ export class ClientBridge {
     this.onStatus(status);
   }
 
-  /** Shows a Meridian notification inside the game. */
+  /** Shows a Medirian notification inside the game. */
   notify(title: string, message: string, level: 'info' | 'success' | 'warning' = 'info'): void {
     this.socket?.write(JSON.stringify({ type: 'notify', title, message, level }) + '\n');
   }

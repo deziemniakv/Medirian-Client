@@ -1,4 +1,4 @@
-// Meridian adapter for Minecraft 26.3 (Fabric).
+// Medirian adapter for Minecraft 26.3 (Fabric).
 // Pure Fabric Loader + Mixin: no Fabric API dependency, so the launcher ships a single jar.
 // Minecraft 26.x ships without obfuscation: Loom does not remap (plugin "fabric-loom", no mappings).
 
@@ -6,12 +6,12 @@ plugins {
     id 'net.fabricmc.fabric-loom' version "${loom_version}"
 }
 
-def meridianVersion = rootProject.file('../../../VERSION').text.trim()
-version = "${meridianVersion}+mc${project.minecraft_version}"
-group = 'dev.meridian'
+def medirianVersion = rootProject.file('../../../VERSION').text.trim()
+version = "${medirianVersion}+mc${project.minecraft_version}"
+group = 'dev.medirian'
 
 base {
-    archivesName = 'meridian-26.3'
+    archivesName = 'medirian-26.3'
 }
 
 configurations {
@@ -23,23 +23,23 @@ configurations {
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     implementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    shade "dev.meridian:meridian-shared:${meridianVersion}"
+    shade "dev.medirian:medirian-shared:${medirianVersion}"
 }
 
 loom {
     runs {
         client {
-            // Development runs keep their Meridian data inside run/ instead of the real MERIDIAN_HOME.
+            // Development runs keep their Medirian data inside run/ instead of the real MEDIRIAN_HOME.
             // The self-test starts from a fresh one every time, so its screenshots are reproducible.
-            def home = file(project.hasProperty('selftest') ? 'run/selftest-home' : 'run/meridian-home')
+            def home = file(project.hasProperty('selftest') ? 'run/selftest-home' : 'run/medirian-home')
             if (project.hasProperty('selftest')) {
                 project.delete(home)
             }
-            vmArg "-Dmeridian.home=${home.absolutePath}"
+            vmArg "-Dmedirian.home=${home.absolutePath}"
             if (project.hasProperty('selftest')) {
                 // ./gradlew runClient -Pselftest : screenshot walkthrough + mixin audit (see SelfTest.java)
-                vmArg '-Dmeridian.selftest=true'
-                vmArg '-Dmeridian.mixinAudit=true'
+                vmArg '-Dmedirian.selftest=true'
+                vmArg '-Dmedirian.mixinAudit=true'
                 programArgs '--width', '1600', '--height', '900'
             }
         }

@@ -1,25 +1,25 @@
-# Meridian — kontrakty danych i protokół launcher ↔ klient
+# Medirian — kontrakty danych i protokół launcher ↔ klient
 
 Ten dokument opisuje wszystko, co launcher i klient (w każdej wersji Minecrafta) muszą rozumieć
 identycznie. Zmiana któregokolwiek formatu = zmiana obu stron + wpis w CHANGELOG.
 
-## 1. `MERIDIAN_HOME`
+## 1. `MEDIRIAN_HOME`
 
 | System | Domyślna lokalizacja |
 |---|---|
-| Windows | `%APPDATA%\.meridian` |
-| macOS | `~/Library/Application Support/meridian` |
-| Linux | `~/.meridian` |
+| Windows | `%APPDATA%\.medirian` |
+| macOS | `~/Library/Application Support/medirian` |
+| Linux | `~/.medirian` |
 
-Nadpisanie: zmienna środowiskowa `MERIDIAN_HOME` (launcher i klient) albo `-Dmeridian.home` (klient).
-Implementacje: `launcher/src/main/core/paths.ts`, `client/shared/.../core/MeridianHome.java`.
+Nadpisanie: zmienna środowiskowa `MEDIRIAN_HOME` (launcher i klient) albo `-Dmedirian.home` (klient).
+Implementacje: `launcher/src/main/core/paths.ts`, `client/shared/.../core/MedirianHome.java`.
 
 ```
-MERIDIAN_HOME/
+MEDIRIAN_HOME/
 ├── launcher/            settings.json, profiles.json, accounts.json (tokeny zaszyfrowane), logs/
 ├── runtime/<component>/ Java od Mojang (jre-legacy, java-runtime-delta…)
 ├── game/                versions/, libraries/, assets/  (współdzielone przez wszystkie targety)
-├── clients/<target>/    zainstalowany jar Meridian + installed.json
+├── clients/<target>/    zainstalowany jar Medirian + installed.json
 ├── instances/<target>/  katalog gry (mods/, saves/, options.txt, screenshots/)
 ├── config/              client.json, profiles/*.json, waypoints.json, cosmetics.json   ← klient
 └── cache/               manifesty, natywki — można bezpiecznie usunąć
@@ -45,7 +45,7 @@ Generowany przez `scripts/build-clients.mjs`. Kanał `local` czyta go z `distrib
       "branch": "legacy",
       "loader": { "type": "legacy-fabric", "version": "0.19.5" },
       "java": { "component": "jre-legacy", "majorVersion": 8 },
-      "artifact": { "file": "meridian-1.8.9-0.1.0.jar", "url": "https://…/meridian-1.8.9-0.1.0.jar", "sha1": "…", "size": 380907 },
+      "artifact": { "file": "medirian-1.8.9-0.1.0.jar", "url": "https://…/medirian-1.8.9-0.1.0.jar", "sha1": "…", "size": 380907 },
       "recommended": true,
       "tags": ["pvp"],
       "description": "PvP"
@@ -62,11 +62,11 @@ Generowany przez `scripts/build-clients.mjs`. Kanał `local` czyta go z `distrib
 
 | Właściwość | Znaczenie |
 |---|---|
-| `-Dmeridian.home=<dir>` | `MERIDIAN_HOME` |
-| `-Dmeridian.target=<id>` | target z manifestu |
-| `-Dmeridian.profile=<name>` | profil konfiguracji Meridian do wczytania (opcjonalnie) |
-| `-Dmeridian.launcher.port=<port>` | port kanału live (opcjonalnie) |
-| `-Dmeridian.launcher.token=<hex>` | jednorazowy token kanału live |
+| `-Dmedirian.home=<dir>` | `MEDIRIAN_HOME` |
+| `-Dmedirian.target=<id>` | target z manifestu |
+| `-Dmedirian.profile=<name>` | profil konfiguracji Medirian do wczytania (opcjonalnie) |
+| `-Dmedirian.launcher.port=<port>` | port kanału live (opcjonalnie) |
+| `-Dmedirian.launcher.token=<hex>` | jednorazowy token kanału live |
 
 ## 4. Kanał live (TCP, JSON Lines)
 
@@ -87,7 +87,7 @@ Klient → launcher:
 Launcher → klient:
 
 ```json
-{"type":"notify","title":"Meridian","message":"Update downloaded","level":"info|success|warning"}
+{"type":"notify","title":"Medirian","message":"Update downloaded","level":"info|success|warning"}
 ```
 
 Nieznane typy wiadomości są ignorowane (zgodność w przód).
@@ -118,7 +118,7 @@ Nieznane typy wiadomości są ignorowane (zgodność w przód).
 }
 ```
 
-* Klawisze to przenośne nazwy (`dev.meridian.input.Key`), kolory `#AARRGGBB`.
+* Klawisze to przenośne nazwy (`dev.medirian.input.Key`), kolory `#AARRGGBB`.
 * Moduły nieznane danej wersji gry są zachowywane przy zapisie (profil współdzielony przez 1.8.9 i 1.21.11).
 * Zmiany formatu: podnieś `version` i dodaj krok w `ConfigMigrations`.
 
@@ -144,15 +144,15 @@ Nieznane typy wiadomości są ignorowane (zgodność w przód).
 
 ## 6. Polityki serwerów (kanały plugin message)
 
-Serwer może wyłączyć wybrane moduły Meridian na czas gry na nim (np. Freelook na serwerze, który go
+Serwer może wyłączyć wybrane moduły Medirian na czas gry na nim (np. Freelook na serwerze, który go
 zabrania). Działa w obu wersjach gry, bez Fabric API.
 
 Po wejściu na serwer klient:
 
-1. rejestruje kanały `meridian:policy` i `meridian:hello` (`REGISTER` w 1.8.9, `minecraft:register` od 1.13),
-2. wysyła na `meridian:hello` JSON `{"client":"Meridian","version":"0.1.4","minecraft":"1.8.9"}`.
+1. rejestruje kanały `medirian:policy` i `medirian:hello` (`REGISTER` w 1.8.9, `minecraft:register` od 1.13),
+2. wysyła na `medirian:hello` JSON `{"client":"Medirian","version":"0.1.4","minecraft":"1.8.9"}`.
 
-Serwer → klient, kanał `meridian:policy`, treść UTF-8 JSON (≤ 32 KiB):
+Serwer → klient, kanał `medirian:policy`, treść UTF-8 JSON (≤ 32 KiB):
 
 ```json
 { "version": 1, "disable": ["freelook", "zoom"], "message": "Freelook jest tu zabroniony" }
@@ -166,9 +166,9 @@ Serwer → klient, kanał `meridian:policy`, treść UTF-8 JSON (≤ 32 KiB):
 Przykład dla pluginu Paper/Spigot (Java):
 
 ```java
-getServer().getMessenger().registerOutgoingPluginChannel(this, "meridian:policy");
-getServer().getMessenger().registerIncomingPluginChannel(this, "meridian:hello", (channel, player, data) -> {
+getServer().getMessenger().registerOutgoingPluginChannel(this, "medirian:policy");
+getServer().getMessenger().registerIncomingPluginChannel(this, "medirian:hello", (channel, player, data) -> {
     byte[] policy = "{\"disable\":[\"freelook\"],\"message\":\"No freelook here\"}".getBytes(StandardCharsets.UTF_8);
-    player.sendPluginMessage(this, "meridian:policy", policy);
+    player.sendPluginMessage(this, "medirian:policy", policy);
 });
 ```

@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import type { GameState, TaskProgress } from '../../common/types';
 import type { AccountService } from '../auth/accounts';
 import { log } from '../core/log';
-import type { MeridianPaths } from '../core/paths';
+import type { MedirianPaths } from '../core/paths';
 import type { Installer } from '../install/installer';
 import type { ProfileStore } from '../profiles/profiles';
 import type { UpdateService } from '../updates/updates';
@@ -25,7 +25,7 @@ export class GameService {
   private killed = false;
 
   constructor(
-    private readonly paths: MeridianPaths,
+    private readonly paths: MedirianPaths,
     private readonly installer: Installer,
     private readonly updates: UpdateService,
     private readonly profiles: ProfileStore,
@@ -66,7 +66,7 @@ export class GameService {
       const releases = await this.updates.refresh(true);
       const target = this.updates.target(profile.targetId);
       if (!target) {
-        throw new Error(releases.error ?? `Meridian for ${profile.targetId} is not available in the current release channel.`);
+        throw new Error(releases.error ?? `Medirian for ${profile.targetId} is not available in the current release channel.`);
       }
       const session = await this.accounts.session();
       this.bridge = new ClientBridge((bridge) => {

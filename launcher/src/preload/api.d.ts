@@ -1,8 +1,8 @@
-import type { MeridianBridge } from '../common/ipc';
+import type { MedirianBridge } from '../common/ipc';
 
 declare global {
   interface Window {
-    meridian: MeridianBridge;
+    medirian: MedirianBridge;
   }
 }
 

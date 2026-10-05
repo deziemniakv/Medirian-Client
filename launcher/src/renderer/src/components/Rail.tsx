@@ -10,7 +10,7 @@ const ITEMS: { page: Page; icon: IconName; label: 'nav.play' | 'nav.profiles' | 
   { page: 'settings', icon: 'settings', label: 'nav.settings' }
 ];
 
-/** Left navigation rail with the Meridian mark and the account button. */
+/** Left navigation rail with the Medirian mark and the account button. */
 export function Rail() {
   const t = useT();
   const page = useStore((s) => s.page);
@@ -20,7 +20,7 @@ export function Rail() {
 
   return (
     <nav className="rail">
-      <img className="rail__logo" src={mark} alt="Meridian" draggable={false} />
+      <img className="rail__logo" src={mark} alt="Medirian" draggable={false} />
       <div className="rail__nav">
         {ITEMS.map((item) => (
           <button

@@ -114,5 +114,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "$GITHUB_REF_NAME" release/* \
-            --title "Meridian $(cat VERSION)" \
+            --title "Medirian $(cat VERSION)" \
             --notes-file release-notes.md

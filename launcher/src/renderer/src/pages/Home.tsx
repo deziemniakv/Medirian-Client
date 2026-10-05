@@ -23,7 +23,7 @@ export function Home() {
         <div className="hero__brand">
           <span className="chip chip--seasonal hero__eyebrow">{t('home.eyebrow')}</span>
           <img className="hero__mark" src={mark} alt="" draggable={false} />
-          <h1 className="hero__wordmark">MERIDIAN</h1>
+          <h1 className="hero__wordmark">MEDIRIAN</h1>
           <div className="hero__client">CLIENT</div>
           {latest && (
             <p className="hero__tagline">

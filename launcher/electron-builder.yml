@@ -1,5 +1,5 @@
-appId: dev.meridian.launcher
-productName: Meridian Client
+appId: dev.medirian.launcher
+productName: Medirian Client
 directories:
   output: dist
   buildResources: resources
@@ -22,7 +22,7 @@ win:
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
-  artifactName: Meridian-Setup-${version}.${ext}
+  artifactName: Medirian-Setup-${version}.${ext}
 mac:
   # the zip is what electron-updater installs on macOS; the dmg is for first installs
   target:
@@ -30,9 +30,9 @@ mac:
     - zip
   icon: resources/icon.png
   category: public.app-category.games
-  artifactName: Meridian-${version}-${arch}.${ext}
+  artifactName: Medirian-${version}-${arch}.${ext}
 linux:
   target: AppImage
   icon: resources/icon.png
   category: Game
-  artifactName: Meridian-${version}-${arch}.${ext}
+  artifactName: Medirian-${version}-${arch}.${ext}

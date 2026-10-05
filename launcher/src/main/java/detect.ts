@@ -51,7 +51,7 @@ async function subdirectories(dir: string): Promise<string[]> {
 }
 
 /** Finds Java installations in the usual locations of each operating system. */
-export async function detectJavaInstallations(meridianRuntimeDir: string): Promise<JavaInstall[]> {
+export async function detectJavaInstallations(medirianRuntimeDir: string): Promise<JavaInstall[]> {
   const candidates = new Set<string>();
   const add = (home: string) => {
     const binary = javaBinary(home);
@@ -94,15 +94,15 @@ export async function detectJavaInstallations(meridianRuntimeDir: string): Promi
       }
     }
   }
-  const meridianRuntimes: string[] = [];
-  for (const component of await subdirectories(meridianRuntimeDir)) {
+  const medirianRuntimes: string[] = [];
+  for (const component of await subdirectories(medirianRuntimeDir)) {
     const binary = platform() === 'darwin' ? join(component, 'jre.bundle', 'Contents', 'Home', 'bin', 'java') : javaBinary(component);
     if (existsSync(binary)) {
-      meridianRuntimes.push(binary);
+      medirianRuntimes.push(binary);
     }
   }
   const probes = await Promise.all([
-    ...meridianRuntimes.map((path) => probeJava(path, 'meridian')),
+    ...medirianRuntimes.map((path) => probeJava(path, 'medirian')),
     ...[...candidates].map((path) => probeJava(path, 'system'))
   ]);
   const seen = new Set<string>();

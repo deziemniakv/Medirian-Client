@@ -3,7 +3,7 @@ import { stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { readJson, writeJson } from '../core/json';
 import { log } from '../core/log';
-import type { MeridianPaths } from '../core/paths';
+import type { MedirianPaths } from '../core/paths';
 import { downloadAll, type DownloadJob } from '../net/downloader';
 import { fetchJson } from '../net/http';
 import { mavenPath } from './maven';
@@ -78,7 +78,7 @@ const MANIFEST_TTL_MS = 60 * 60 * 1000;
 
 /** Access to Mojang's version metadata, client jars, libraries and assets. */
 export class MojangService {
-  constructor(private readonly paths: MeridianPaths) {}
+  constructor(private readonly paths: MedirianPaths) {}
 
   /** Version manifest, cached for an hour; falls back to the cache when offline. */
   async versionManifest(): Promise<VersionManifest> {

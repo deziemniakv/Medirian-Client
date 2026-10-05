@@ -3,14 +3,14 @@ import { access, mkdir, rm, statfs, writeFile } from 'node:fs/promises';
 import { arch, freemem, platform, release, totalmem } from 'node:os';
 import { join } from 'node:path';
 import type { SetupCheck, SystemInfo } from '../../common/types';
-import { detectMinecraftDir, type MeridianPaths } from '../core/paths';
+import { detectMinecraftDir, type MedirianPaths } from '../core/paths';
 import { detectJavaInstallations } from '../java/detect';
 import { request } from '../net/http';
 import type { UpdateService } from '../updates/updates';
 
 const SUPPORTED = new Set(['win32-x64', 'win32-arm64', 'darwin-x64', 'darwin-arm64', 'linux-x64']);
 
-export async function systemInfo(paths: MeridianPaths): Promise<SystemInfo> {
+export async function systemInfo(paths: MedirianPaths): Promise<SystemInfo> {
   let freeDiskMb: number | null = null;
   try {
     const stats = await statfs(paths.root).catch(() => statfs(join(paths.root, '..')));
@@ -35,7 +35,7 @@ export async function systemInfo(paths: MeridianPaths): Promise<SystemInfo> {
  * carry a {@code fix} action the UI offers as a button.
  */
 export class SetupService {
-  constructor(private readonly paths: MeridianPaths, private readonly updates: UpdateService) {}
+  constructor(private readonly paths: MedirianPaths, private readonly updates: UpdateService) {}
 
   async run(): Promise<SetupCheck[]> {
     const info = await systemInfo(this.paths);
@@ -69,7 +69,7 @@ export class SetupService {
     const key = `${info.platform}-${info.arch}`;
     return SUPPORTED.has(key)
       ? { id: 'system', status: 'ok', detail: `${info.platform} ${info.arch} (${info.osRelease})` }
-      : { id: 'system', status: 'warn', detail: `${key} is not officially supported; Meridian may not start.` };
+      : { id: 'system', status: 'warn', detail: `${key} is not officially supported; Medirian may not start.` };
   }
 
   private async memory(info: SystemInfo): Promise<SetupCheck> {
@@ -147,6 +147,6 @@ export class SetupService {
       return { id: 'integrity', status: 'warn', detail: state.error ?? 'Release information unavailable.', fix: 'retry' };
     }
     const targets = state.manifest.targets.map((t) => t.displayName).join(', ');
-    return { id: 'integrity', status: 'ok', detail: `Meridian ${state.manifest.client.version} available for ${targets}.` };
+    return { id: 'integrity', status: 'ok', detail: `Medirian ${state.manifest.client.version} available for ${targets}.` };
   }
 }

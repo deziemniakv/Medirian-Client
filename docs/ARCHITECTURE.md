@@ -1,6 +1,6 @@
-# Meridian Client — Architektura
+# Medirian Client — Architektura
 
-Dokument opisuje architekturę całego produktu **Meridian Client**: launchera, wspólnego rdzenia klienta,
+Dokument opisuje architekturę całego produktu **Medirian Client**: launchera, wspólnego rdzenia klienta,
 adapterów wersji Minecrafta oraz kontraktów, które je łączą. Jest to dokument „żywy” — każda większa
 zmiana systemu powinna być tu odnotowana.
 
@@ -25,22 +25,22 @@ Spis treści
 
 ```
                          ┌──────────────────────────────────────────────┐
-                         │            MERIDIAN LAUNCHER (Electron)       │
+                         │            MEDIRIAN LAUNCHER (Electron)       │
                          │  UI (React)  ◄─IPC─►  Main process services   │
                          │  Home/Play · Profiles · Settings · Account    │
                          │  Installer · Repair · Updates · Java · Auth   │
                          └───────────────┬───────────────▲──────────────┘
               pobiera i weryfikuje pliki │               │ status gry (TCP localhost, JSON lines)
                                          ▼               │
-   ~/.meridian (MERIDIAN_HOME) ── wspólne dane: config/, profiles, runtime/, game/, instances/
+   ~/.medirian (MEDIRIAN_HOME) ── wspólne dane: config/, profiles, runtime/, game/, instances/
                                          │
                 ┌────────────────────────┴─────────────────────────┐
                 ▼                                                  ▼
    ┌─────────────────────────────┐                ┌──────────────────────────────┐
    │ Minecraft 1.8.9             │                │ Minecraft 1.21.11            │
    │ + Legacy Fabric Loader      │                │ + Fabric Loader              │
-   │ + meridian-1.8.9.jar        │                │ + meridian-1.21.11.jar       │
-   │   ├─ Meridian Shared (Java8)│                │   ├─ Meridian Shared (Java8) │
+   │ + medirian-1.8.9.jar        │                │ + medirian-1.21.11.jar       │
+   │   ├─ Medirian Shared (Java8)│                │   ├─ Medirian Shared (Java8) │
    │   └─ Adapter 1.8.9          │                │   └─ Adapter 1.21.11         │
    │      mixiny, render, eventy │                │      mixiny, render, eventy  │
    └─────────────────────────────┘                └──────────────────────────────┘
@@ -51,11 +51,11 @@ Trzy warstwy:
 | Warstwa | Odpowiedzialność | Zależy od Minecrafta? |
 |---|---|---|
 | **Launcher** | instalacja, aktualizacje, konto, profile uruchomieniowe, uruchamianie procesu gry | nie (zna tylko formaty plików Mojang/Fabric) |
-| **Meridian Shared** | moduły, HUD, edytor HUD, mod menu, konfiguracja, eventy, powiadomienia, wydajność, kosmetyki (API), i18n, motywy | **nie** — zero importów `net.minecraft` |
+| **Medirian Shared** | moduły, HUD, edytor HUD, mod menu, konfiguracja, eventy, powiadomienia, wydajność, kosmetyki (API), i18n, motywy | **nie** — zero importów `net.minecraft` |
 | **Adapter wersji** | integracja z grą: mixiny, eventy, backend renderowania, dostęp do danych gry, funkcje zależne od wersji | tak — jedna wersja na adapter |
 
 Kluczowa zasada: **Shared nigdy nie importuje klas Minecrafta**. Każdy adapter implementuje interfejsy
-platformy (`dev.meridian.platform.*`). Dzięki temu moduł HUD „FPS” czy edytor HUD są napisane raz,
+platformy (`dev.medirian.platform.*`). Dzięki temu moduł HUD „FPS” czy edytor HUD są napisane raz,
 a wyglądają i działają identycznie w 1.8.9 i 1.21.11 — użytkownik ma wrażenie jednego produktu.
 Jednocześnie nie istnieje żaden „wspólny moduł minecraftowy” — każda wersja ma własny, niezależny
 projekt Gradle, własne mixiny i własny backend renderowania.
@@ -73,7 +73,7 @@ Rozważane opcje:
 | **Legacy Fabric 1.8.9 + Fabric 1.21.x** | ten sam model (Fabric Loader + Mixin) dla obu gałęzi, nowoczesny Gradle 9 + Loom, aktywnie utrzymywane | 1.8.9 nie korzysta z ekosystemu modów Forge |
 
 **Decyzja:** Fabric Loader w obu gałęziach. Launcher uruchamia czystego Minecrafta z Fabric Loaderem
-(profil z `meta.fabricmc.net` / `meta.legacyfabric.net`) i wrzuca jeden plik `meridian-<target>.jar`
+(profil z `meta.fabricmc.net` / `meta.legacyfabric.net`) i wrzuca jeden plik `medirian-<target>.jar`
 do folderu `mods/` instancji. Ten sam model uruchamiania dla każdej wersji upraszcza launcher, a Mixin
 daje precyzyjne, wydajne hooki bez reflection w gorących ścieżkach.
 
@@ -103,7 +103,7 @@ daje precyzyjne, wydajne hooki bez reflection w gorących ścieżkach.
 * Fabric API w 1.21.11 jest **zagnieżdżone (jar-in-jar)** — tylko potrzebne moduły — więc launcher
   dystrybuuje jeden plik na target.
 
-### 2.3 Meridian Shared — Java 8
+### 2.3 Medirian Shared — Java 8
 
 Shared jest kompilowany z `--release 8`, bo musi działać w 1.8.9 (Java 8). Ograniczenia: brak `var`,
 `record`, switch expressions, `List.of`. Jedyna zależność zewnętrzna to **Gson** (`compileOnly`),
@@ -139,14 +139,14 @@ komunikuje się przez wąskie, typowane API wystawione w `preload` (`contextIsol
 
 Logowanie: Microsoft OAuth 2.0 **device code flow** → Xbox Live → XSTS → Minecraft Services
 (`login_with_xbox`) → weryfikacja posiadania gry (`entitlements`) → profil. Wymaga identyfikatora
-aplikacji Azure (`MERIDIAN_MSA_CLIENT_ID`) zatwierdzonego przez Mojang do API Minecraft Services —
+aplikacji Azure (`MEDIRIAN_MSA_CLIENT_ID`) zatwierdzonego przez Mojang do API Minecraft Services —
 to wymóg Mojang dla każdego launchera. Tokeny są szyfrowane przez `safeStorage` (DPAPI na Windows).
 W trybie deweloperskim (niespakowany launcher) dostępne jest konto offline do testów singleplayer.
 
 ## 3. Struktura folderów
 
 ```
-Meridian/
+Medirian/
 ├── README.md                    przegląd, szybki start, budowanie
 ├── TODO.md                      roadmapa etapów
 ├── CHANGELOG.md                 źródło changelogu (wbudowywany w launcher)
@@ -158,7 +158,7 @@ Meridian/
 │   └── build-clients.mjs        buduje wszystkie targety + generuje manifest kanału „local”
 ├── distribution/                wynik build-clients: manifest + jary (gitignored)
 ├── client/
-│   ├── shared/                  Meridian Shared (Java 8, bez Minecrafta) + testy JUnit
+│   ├── shared/                  Medirian Shared (Java 8, bez Minecrafta) + testy JUnit
 │   └── targets/
 │       ├── mc-1.8.9/            adapter Legacy Fabric 1.8.9
 │       ├── mc-1.21.11/          adapter Fabric 1.21.11
@@ -179,21 +179,21 @@ Meridian/
 
 | Serwis | Plik | Odpowiedzialność |
 |---|---|---|
-| `paths` | `core/paths.ts` | lokalizacja `MERIDIAN_HOME` i podkatalogów |
+| `paths` | `core/paths.ts` | lokalizacja `MEDIRIAN_HOME` i podkatalogów |
 | `SettingsStore` | `core/settings.ts` | ustawienia launchera (JSON, atomowy zapis) |
 | `ProfileStore` | `profiles/profiles.ts` | profile uruchomieniowe |
 | `Downloader` | `net/downloader.ts` | kolejka pobierania: równoległość, retry z backoffem, SHA-1, atomowe `.part` → rename |
 | `MojangService` | `minecraft/mojang.ts` | manifest wersji, version JSON, biblioteki (reguły OS), assety, natywki |
 | `LoaderService` | `minecraft/loader.ts` | profile Fabric / Legacy Fabric z meta API, scalanie z version JSON |
 | `JavaService` | `java/*.ts` | wykrywanie zainstalowanych Jav, instalacja runtime'ów Mojang |
-| `UpdateService` | `updates/updates.ts` | manifest wydań Meridian, kanały stable/local |
+| `UpdateService` | `updates/updates.ts` | manifest wydań Medirian, kanały stable/local |
 | `Installer` | `install/installer.ts` | plan instalacji targetu, weryfikacja, naprawa |
 | `SetupService` | `install/setup.ts` | kreator pierwszego uruchomienia (diagnostyka + automatyczne naprawy) |
 | `GameLauncher` | `launch/launcher.ts` | budowa classpath/argumentów, uruchomienie procesu, logi |
 | `AccountService` | `auth/*.ts` | Microsoft device code flow, odświeżanie tokenów |
 | `ClientBridge` | `launch/bridge.ts` | serwer TCP localhost dla klienta w grze |
 
-* **Preload** — `window.meridian` z metodami `invoke` (request/response) i `on` (zdarzenia postępu).
+* **Preload** — `window.medirian` z metodami `invoke` (request/response) i `on` (zdarzenia postępu).
   Wszystkie kanały i typy są zdefiniowane w `src/common/ipc.ts` — jedno źródło prawdy.
 * **Renderer** — React, bez dostępu do Node. Strony: Home (hero + PLAY), Profiles, Versions,
   Settings, Account, Changelog, Setup (kreator), Logs.
@@ -207,7 +207,7 @@ resolveTarget(profile) → ensureJava(target) → ensureVersion(mc) → ensureLo
 ```
 
 Każdy krok raportuje postęp (`TaskProgress`) do UI. Wszystkie pobierane pliki mają znany SHA-1
-(z manifestów Mojang/Meridian) i są weryfikowane; biblioteki Fabric z Maven są weryfikowane przez
+(z manifestów Mojang/Medirian) i są weryfikowane; biblioteki Fabric z Maven są weryfikowane przez
 pliki `.sha1` z repozytorium.
 
 ### 4.3 Magazyn danych gry
@@ -219,11 +219,11 @@ kopiowane z niego (po weryfikacji hash), zamiast pobierania z sieci.
 
 ## 5. Architektura klienta
 
-Shared (`client/shared`, pakiet `dev.meridian`):
+Shared (`client/shared`, pakiet `dev.medirian`):
 
 | Pakiet | System | Zawartość |
 |---|---|---|
-| `core` | **Core** | `Meridian` (fasada/bootstrap), `MeridianHome`, `Version`, cykl życia |
+| `core` | **Core** | `Medirian` (fasada/bootstrap), `MedirianHome`, `Version`, cykl życia |
 | `event` | **Event System** | `EventBus` (typowane, bez reflection przy dispatchu), zdarzenia gry |
 | `module` | **Module System** | `Module`, `Category`, `ModuleManager`, `Capability` |
 | `setting` | (Module System) | `BooleanSetting`, `NumberSetting`, `ColorSetting`, `EnumSetting`, `KeySetting`, `TextSetting` |
@@ -231,21 +231,21 @@ Shared (`client/shared`, pakiet `dev.meridian`):
 | `config` | **Config System** | `ConfigManager`, profile, serializacja JSON, migracje |
 | `render` | **Render System** | `Gfx` (backend renderowania — implementuje adapter), `Colors`, `Theme`, `UiDraw` |
 | `perf` | **Performance System** | `PerformanceManager`, `FrameStats`, `PerformanceProfile` |
-| `ui` | **UI System** | `MeridianScreen`, widgety, `ModMenuScreen`, `HudEditorScreen`, `SettingsScreen` |
+| `ui` | **UI System** | `MedirianScreen`, widgety, `ModMenuScreen`, `HudEditorScreen`, `SettingsScreen` |
 | `cosmetics` | **Cosmetics System** | `CosmeticType`, `Cosmetic`, `CosmeticsProvider`, `Loadout` |
-| `account` | **Account System** | `PlayerIdentity`, `MeridianAccountService` (interfejs) |
+| `account` | **Account System** | `PlayerIdentity`, `MedirianAccountService` (interfejs) |
 | `notify` | Notifications | `NotificationManager`, `Toast` |
 | `input` | Input | `Key` (przenośne nazwy klawiszy), `ClickTracker`, `KeybindManager` |
 | `i18n` | Lokalizacja | `I18n`, `lang/en_us.json`, `lang/pl_pl.json` |
 | `ipc` | Bridge | `LauncherBridge` (klient TCP do launchera) |
 | `platform` | **Platform SPI** | interfejsy, które implementuje adapter: `Platform`, `GameView`, `PlayerView`, `EntityView`, `Gfx`… |
 
-Adapter (`client/targets/mc-X`, pakiet `dev.meridian.mc<ver>`):
+Adapter (`client/targets/mc-X`, pakiet `dev.medirian.mc<ver>`):
 
-* `MeridianMod` — entrypoint Fabric (`ClientModInitializer`), tworzy `XPlatform` i wywołuje `Meridian.boot(platform)`.
+* `MedirianMod` — entrypoint Fabric (`ClientModInitializer`), tworzy `XPlatform` i wywołuje `Medirian.boot(platform)`.
 * `XPlatform` — implementacja SPI: dane gracza, świata, serwera, klawiszy, opcji wideo.
 * `XGfx` — backend `Gfx` (1.8.9: `Gui`/`FontRenderer`/`GlStateManager`; 1.21.11: `GuiGraphics`).
-* `ScreenBridge` — ekran Minecrafta, który deleguje do `MeridianScreen` (shared).
+* `ScreenBridge` — ekran Minecrafta, który deleguje do `MedirianScreen` (shared).
 * `mixin/*` — hooki: tick, render HUD, kliknięcia, atak, FOV (zoom), kamera (freelook), cząsteczki,
   culling encji, limit FPS, crosshair, scoreboard.
 
@@ -296,14 +296,14 @@ public abstract class Module {
 ## 8. Architektura konfiguracji
 
 ```
-MERIDIAN_HOME/config/
+MEDIRIAN_HOME/config/
 ├── client.json            { activeProfile, language, theme, notifications, animations, hudScale }
 ├── profiles/
 │   ├── default.json       ┐
 │   ├── pvp.json           │ { version, modules: { id: { enabled, keybind, settings{} } },
 │   ├── performance.json   │   hud: { id: { anchor, x, y, scale } }, performance: {...} }
 │   └── <custom>.json      ┘
-└── cosmetics.json         { loadout: { CAPE: "meridian_moon", ... } }
+└── cosmetics.json         { loadout: { CAPE: "medirian_moon", ... } }
 ```
 
 * Zapisy atomowe (`*.tmp` → rename), debounce 1 s, zapis przy zamknięciu gry.
@@ -312,7 +312,7 @@ MERIDIAN_HOME/config/
   i mogą być edytowane; profil „Custom” = dowolny profil utworzony przez użytkownika.
 * Klawisze zapisane przenośnymi nazwami → ten sam profil działa w 1.8.9 i 1.21.11.
 * Launcher czyta `config/profiles/` (lista profili do wyboru w profilu uruchomieniowym) i przekazuje
-  wybrany profil przez `-Dmeridian.profile=<name>`.
+  wybrany profil przez `-Dmedirian.profile=<name>`.
 
 ## 9. Architektura aktualizacji
 
@@ -332,9 +332,9 @@ MERIDIAN_HOME/config/
 
 ## 10. Komunikacja launcher ↔ klient
 
-1. **Pliki** — wspólny `MERIDIAN_HOME/config` (profile, ustawienia).
-2. **Argumenty JVM** — `-Dmeridian.home`, `-Dmeridian.profile`, `-Dmeridian.target`,
-   `-Dmeridian.launcher.port`, `-Dmeridian.launcher.token`.
+1. **Pliki** — wspólny `MEDIRIAN_HOME/config` (profile, ustawienia).
+2. **Argumenty JVM** — `-Dmedirian.home`, `-Dmedirian.profile`, `-Dmedirian.target`,
+   `-Dmedirian.launcher.port`, `-Dmedirian.launcher.token`.
 3. **Kanał live** — klient łączy się z `127.0.0.1:<port>` i wysyła/odbiera linie JSON
    (`hello`, `status`, `notify`). Token jednorazowy chroni przed obcymi połączeniami.
    Szczegóły: [`PROTOCOL.md`](PROTOCOL.md).
@@ -342,7 +342,7 @@ MERIDIAN_HOME/config/
 ## 11. Design system i motywy sezonowe
 
 Tokeny kolorów są zdefiniowane identycznie w launcherze (`launcher/src/renderer/styles/tokens.css`)
-i kliencie (`dev.meridian.render.Theme`). Motywy: `DEFAULT` (Meridian Violet), `HALLOWEEN`
+i kliencie (`dev.medirian.render.Theme`). Motywy: `DEFAULT` (Medirian Violet), `HALLOWEEN`
 (mgła, księżyc, oszczędne pomarańczowe akcenty), `AUTO` (wybiera motyw sezonowy po dacie).
 Nowy sezon = nowa instancja `Theme` + zestaw tokenów CSS — bez zmian w komponentach.
 

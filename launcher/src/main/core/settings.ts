@@ -2,16 +2,16 @@ import type { LauncherSettings } from '../../common/types';
 import { readJson, writeJson } from './json';
 
 /**
- * Release manifest of the stable channel when the user has not set one: MERIDIAN_MANIFEST_URL at
+ * Release manifest of the stable channel when the user has not set one: MEDIRIAN_MANIFEST_URL at
  * runtime, else the URL built in by the release workflow (MAIN_VITE_MANIFEST_URL).
  */
 export function defaultManifestUrl(): string {
-  return process.env.MERIDIAN_MANIFEST_URL || import.meta.env.MAIN_VITE_MANIFEST_URL || '';
+  return process.env.MEDIRIAN_MANIFEST_URL || import.meta.env.MAIN_VITE_MANIFEST_URL || '';
 }
 
-/** Meridian services when the user has not set a URL: MERIDIAN_SERVICES_URL, else the built-in one. */
+/** Medirian services when the user has not set a URL: MEDIRIAN_SERVICES_URL, else the built-in one. */
 export function defaultServicesUrl(): string {
-  return process.env.MERIDIAN_SERVICES_URL || import.meta.env.MAIN_VITE_SERVICES_URL || '';
+  return process.env.MEDIRIAN_SERVICES_URL || import.meta.env.MAIN_VITE_SERVICES_URL || '';
 }
 
 export function defaultSettings(localDistributionDir: string): LauncherSettings {

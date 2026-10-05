@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-// Builds every Meridian client target and writes the "local" release channel:
+// Builds every Medirian client target and writes the "local" release channel:
 //   distribution/release-manifest.json + one jar per target.
 //
-// Usage: node scripts/build-clients.mjs [--skip-build] [--base-url https://cdn.example.com/meridian/0.1.0/]
+// Usage: node scripts/build-clients.mjs [--skip-build] [--base-url https://cdn.example.com/medirian/0.1.0/]
 //   --skip-build  package the jars that are already built
 //   --base-url    also emit absolute artifact URLs (for publishing to a server / stable channel)
 
@@ -119,7 +119,7 @@ mkdirSync(staging, { recursive: true });
 const targets = [];
 for (const [index, target] of TARGETS.entries()) {
   const jar = jars[index];
-  const fileName = `meridian-${target.id}-${version}.jar`;
+  const fileName = `medirian-${target.id}-${version}.jar`;
   copyFileSync(jar, join(staging, fileName));
   const artifact = { file: fileName, sha1: sha1(jar), size: statSync(jar).size };
   if (baseUrl) {
@@ -151,7 +151,7 @@ const manifest = {
 writeFileSync(join(staging, 'release-manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
 rmSync(out, { recursive: true, force: true });
 renameSync(staging, out);
-console.log(`Wrote ${join(out, 'release-manifest.json')} (${targets.length} targets, Meridian ${version})`);
+console.log(`Wrote ${join(out, 'release-manifest.json')} (${targets.length} targets, Medirian ${version})`);
 if (!existsSync(join(out, 'release-manifest.json'))) {
   process.exit(1);
 }

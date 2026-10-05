@@ -3,7 +3,7 @@ import type { DiscordStatus, GameState, Language } from '../../common/types';
 import { DiscordIpcClient, DiscordUnavailableError, type Activity } from './ipc.ts';
 
 /** Rich presence art asset uploaded to the Discord application (Rich Presence → Art Assets). */
-export const LARGE_IMAGE = 'meridian';
+export const LARGE_IMAGE = 'medirian';
 
 const TEXT = {
   en: {
@@ -54,7 +54,7 @@ export interface PresenceContext {
   targetName: (targetId: string) => string | null;
   /** Release target of a launch profile. */
   profileTarget: (profileId: string) => string | null;
-  /** Meridian version shown when the client has not reported its own. */
+  /** Medirian version shown when the client has not reported its own. */
   version: string;
   language: Language;
   showServer: boolean;
@@ -71,7 +71,7 @@ function fit(text: string): string {
 export function buildActivity(context: PresenceContext): Activity | null {
   const text = TEXT[context.language] ?? TEXT.en;
   const game = context.game;
-  const assets = (version: string) => ({ large_image: LARGE_IMAGE, large_text: fit(`Meridian Client ${version}`) });
+  const assets = (version: string) => ({ large_image: LARGE_IMAGE, large_text: fit(`Medirian Client ${version}`) });
   if (game.state === 'running') {
     const target = context.targetName(game.targetId) ?? `Minecraft ${game.targetId}`;
     const bridge = game.bridge;

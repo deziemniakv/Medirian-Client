@@ -77,7 +77,7 @@ jobs:
         run: npm test
 
   backend:
-    name: Meridian services
+    name: Medirian services
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

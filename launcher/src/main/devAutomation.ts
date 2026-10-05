@@ -10,11 +10,11 @@ import type { ProfileStore } from './profiles/profiles';
 /**
  * Development-only automation (never active in packaged builds), driven by environment variables:
  *
- *  MERIDIAN_DEV_CAPTURE=<dir>      screenshot every page (and the setup wizard) into <dir>
- *  MERIDIAN_DEV_LAUNCH=<profile>   sign in offline and launch the profile whose name contains <profile>
+ *  MEDIRIAN_DEV_CAPTURE=<dir>      screenshot every page (and the setup wizard) into <dir>
+ *  MEDIRIAN_DEV_LAUNCH=<profile>   sign in offline and launch the profile whose name contains <profile>
  *                                  (otherwise a new profile for the target with that id, e.g. 1.21.8)
- *  MERIDIAN_DEV_OFFLINE=<name>     offline player name for MERIDIAN_DEV_LAUNCH (default MeridianDev)
- *  MERIDIAN_DEV_RUN_MS=<ms>        stop the game and quit this long after it started
+ *  MEDIRIAN_DEV_OFFLINE=<name>     offline player name for MEDIRIAN_DEV_LAUNCH (default MedirianDev)
+ *  MEDIRIAN_DEV_RUN_MS=<ms>        stop the game and quit this long after it started
  *
  * Used to verify the launcher visually and to test the real install/launch pipeline end to end.
  */
@@ -22,8 +22,8 @@ export async function runDevAutomation(
   window: BrowserWindow,
   deps: { settings: SettingsStore; accounts: AccountService; profiles: ProfileStore; game: GameService }
 ): Promise<void> {
-  const captureDir = process.env.MERIDIAN_DEV_CAPTURE;
-  const launch = process.env.MERIDIAN_DEV_LAUNCH;
+  const captureDir = process.env.MEDIRIAN_DEV_CAPTURE;
+  const launch = process.env.MEDIRIAN_DEV_LAUNCH;
   if (app.isPackaged || (!captureDir && !launch)) {
     return;
   }
@@ -51,11 +51,11 @@ export async function runDevAutomation(
   if (!deps.settings.get().setupCompleted) {
     await wait(4000); // let the diagnostics finish
     await capture('0-setup');
-    await run('window.__meridianDev.completeSetup()');
+    await run('window.__medirianDev.completeSetup()');
     await wait(1200);
   }
   for (const page of ['home', 'profiles', 'changelog', 'settings']) {
-    await run(`window.__meridianDev.navigate('${page}')`);
+    await run(`window.__medirianDev.navigate('${page}')`);
     await wait(900);
     await capture(`page-${page}`);
   }
@@ -63,31 +63,31 @@ export async function runDevAutomation(
   await run(`[...document.querySelectorAll('.settings__tab')].find((tab) => tab.textContent === 'Discord')?.click()`);
   await wait(600);
   await capture('page-settings-discord');
-  await run("window.__meridianDev.navigate('home')");
+  await run("window.__medirianDev.navigate('home')");
   // seasonal look without touching the saved theme setting
   await run("document.documentElement.dataset.theme = 'christmas'");
   await wait(900);
   await capture('page-home-christmas');
-  await run('window.__meridianDev.reload()');
+  await run('window.__medirianDev.reload()');
 
   if (!launch) {
     app.quit();
     return;
   }
-  await deps.accounts.offline(process.env.MERIDIAN_DEV_OFFLINE || 'MeridianDev');
+  await deps.accounts.offline(process.env.MEDIRIAN_DEV_OFFLINE || 'MedirianDev');
   const profile =
     deps.profiles.list().find((p) => p.name.toLowerCase().includes(launch.toLowerCase())) ??
     deps.profiles.list().find((p) => p.targetId === launch) ??
     (await deps.profiles.create({ name: `Dev ${launch}`, targetId: launch }));
   await deps.settings.update({ selectedProfileId: profile.id });
-  await run('window.__meridianDev.reload()');
+  await run('window.__medirianDev.reload()');
   log.info(`[dev] launching ${profile.name}`);
   void deps.game.launch(profile.id);
 
   let lastLabel = '';
   let capturedPreparing = false;
   let startedAt = 0;
-  const runMs = Number(process.env.MERIDIAN_DEV_RUN_MS || 0);
+  const runMs = Number(process.env.MEDIRIAN_DEV_RUN_MS || 0);
   for (;;) {
     await wait(500);
     const state = deps.game.current();

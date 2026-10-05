@@ -92,12 +92,12 @@ export function Settings() {
           {section === 'discord' && <DiscordSection />}
           {section === 'developer' && (
             <>
-              <Row label={t('settings.msaClientId')} hint="MERIDIAN_MSA_CLIENT_ID">
+              <Row label={t('settings.msaClientId')} hint="MEDIRIAN_MSA_CLIENT_ID">
                 <input className="input mono settings__wide-input" value={settings.msaClientId}
                   placeholder="00000000-0000-0000-0000-000000000000"
                   onChange={(e) => set({ msaClientId: e.target.value.trim() })} />
               </Row>
-              <Row label={t('settings.servicesUrl')} hint="MERIDIAN_SERVICES_URL">
+              <Row label={t('settings.servicesUrl')} hint="MEDIRIAN_SERVICES_URL">
                 <input className="input mono settings__wide-input" value={settings.servicesUrl}
                   placeholder={app?.defaultServicesUrl || 'https://…'}
                   onChange={(e) => set({ servicesUrl: e.target.value.trim() })} />
@@ -221,7 +221,7 @@ function InstallationSection() {
         </button>
       </Row>
       <Row label={t('settings.diskUsage')}
-        hint={usage ? `Java ${formatBytes(usage.runtimeBytes)} · Minecraft ${formatBytes(usage.gameBytes)} · Meridian ${formatBytes(usage.clientsBytes)} · Cache ${formatBytes(usage.cacheBytes)}` : undefined}>
+        hint={usage ? `Java ${formatBytes(usage.runtimeBytes)} · Minecraft ${formatBytes(usage.gameBytes)} · Medirian ${formatBytes(usage.clientsBytes)} · Cache ${formatBytes(usage.cacheBytes)}` : undefined}>
         <button className="btn" onClick={() => void invoke('install:diskUsage').then(setUsage)}>{t('settings.calculate')}</button>
       </Row>
       <Row label={t('settings.repair')} hint={t('settings.repairHint')}>
@@ -270,7 +270,7 @@ function JavaSection() {
         <ul className="java-list">
           {javas.map((java) => (
             <li key={java.path}>
-              <span className={`chip ${java.source === 'meridian' ? '' : 'chip--muted'}`}>Java {java.major}</span>
+              <span className={`chip ${java.source === 'medirian' ? '' : 'chip--muted'}`}>Java {java.major}</span>
               <span className="java-list__version">{java.version}</span>
               <span className="muted">{java.vendor}</span>
               <span className="mono java-list__path">{java.path}</span>
@@ -355,10 +355,10 @@ function AboutSection() {
   }
   return (
     <>
-      <Row label="Meridian Launcher" hint={`Electron ${app.electron} · Chromium ${app.chrome} · Node ${app.node}`}>
+      <Row label="Medirian Launcher" hint={`Electron ${app.electron} · Chromium ${app.chrome} · Node ${app.node}`}>
         <span className="chip">v{app.version}</span>
       </Row>
-      <Row label="Meridian Client">
+      <Row label="Medirian Client">
         <span className="chip chip--muted">{releases?.manifest ? `v${releases.manifest.client.version}` : '—'}</span>
       </Row>
       <Row label={t('settings.logs')}>

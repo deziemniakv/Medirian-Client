@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Starts Meridian services.
+// Starts Medirian services.
 //   PORT            (default 8080)
 //   HOST            (default 0.0.0.0)
 //   DATA_DIR        (default ./data)
@@ -16,5 +16,5 @@ if (process.env.MOJANG_SESSION_URL) {
   console.warn(`Using the session server at ${options.sessionServer} instead of Mojang's (testing only)`);
 }
 createServer(options).listen(port, host, () => {
-  console.log(`Meridian services listening on http://${host}:${port} (data: ${dataDir})`);
+  console.log(`Medirian services listening on http://${host}:${port} (data: ${dataDir})`);
 });
