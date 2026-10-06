@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import mark from '../../assets/mark.png';
+import logo from '../../assets/logo.png';
 import type { SetupCheck } from '../../../common/types';
 import { errorMessage, invoke } from '../api';
 import { useT, type MessageKey } from '../i18n';
@@ -44,18 +44,19 @@ export function SetupWizard() {
 
   return (
     <div className="overlay setup">
-      <div className="setup__panel">
+      <div className="dialog dialog--wide px-frame">
         <div className="setup__intro">
-          <img src={mark} alt="" className="setup__mark" />
-          <h2 className="dialog__title">{t('setup.title')}</h2>
+          <img src={logo} alt="Medirian Client" className="setup__logo" draggable={false} />
+          <h2 className="setup__title pixel">{t('setup.title')}</h2>
           <p className="dim">{t('setup.subtitle')}</p>
         </div>
+        <div className="dialog__body">
         <ul className="checks">
           {(checks ? sorted : ORDER.map((id) => ({ id, status: 'pending', detail: t('setup.running') }) as SetupCheck)).map((check) => (
             <li key={check.id} className={`check check--${check.status}`}>
               <span className="check__icon">
                 {check.status === 'pending' ? <span className="spinner" /> :
-                  <Icon name={check.status === 'ok' ? 'check' : check.status === 'warn' ? 'alert' : 'x'} size={14} />}
+                  <Icon name={check.status === 'ok' ? 'check' : check.status === 'warn' ? 'alert' : 'x'} size={16} />}
               </span>
               <div className="check__text">
                 <div className="check__label">{t(`setup.check.${check.id}` as MessageKey)}</div>
@@ -63,7 +64,7 @@ export function SetupWizard() {
               </div>
               {check.fix && (
                 <button className="btn btn--small" disabled={working !== null} onClick={() => void run(check.id)}>
-                  {working === check.id ? <span className="spinner" /> : <Icon name={check.fix === 'retry' ? 'refresh' : 'shield'} size={14} />}
+                  {working === check.id ? <span className="spinner" /> : <Icon name={check.fix === 'retry' ? 'refresh' : 'shield'} size={16} />}
                   {check.fix === 'retry' ? t('setup.retry') : t('setup.fix')}
                 </button>
               )}
@@ -71,9 +72,10 @@ export function SetupWizard() {
           ))}
         </ul>
         {error && <div className="alert alert--error">{error}</div>}
+        </div>
         <div className="dialog__actions">
           <button className="btn btn--ghost" disabled={working !== null} onClick={() => void run()}>
-            <Icon name="refresh" size={15} />
+            <Icon name="refresh" size={16} />
             {t('setup.retry')}
           </button>
           <button className={`btn ${hasErrors ? '' : 'btn--primary'}`} disabled={!checks || working !== null} onClick={() => void finish()}>

@@ -4,9 +4,8 @@ import dev.medirian.render.Anim;
 import dev.medirian.render.Colors;
 import dev.medirian.render.Gfx;
 import dev.medirian.render.Theme;
-import dev.medirian.render.UiDraw;
 
-/** Smooth vertical scrolling state with a thin scrollbar. */
+/** Smooth vertical scrolling state with a thin pixel scrollbar. */
 public final class ScrollState {
 
     private final Anim anim = new Anim(0f, 20f);
@@ -43,6 +42,9 @@ public final class ScrollState {
         }
         float barHeight = Math.max(16f, view * view / content);
         float barY = y + (view - barHeight) * (offset() / (content - view));
-        UiDraw.roundRect(g, x, barY, 2, barHeight, 1, Colors.withAlpha(Theme.current().textMuted, 0x90));
+        Theme t = Theme.current();
+        g.fill(Math.round(x), Math.round(y), Math.round(x) + 2, Math.round(y + view), Colors.withAlpha(t.panelDark, 0xC0));
+        g.fill(Math.round(x), Math.round(barY), Math.round(x) + 2, Math.round(barY + barHeight), t.borderStrong);
+        g.fill(Math.round(x), Math.round(barY), Math.round(x) + 1, Math.round(barY + barHeight), t.textMuted);
     }
 }

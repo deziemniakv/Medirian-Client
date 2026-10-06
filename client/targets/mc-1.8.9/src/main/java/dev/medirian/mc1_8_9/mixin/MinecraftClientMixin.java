@@ -5,6 +5,7 @@ import dev.medirian.core.Medirian;
 import dev.medirian.mc1_8_9.LegacyPlatform;
 import dev.medirian.mc1_8_9.SelfTest;
 import dev.medirian.platform.Hooks;
+import dev.medirian.mc1_8_9.ScreenBridge;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.entity.player.PlayerInventory;
@@ -13,6 +14,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -52,6 +54,18 @@ public abstract class MinecraftClientMixin {
     @Inject(method = "setScreen", at = @At("HEAD"))
     private void medirian$screen(Screen screen, CallbackInfo ci) {
         Hooks.screenChanged(screen != null);
+    }
+
+    /** Medirian's main menu instead of Minecraft's title screen: when it is opened... */
+    @ModifyVariable(method = "setScreen", at = @At("HEAD"), argsOnly = true)
+    private Screen medirian$title(Screen screen) {
+        return ScreenBridge.replaceTitle((MinecraftClient) (Object) this, screen);
+    }
+
+    /** ...and when setScreen(null) falls back to it outside a world. */
+    @ModifyVariable(method = "setScreen", at = @At("STORE"), argsOnly = true)
+    private Screen medirian$titleFallback(Screen screen) {
+        return ScreenBridge.replaceTitle((MinecraftClient) (Object) this, screen);
     }
 
     @Inject(method = "stop", at = @At("HEAD"))

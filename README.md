@@ -25,19 +25,26 @@
 
 Pełny opis architektury i decyzji technologicznych: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
 
-## Funkcje (0.1.4)
+## Wygląd
+
+Medirian Client to klient w klimacie **cozy pixel-artowej nocy Halloween** — na stałe, nie sezonowo: fiolet z logo,
+pomarańcz dyń, księżyc, mgła. Launcher i gra używają tej samej sceny, logo, ikon i palety, generowanych kodem przez
+`node scripts/generate-pixel-art.mjs` (`scripts/pixel/`: scena, logo, 70+ ikon 16×16, własna czcionka Medirian Pixel).
+W grze: własne menu główne, nowe Mod Menu (kafelki z ikonami modułów i lampką ON/OFF), wszystkie ekrany w stylu pixel art.
+
+## Funkcje (0.2.0)
 
 **Launcher** — kreator pierwszego uruchomienia z diagnostyką i automatycznymi naprawami, automatyczna
 instalacja Javy (Mojang: Java 8 dla 1.8.9, Java 21 dla 1.21.8 i 1.21.11, Java 25 dla 26.3), pobieranie i weryfikacja SHA-1 plików
 gry, ponowne użycie assetów z istniejącego `.minecraft`, profile uruchomieniowe (wersja, RAM, Java,
 argumenty JVM, rozdzielczość, profil konfiguracji Medirian), logowanie Microsoft (device code),
 aktualizacje klienta z manifestu wydań (kanał stabilny / lokalny), automatyczna aktualizacja samego launchera, naprawa instalacji, czyszczenie cache,
-podgląd logu gry, status gry na żywo (kanał launcher ↔ klient), changelog, Discord Rich Presence, motywy Halloween i Christmas, PL/EN/DE/ES.
+podgląd logu gry, status gry na żywo (kanał launcher ↔ klient), changelog, Discord Rich Presence, animowana nocna scena (śnieg zimą), PL/EN/DE/ES.
 
-**Klient** — mod menu (kategorie | moduły | ustawienia, wyszukiwarka), edytor HUD (przeciąganie,
+**Klient** — własne menu główne, mod menu (zakładki kategorii, kafelki modułów z ikonami i lampką ON/OFF, strona ustawień modułu, wyszukiwarka), edytor HUD (przeciąganie,
 przyciąganie z liniami pomocniczymi, skalowanie, panel właściwości, dodawanie/usuwanie, reset),
 ustawienia globalne, profile konfiguracji (Default / PvP / Performance / własne) wspólne dla obu
-wersji gry, powiadomienia, i18n PL/EN/DE/ES, motywy sezonowe, peleryny (ekran kosmetyków), konto Medirian
+wersji gry, powiadomienia, i18n PL/EN/DE/ES, śnieg zimą, peleryny (ekran kosmetyków), konto Medirian
 (logowanie kontem Minecraft przez handshake sesji Mojang) i profile w chmurze.
 
 Moduły (41): CPS, Combo Counter, Reach Display, Target HUD, Hit Color, Health Tags, Toggle Sprint, Toggle Sneak, Zoom, Freelook,
@@ -114,7 +121,7 @@ wersję gry, profil Medirian, menu / singleplayer / serwer (adres można ukryć)
 
 **Publikacja**: tag `v<wersja>` uruchamia `.github/workflows/release.yml` — jary, manifest, instalatory launchera
 i kanał jego auto-aktualizacji trafiają do GitHub Releases (szczegóły i sekrety podpisywania: [docs/RELEASING.md](docs/RELEASING.md)).
-Własny serwer: `node scripts/build-clients.mjs --base-url https://twoj-cdn/medirian/0.1.4/`, wgraj
+Własny serwer: `node scripts/build-clients.mjs --base-url https://twoj-cdn/medirian/0.2.0/`, wgraj
 zawartość `distribution/` pod ten adres i ustaw URL manifestu w launcherze.
 
 ## Struktura danych

@@ -1,75 +1,87 @@
 /*
- * Medirian design tokens. Keep in sync with client/shared/.../render/Theme.java.
- * Themes only change tokens; components never hard-code colours.
+ * Medirian Client design tokens: a cozy Halloween night in pixel art. The logo's purple is the
+ * main colour, pumpkin orange the accent. Keep in sync with client/shared/.../render/Theme.java
+ * and scripts/pixel/palette.mjs. One UI pixel is 2 CSS pixels (--px).
  */
-:root,
-[data-theme='default'] {
-  --bg: #0b0a10;
-  --bg-deep: #08070c;
-  --panel: #100d17;
-  --surface: #16131f;
-  --elevated: #1d1928;
-  --border: #2a2438;
-  --border-strong: #3a3150;
-  --text: #eceaf2;
-  --text-dim: #9a94ab;
-  --text-muted: #6c6680;
-  --accent: #9b55d6;
-  --accent-hover: #ae6fe3;
-  --accent-soft: rgba(155, 85, 214, 0.16);
-  --accent-glow: rgba(155, 85, 214, 0.35);
-  --seasonal: #9b55d6;
-  --seasonal-soft: rgba(155, 85, 214, 0.14);
-  --success: #5bc98a;
-  --warning: #e5b454;
-  --danger: #e5566a;
-  --moon: #e9e2f5;
+@font-face {
+  font-family: 'Medirian Pixel';
+  src: url('../../assets/fonts/medirian-pixel.ttf') format('truetype');
+  font-display: block;
+}
 
-  --radius-sm: 6px;
-  --radius: 10px;
-  --radius-lg: 16px;
-  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-  --shadow-soft: 0 4px 14px rgba(0, 0, 0, 0.25);
-  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --fast: 120ms;
-  --normal: 200ms;
+@font-face {
+  font-family: 'Lato';
+  src: url('../../assets/fonts/Lato-Regular.ttf') format('truetype');
+  font-weight: 400;
+}
 
-  --font: 'Segoe UI Variable Text', 'Segoe UI', -apple-system, 'SF Pro Text', Inter, Roboto, 'Helvetica Neue', sans-serif;
-  --font-display: 'Segoe UI Variable Display', 'Segoe UI', -apple-system, 'SF Pro Display', Inter, Roboto, sans-serif;
+@font-face {
+  font-family: 'Lato';
+  src: url('../../assets/fonts/Lato-Bold.ttf') format('truetype');
+  font-weight: 700;
+}
+
+:root {
+  color-scheme: dark;
+
+  --ink: #07040c;
+  --night-0: #0c0814;
+  --night-1: #120b1e;
+  --night-2: #1a1029;
+  --night-3: #221535;
+  --night-4: #2c1b43;
+  --night-5: #382352;
+
+  --panel: #1b1228;
+  --panel-light: #2e2042;
+  --panel-dark: #0e0916;
+  --surface: #261a37;
+  --surface-light: #3a2954;
+  --surface-hover: #4c3870;
+  --surface-dark: #150e1f;
+  --elevated: #31234a;
+  --inset: #0f0a18;
+  --border: #3a2a52;
+
+  --text: #f3eadb;
+  --text-dim: #b9aacb;
+  --text-muted: #7c6d92;
+
+  --accent: #9b5fd0;
+  --accent-light: #c49ae8;
+  --accent-dark: #5c1d7c;
+  --plum: #2b0e3a;
+
+  --pumpkin: #e07a2f;
+  --pumpkin-light: #f39c4a;
+  --pumpkin-dark: #a8481a;
+  --pumpkin-deep: #6e2a0e;
+  --ember: #ffbf66;
+  --candle: #ffe39a;
+  --on-pumpkin: #2a1206;
+
+  --wood: #4a2c1f;
+  --wood-light: #6b4430;
+  --wood-dark: #2d1912;
+
+  --success: #7cc36a;
+  --warning: #f2c14e;
+  --danger: #d9534f;
+  --danger-dark: #8c2a2f;
+
+  --px: 2px;
+  --cut: polygon(var(--px) 0, calc(100% - var(--px)) 0, 100% var(--px), 100% calc(100% - var(--px)), calc(100% - var(--px)) 100%, var(--px) 100%, 0 calc(100% - var(--px)), 0 var(--px));
+
+  --font-pixel: 'Medirian Pixel', monospace;
+  --font: 'Lato', 'Segoe UI', -apple-system, sans-serif;
   --font-mono: 'Cascadia Mono', 'JetBrains Mono', Consolas, 'SF Mono', Menlo, monospace;
+  --fast: 90ms;
+  --normal: 160ms;
 }
 
-[data-theme='halloween'] {
-  --bg: #0a0812;
-  --bg-deep: #07060d;
-  --panel: #120e1a;
-  --surface: #181221;
-  --elevated: #1f182b;
-  --border: #2d243c;
-  --border-strong: #3d3254;
-  --text-dim: #9c95ae;
-  --text-muted: #6e6683;
-  --seasonal: #e8833a;
-  --seasonal-soft: rgba(232, 131, 58, 0.14);
-}
-
-[data-theme='christmas'] {
-  --bg: #090b13;
-  --bg-deep: #06070d;
-  --panel: #0e1020;
-  --surface: #131726;
-  --elevated: #1a1f31;
-  --border: #262c42;
-  --border-strong: #353d58;
-  --text: #eceff6;
-  --text-dim: #97a0b6;
-  --text-muted: #687089;
-  --seasonal: #8fd3f4;
-  --seasonal-soft: rgba(143, 211, 244, 0.14);
-  --moon: #eaf4fb;
-}
-
-[data-animations='off'] * {
+[data-motion='off'] *,
+[data-motion='off'] *::before,
+[data-motion='off'] *::after {
   transition: none !important;
   animation: none !important;
 }

@@ -20,7 +20,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const BASELINES = join(ROOT, 'client', 'visual-baselines');
 const TARGETS = join(ROOT, 'client', 'targets');
 /** Self-test screenshots without a world behind them. */
-const SCREENS = ['1-modmenu', '2-hudeditor', '3-settings', '3b-cosmetics', '3c-cosmetics-hats'];
+const SCREENS = ['0-title', '1-modmenu', '2-hudeditor', '3-settings', '3b-cosmetics', '3c-cosmetics-hats'];
 
 function parseArgs(argv) {
   const options = { targets: [], update: false, threshold: 32, maxRatio: 0.005 };

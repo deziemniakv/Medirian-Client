@@ -399,6 +399,14 @@ public final class Hooks {
                 && medirian.emotes().pose(player, local, out);
     }
 
+    /**
+     * Medirian's main menu to show instead of Minecraft's title screen, or null to keep Minecraft's
+     * (Settings → General → Medirian main menu, or before Medirian has booted).
+     */
+    public static dev.medirian.ui.MedirianScreen titleScreen() {
+        return medirian != null && medirian.settings().mainMenu.on() ? new dev.medirian.ui.TitleMenuScreen() : null;
+    }
+
     /** Whether this version supports {@code capability} (true before Medirian has booted). */
     public static boolean supports(Capability capability) {
         return medirian == null || medirian.platform().supports(capability);

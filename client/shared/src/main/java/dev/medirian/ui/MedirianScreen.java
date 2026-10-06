@@ -214,18 +214,14 @@ public abstract class MedirianScreen {
         return lastMouseY;
     }
 
-    /** Dimmed backdrop with the seasonal atmosphere (violet haze, fog) when the theme enables it. */
+    /** Dimmed backdrop: night violet haze rising from the bottom, a warm hint of pumpkin light, snow in winter. */
     protected void renderBackdrop(Gfx g) {
         Theme theme = Theme.current();
         g.fill(0, 0, width, height, theme.backdrop);
-        // soft violet light from the bottom — the "fog"
-        g.gradient(0, height / 2, width, height, 0x00000000, Colors.withAlpha(theme.accent, theme.decorations ? 0x2C : 0x16));
-        if (theme.decorations) {
-            // a barely visible seasonal glow on the horizon (warm for Halloween, icy for Christmas)
-            g.gradient(0, height * 3 / 4, width, height, 0x00000000, Colors.withAlpha(theme.seasonal, 0x10));
-            if (theme.snow()) {
-                renderSnow(g);
-            }
+        g.gradient(0, height / 2, width, height, 0x00000000, Colors.withAlpha(theme.accent, 0x26));
+        g.gradient(0, height * 3 / 4, width, height, 0x00000000, Colors.withAlpha(theme.pumpkin, 0x0E));
+        if (Theme.snowing()) {
+            renderSnow(g);
         }
     }
 

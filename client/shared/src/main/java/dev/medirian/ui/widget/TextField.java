@@ -4,7 +4,7 @@ import dev.medirian.input.Key;
 import dev.medirian.render.Colors;
 import dev.medirian.render.Gfx;
 import dev.medirian.render.Theme;
-import dev.medirian.render.UiDraw;
+import dev.medirian.render.Pixel;
 import dev.medirian.ui.MedirianScreen;
 
 /** Single-line text input with caret, placeholder and Ctrl+Backspace word deletion. */
@@ -74,9 +74,11 @@ public final class TextField extends Widget {
     public void render(Gfx g, float mx, float my) {
         Theme theme = Theme.current();
         float t = hoverValue(mx, my);
-        int border = focused ? theme.accent : Colors.lerp(theme.border, theme.borderStrong, t);
-        UiDraw.roundRectBordered(g, x, y, w, h, 3, theme.surface, border);
-        float textY = y + (h - g.fontHeight()) / 2f + 1;
+        Pixel.inset(g, x, y, w, h, Colors.lerp(theme.inset, theme.surfaceDark, t));
+        if (focused) {
+            Pixel.outline(g, Math.round(x), Math.round(y), Math.round(w), Math.round(h), theme.accent);
+        }
+        float textY = Math.round(y + (h - g.fontHeight()) / 2f + 1);
         int available = (int) w - 10;
         g.enableScissor((int) x + 2, (int) y, (int) (x + w) - 2, (int) (y + h));
         if (text.isEmpty() && !focused) {
@@ -88,7 +90,7 @@ public final class TextField extends Widget {
             g.text(text, x + 5 - scroll, textY, theme.text, false);
             if (focused && ((System.currentTimeMillis() - focusTimeMs) / 500) % 2 == 0) {
                 float cx = x + 5 + caretX - scroll;
-                g.fill((int) cx, (int) textY - 1, (int) cx + 1, (int) textY + g.fontHeight() - 1, theme.accentHover);
+                g.fill(Math.round(cx), (int) textY - 1, Math.round(cx) + 1, (int) textY + g.fontHeight() - 2, theme.pumpkinLight);
             }
         }
         g.disableScissor();

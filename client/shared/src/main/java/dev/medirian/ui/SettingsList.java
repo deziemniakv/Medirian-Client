@@ -3,6 +3,7 @@ package dev.medirian.ui;
 import dev.medirian.i18n.I18n;
 import dev.medirian.input.Key;
 import dev.medirian.render.Gfx;
+import dev.medirian.render.Pixel;
 import dev.medirian.render.Theme;
 import dev.medirian.render.UiDraw;
 import dev.medirian.setting.ActionSetting;
@@ -34,7 +35,7 @@ import java.util.function.Supplier;
 public final class SettingsList {
 
     private static final float ROW_HEIGHT = 20;
-    private static final float DESC_HEIGHT = 9;
+    private static final float DESC_HEIGHT = 10;
 
     private final MedirianScreen screen;
     private final List<Row> rows = new ArrayList<Row>();
@@ -212,11 +213,7 @@ public final class SettingsList {
                 return;
             }
             g.text(UiDraw.ellipsize(g, text, (int) maxWidth), rx, ry + 4, theme.text, false);
-            g.push();
-            g.translate(rx, ry + 14);
-            g.scale(0.8f, 0.8f);
-            g.text(UiDraw.ellipsize(g, description, (int) (maxWidth / 0.8f)), 0, 0, theme.textMuted, false);
-            g.pop();
+            g.text(UiDraw.ellipsize(g, description, (int) maxWidth), rx, ry + 15, theme.textMuted, false);
         }
     }
 
@@ -230,15 +227,19 @@ public final class SettingsList {
 
         @Override
         public float height() {
-            return 18;
+            return 20;
         }
 
         @Override
         public void render(Gfx g, float mx, float my) {
             Theme theme = Theme.current();
-            g.text(text.toUpperCase(), rx, ry + 7, theme.accentHover, false);
-            float lineX = rx + g.textWidth(text.toUpperCase()) + 6;
-            g.fill((int) lineX, (int) ry + 11, (int) (rx + rw), (int) ry + 12, theme.border);
+            String upper = text.toUpperCase();
+            Pixel.diamond(g, rx, ry + 9, theme.pumpkin);
+            g.text(upper, rx + 6, ry + 8, theme.pumpkinLight, false);
+            float lineX = rx + 6 + g.textWidth(upper) + 6;
+            if (lineX < rx + rw) {
+                Pixel.groove(g, lineX, ry + 11, rx + rw - lineX);
+            }
         }
     }
 

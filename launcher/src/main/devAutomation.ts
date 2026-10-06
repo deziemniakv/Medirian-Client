@@ -64,10 +64,14 @@ export async function runDevAutomation(
   await wait(600);
   await capture('page-settings-discord');
   await run("window.__medirianDev.navigate('home')");
-  // seasonal look without touching the saved theme setting
-  await run("document.documentElement.dataset.theme = 'christmas'");
+  await run('window.__medirianDev.account(true)');
+  await wait(600);
+  await capture('dialog-account');
+  await run('window.__medirianDev.account(false)');
+  // winter snow without touching the saved settings
+  await run("document.documentElement.dataset.snow = 'on'");
   await wait(900);
-  await capture('page-home-christmas');
+  await capture('page-home-winter');
   await run('window.__medirianDev.reload()');
 
   if (!launch) {

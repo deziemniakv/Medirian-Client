@@ -12,6 +12,21 @@ public interface ClientActions {
     /** Opens the vanilla options screen. */
     void openVanillaSettings();
 
+    /** Opens the world list (the main menu's Singleplayer). */
+    void openSingleplayer();
+
+    /**
+     * Opens the server list, through Minecraft's safety notice the first time. Returns false when
+     * multiplayer is disabled for the account.
+     */
+    boolean openMultiplayer();
+
+    /** Opens Minecraft's language selection. */
+    void openLanguageSettings();
+
+    /** Closes the game. */
+    void quitGame();
+
     boolean isFullscreen();
 
     void toggleFullscreen();

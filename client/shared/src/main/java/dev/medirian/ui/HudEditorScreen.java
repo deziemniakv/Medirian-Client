@@ -9,6 +9,7 @@ import dev.medirian.input.Key;
 import dev.medirian.module.Module;
 import dev.medirian.render.Colors;
 import dev.medirian.render.Gfx;
+import dev.medirian.render.Pixel;
 import dev.medirian.render.Theme;
 import dev.medirian.render.UiDraw;
 import dev.medirian.ui.widget.Button;
@@ -181,10 +182,10 @@ public final class HudEditorScreen extends MedirianScreen {
                 continue;
             }
             if (element == selected) {
-                UiDraw.hairline(g, element.screenX() - 1, element.screenY() - 1, element.screenWidth() + 2, element.screenHeight() + 2, theme.accent);
+                UiDraw.hairline(g, element.screenX() - 1, element.screenY() - 1, element.screenWidth() + 2, element.screenHeight() + 2, theme.pumpkinLight);
                 float hx = element.screenX() + element.screenWidth() - HANDLE / 2f;
                 float hy = element.screenY() + element.screenHeight() - HANDLE / 2f;
-                UiDraw.roundRect(g, hx, hy, HANDLE, HANDLE, 1, theme.accent);
+                Pixel.frame(g, hx, hy, HANDLE, HANDLE, theme.pumpkin, theme.ember, theme.pumpkinDark);
                 renderTag(g, theme, element);
             } else if (element == hovered) {
                 UiDraw.hairline(g, element.screenX() - 1, element.screenY() - 1, element.screenWidth() + 2, element.screenHeight() + 2,
@@ -195,10 +196,10 @@ public final class HudEditorScreen extends MedirianScreen {
             }
         }
         if (!Float.isNaN(guideX)) {
-            g.fill(Math.round(guideX), 0, Math.round(guideX) + 1, height, Colors.withAlpha(theme.seasonal, 0xC0));
+            g.fill(Math.round(guideX), 0, Math.round(guideX) + 1, height, Colors.withAlpha(theme.pumpkin, 0xC0));
         }
         if (!Float.isNaN(guideY)) {
-            g.fill(0, Math.round(guideY), width, Math.round(guideY) + 1, Colors.withAlpha(theme.seasonal, 0xC0));
+            g.fill(0, Math.round(guideY), width, Math.round(guideY) + 1, Colors.withAlpha(theme.pumpkin, 0xC0));
         }
 
         if (selected != null && selected.module().isEnabled() && properties != null && !dragging && !resizing) {
@@ -226,15 +227,11 @@ public final class HudEditorScreen extends MedirianScreen {
 
     private void renderTag(Gfx g, Theme theme, HudElement element) {
         String tag = element.displayName() + "  " + Math.round(element.scale() * 100) + "%";
-        float tagW = g.textWidth(tag) * 0.75f + 8;
-        float tagX = Math.max(2, Math.min(width - tagW - 2, element.screenX()));
-        float tagY = element.screenY() - 12 < 2 ? element.screenY() + element.screenHeight() + 3 : element.screenY() - 12;
-        UiDraw.roundRect(g, tagX, tagY, tagW, 10, 2, theme.accent);
-        g.push();
-        g.translate(tagX + 4, tagY + 2);
-        g.scale(0.75f, 0.75f);
-        g.text(tag, 0, 0, 0xFFFFFFFF, false);
-        g.pop();
+        float tagW = g.textWidth(tag) + 8;
+        float tagX = Math.round(Math.max(2, Math.min(width - tagW - 2, element.screenX())));
+        float tagY = Math.round(element.screenY() - 15 < 2 ? element.screenY() + element.screenHeight() + 3 : element.screenY() - 15);
+        Pixel.frame(g, tagX, tagY, tagW, 13, theme.pumpkin, theme.ember, theme.pumpkinDark);
+        g.text(tag, tagX + 4, tagY + 3, theme.onPumpkin, false);
     }
 
     private void renderPanel(Gfx g, Theme theme, float mx, float my) {
@@ -242,10 +239,10 @@ public final class HudEditorScreen extends MedirianScreen {
         panelX = right ? width - PANEL_W - 8 : 8;
         float py = 8;
         float ph = height - 44;
-        UiDraw.shadow(g, panelX, py, PANEL_W, ph, 6, 3);
-        UiDraw.roundRectBordered(g, panelX, py, PANEL_W, ph, 6, theme.panel, theme.border);
-        g.text("§l" + selected.displayName(), panelX + 10, py + 10, theme.text, false);
-        g.fill((int) panelX + 10, (int) py + 24, (int) (panelX + PANEL_W) - 10, (int) py + 25, theme.border);
+        Pixel.panel(g, panelX, py, PANEL_W, ph);
+        Pixel.icon(g, Pixel.moduleIcon(selected.module().id()), panelX + 8, py + 5, 1, 0xFFFFFFFF);
+        Pixel.text(g, UiDraw.ellipsize(g, selected.displayName(), (int) PANEL_W - 40), panelX + 28, py + 9, theme.text);
+        Pixel.groove(g, panelX + 6, py + 24, PANEL_W - 12);
         properties.bounds(panelX + 10, py + 30, PANEL_W - 14, ph - 36);
         properties.render(g, mx, my);
     }
@@ -256,8 +253,7 @@ public final class HudEditorScreen extends MedirianScreen {
         Button last = toolbar.get(toolbar.size() - 1);
         float x = first.x - 6;
         float w = last.x + last.w - first.x + 12;
-        UiDraw.shadow(g, x, height - 32, w, 28, 6, 3);
-        UiDraw.roundRectBordered(g, x, height - 32, w, 28, 6, theme.panel, theme.border);
+        Pixel.panel(g, x, height - 32, w, 28);
         for (Button button : toolbar) {
             button.render(g, mx, my);
         }
@@ -281,8 +277,7 @@ public final class HudEditorScreen extends MedirianScreen {
         float menuH = Math.max(1, modules.size()) * itemH + 8;
         float x = add.x;
         float y = add.y - 8 - menuH;
-        UiDraw.shadow(g, x, y, menuW, menuH, 5, 3);
-        UiDraw.roundRectBordered(g, x, y, menuW, menuH, 5, theme.panel, theme.borderStrong);
+        Pixel.panel(g, x, y, menuW, menuH);
         if (modules.isEmpty()) {
             g.text(I18n.tr("ui.hudeditor.allAdded", "All elements are on screen"), x + 6, y + 7, theme.textMuted, false);
             return;
@@ -291,10 +286,10 @@ public final class HudEditorScreen extends MedirianScreen {
         for (Module module : modules) {
             boolean hover = mx >= x && mx < x + menuW && my >= iy && my < iy + itemH;
             if (hover) {
-                UiDraw.roundRect(g, x + 3, iy, menuW - 6, itemH, 3, theme.accentSoft);
+                g.fill(Math.round(x) + 3, Math.round(iy), Math.round(x + menuW) - 3, Math.round(iy + itemH), theme.surfaceLight);
             }
             g.text(module.displayName(), x + 8, iy + 3, hover ? theme.text : theme.textDim, false);
-            g.text("+", x + menuW - 14, iy + 3, theme.accentHover, false);
+            g.text("+", x + menuW - 14, iy + 3, theme.pumpkinLight, false);
             iy += itemH;
         }
     }

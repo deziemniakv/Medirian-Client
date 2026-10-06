@@ -16,7 +16,7 @@ Spis treści
 8. [Architektura konfiguracji](#8-architektura-konfiguracji)
 9. [Architektura aktualizacji](#9-architektura-aktualizacji)
 10. [Komunikacja launcher ↔ klient](#10-komunikacja-launcher--klient)
-11. [Design system i motywy sezonowe](#11-design-system-i-motywy-sezonowe)
+11. [Tożsamość wizualna i design system](#11-tożsamość-wizualna-i-design-system)
 12. [Dodawanie nowej wersji Minecrafta](#12-dodawanie-nowej-wersji-minecrafta)
 
 ---
@@ -229,7 +229,7 @@ Shared (`client/shared`, pakiet `dev.medirian`):
 | `setting` | (Module System) | `BooleanSetting`, `NumberSetting`, `ColorSetting`, `EnumSetting`, `KeySetting`, `TextSetting` |
 | `hud` | **HUD System** | `HudElement`, `HudManager`, `HudLayout`, `Anchor`, snapping |
 | `config` | **Config System** | `ConfigManager`, profile, serializacja JSON, migracje |
-| `render` | **Render System** | `Gfx` (backend renderowania — implementuje adapter), `Colors`, `Theme`, `UiDraw` |
+| `render` | **Render System** | `Gfx` (backend renderowania — implementuje adapter), `Colors`, `Theme`, `Pixel` (ramki, wnęki, ikony z atlasu), `UiDraw` |
 | `perf` | **Performance System** | `PerformanceManager`, `FrameStats`, `PerformanceProfile` |
 | `ui` | **UI System** | `MedirianScreen`, widgety, `ModMenuScreen`, `HudEditorScreen`, `SettingsScreen` |
 | `cosmetics` | **Cosmetics System** | `CosmeticType`, `Cosmetic`, `CosmeticsProvider`, `Loadout` |
@@ -297,7 +297,7 @@ public abstract class Module {
 
 ```
 MEDIRIAN_HOME/config/
-├── client.json            { activeProfile, language, theme, notifications, animations, hudScale }
+├── client.json            { activeProfile, language, mainMenu, winterSnow, notifications, animations, hudScale }
 ├── profiles/
 │   ├── default.json       ┐
 │   ├── pvp.json           │ { version, modules: { id: { enabled, keybind, settings{} } },
@@ -339,20 +339,41 @@ MEDIRIAN_HOME/config/
    (`hello`, `status`, `notify`). Token jednorazowy chroni przed obcymi połączeniami.
    Szczegóły: [`PROTOCOL.md`](PROTOCOL.md).
 
-## 11. Design system i motywy sezonowe
+## 11. Tożsamość wizualna i design system
 
-Tokeny kolorów są zdefiniowane identycznie w launcherze (`launcher/src/renderer/styles/tokens.css`)
-i kliencie (`dev.medirian.render.Theme`). Motywy: `DEFAULT` (Medirian Violet), `HALLOWEEN`
-(mgła, księżyc, oszczędne pomarańczowe akcenty), `AUTO` (wybiera motyw sezonowy po dacie).
-Nowy sezon = nowa instancja `Theme` + zestaw tokenów CSS — bez zmian w komponentach.
+Medirian Client wygląda jak **cozy, pixel-artowa noc Halloween w świecie Minecrafta** — na stałe, nie sezonowo.
+Fiolet z logo jest kolorem głównym, pomarańcz dyni akcentem (stany „włączone”, główne akcje, wyróżnienia),
+tło to głęboki fiolet nocy. Bez neonów: ograniczona paleta, dithering zamiast gradientów, pikselowe obrysy.
 
-| Token | Default | Halloween |
+**Jedno źródło grafiki.** `scripts/generate-pixel-art.mjs` rysuje kodem (`scripts/pixel/`) wszystkie grafiki:
+scenę nocy w warstwach (niebo z księżycem, wzgórza, las, pierwszy plan z domkiem, dyniami i płotem, światło,
+mgła), logo (znak „M” z `branding/source` spikselowany + napis MEDIRIAN CLIENT), ikony 16×16 (każdy moduł,
+kategorie, menu, interfejs), ikonę aplikacji i czcionkę **Medirian Pixel** (własne glify, eksport do TTF).
+Gra dostaje warstwy 480×270 i atlas ikon (`assets/medirian/textures/gui`), launcher warstwy 400×250, ikony i TTF.
+
+**Gra.** `Theme` trzyma tokeny, `Pixel` rysuje elementy jak w GUI Minecrafta: obrys z wyciętymi narożnikami,
+jasna faza od góry-lewej, ciemna od dołu-prawej, wnęki (pola, tory suwaków), ikony z atlasu. Jedna jednostka
+Medirian = cała liczba pikseli ekranu (`UiScale`), więc pixel art jest ostry; tekst bez skalowania ułamkowego.
+`TitleMenuScreen` zastępuje `TitleScreen` (adaptery: `@ModifyVariable` na `setScreen`, także gdy `setScreen(null)`
+wraca do menu), scena skaluje się całymi pikselami ekranu, a animacje (mgła, migotanie, nietoperz, paralaksa)
+zatrzymują się przy wyłączonych animacjach.
+
+**Launcher.** `styles/tokens.css` (te same kolory), `styles/base.css` (`.px-frame`, `.px-inset`, przyciski, pola,
+dźwignia, suwak w stylu Minecrafta; 1 piksel UI = 2 px CSS), scena w `components/Scene.tsx` (całkowita skala,
+mgła/światło/nietoperz w CSS), ikony 8×8 jako ostre SVG (`Icon`) i kolorowe ikony gry (`ArtIcon`).
+
+| Token | Wartość | Użycie |
 |---|---|---|
-| `bg` | `#0B0A10` | `#0A0810` |
-| `surface` | `#13111A` | `#130F1B` |
-| `accent` | `#9B55D6` (fiolet z logo, rozjaśniony na ciemne tło) | `#9B55D6` |
-| `seasonal` | = accent | `#E8833A` (rzadko: znacznik sezonu, linie pomocnicze edytora) |
-| `text` / `textDim` | `#ECEAF2` / `#9A94AB` | jw. |
+| `panel` / `panelLight` / `panelDark` | `#1B1228` / `#2E2042` / `#0E0916` | okna i ich faza |
+| `surface` / `surfaceLight` | `#261A37` / `#3A2954` | kafelki, przyciski, najechanie |
+| `inset` | `#0F0A18` | pola, tory, listy |
+| `accent` / `accentHover` / `accentDark` | `#9B5FD0` / `#C49AE8` / `#5C1D7C` | fiolet marki |
+| `pumpkin` / `pumpkinLight` / `pumpkinDark` | `#E07A2F` / `#F39C4A` / `#A8481A` | ON, główne akcje |
+| `text` / `textDim` / `textMuted` | `#F3EADB` / `#B9AACB` / `#7C6D92` | tekst |
+| `outline` (ink) | `#07040C` | obrys każdego elementu |
+
+Jedyny akcent sezonowy: śnieg nad nocą od grudnia do 6 stycznia (`Theme.snowing()`, w launcherze `data-snow`),
+do wyłączenia w ustawieniach.
 
 ## 12. Dodawanie nowej wersji Minecrafta
 

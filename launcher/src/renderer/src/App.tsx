@@ -1,25 +1,17 @@
 import { useEffect } from 'react';
 import { AccountDialog } from './components/AccountDialog';
-import { Rail } from './components/Rail';
+import { Scene } from './components/Scene';
 import { SetupWizard } from './components/SetupWizard';
-import { TitleBar } from './components/TitleBar';
+import { TopBar } from './components/TopBar';
 import { Changelog } from './pages/Changelog';
 import { Home } from './pages/Home';
 import { Profiles } from './pages/Profiles';
 import { Settings } from './pages/Settings';
 import { useStore, type Page } from './store';
 
-/** Resolves the theme: AUTO uses Halloween during October (same rule as the client). */
-/** AUTO: Halloween in October, Christmas from December to 6 January (same rule as the client's Theme). */
-function resolveTheme(mode: string | undefined): 'default' | 'halloween' | 'christmas' {
-  if (mode === 'halloween' || mode === 'default' || mode === 'christmas') {
-    return mode;
-  }
-  const now = new Date();
-  if (now.getMonth() === 9) {
-    return 'halloween';
-  }
-  return now.getMonth() === 11 || (now.getMonth() === 0 && now.getDate() <= 6) ? 'christmas' : 'default';
+/** December to 6 January (same rule as the client's Theme). */
+function isWinter(date: Date): boolean {
+  return date.getMonth() === 11 || (date.getMonth() === 0 && date.getDate() <= 6);
 }
 
 export function App() {
@@ -36,15 +28,18 @@ export function App() {
       (window as unknown as { __medirianDev: unknown }).__medirianDev = {
         navigate: (page: Page) => useStore.getState().navigate(page),
         completeSetup: () => useStore.getState().updateSettings({ setupCompleted: true }),
-        reload: () => useStore.getState().init()
+        reload: () => useStore.getState().init(),
+        account: (open: boolean) => useStore.getState().setAccountDialog(open)
       };
     }
   }, [init]);
 
   useEffect(() => {
-    document.documentElement.dataset.theme = resolveTheme(settings?.theme);
-    document.documentElement.lang = settings?.language ?? 'en';
-  }, [settings?.theme, settings?.language]);
+    const root = document.documentElement;
+    root.lang = settings?.language ?? 'en';
+    root.dataset.motion = settings?.sceneMotion === false ? 'off' : 'on';
+    root.dataset.snow = settings?.winterSnow !== false && isWinter(new Date()) ? 'on' : 'off';
+  }, [settings?.language, settings?.sceneMotion, settings?.winterSnow]);
 
   if (!ready || !settings) {
     return <div className="boot" />;
@@ -52,9 +47,9 @@ export function App() {
 
   return (
     <div className="app">
-      <Rail />
-      <main className="main">
-        <TitleBar />
+      <Scene dim={page !== 'home'} home={page === 'home'} motion={settings.sceneMotion} />
+      <TopBar />
+      <main className="stage">
         {page === 'home' && <Home />}
         {page === 'profiles' && <Profiles />}
         {page === 'changelog' && <Changelog />}

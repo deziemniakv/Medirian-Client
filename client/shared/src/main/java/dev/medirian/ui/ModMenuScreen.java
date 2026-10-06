@@ -9,6 +9,7 @@ import dev.medirian.module.Module;
 import dev.medirian.render.Anim;
 import dev.medirian.render.Colors;
 import dev.medirian.render.Gfx;
+import dev.medirian.render.Pixel;
 import dev.medirian.render.Theme;
 import dev.medirian.render.UiDraw;
 import dev.medirian.setting.ActionSetting;
@@ -16,57 +17,63 @@ import dev.medirian.setting.Setting;
 import dev.medirian.ui.widget.Button;
 import dev.medirian.ui.widget.KeybindButton;
 import dev.medirian.ui.widget.ScrollState;
-import dev.medirian.ui.widget.Switch;
 import dev.medirian.ui.widget.TextField;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
- * The Medirian mod menu: Categories | Modules | Settings, with search.
- * Opened with Right Shift by default.
+ * The Medirian mod menu: a window with category tabs on its left edge (like the creative
+ * inventory), a grid of module tiles (icon, name and an ON/OFF lamp), the selected module's page
+ * on the right and a hotbar of quick actions at the bottom. Opened with Right Shift by default.
+ *
+ * <p>Clicking a tile opens the module's page; clicking its lamp (or right-clicking the tile)
+ * switches the module on or off. Typing anywhere searches.
  */
 public final class ModMenuScreen extends MedirianScreen {
 
-    private static final float SIDEBAR_W = 124;
-    private static final float CARD_H = 30;
-    private static final float CARD_GAP = 4;
+    private static final int TAB_W = 26;
+    private static final int TAB_H = 24;
+    private static final int TILE_W = 66;
+    private static final int TILE_H = 74;
+    private static final int TILE_GAP = 6;
+    private static final int HEADER_H = 30;
+    private static final int FOOTER_H = 28;
 
     // remembered between openings
     private static Category lastCategory;
     private static String lastModuleId;
 
-    private float px;
     /** The menu key closes the menu only after the key that opened it was released (no key-repeat close). */
     private boolean closeKeyArmed;
-    private float py;
-    private float pw;
-    private float ph;
-    private float listX;
-    private float listW;
-    private float detailX;
-    private float detailW;
+    private int px;
+    private int py;
+    private int pw;
+    private int ph;
+    private int gridX;
+    private int gridY;
+    private int gridW;
+    private int gridH;
+    private int columns;
+    private int detailX;
+    private int detailW;
 
     private Category category = lastCategory;
     private Module selected;
     private String query = "";
-    private List<Module> visibleModules;
-    private final Map<Module, Switch> switches = new HashMap<Module, Switch>();
-    private final Map<Object, Anim> hoverAnims = new HashMap<Object, Anim>();
-    private final ScrollState listScroll = new ScrollState();
-    private final Anim open = new Anim(0f, 16f);
+    private List<Module> visibleModules = new ArrayList<Module>();
+    private final List<Category> tabs = new ArrayList<Category>();
+    private final ScrollState gridScroll = new ScrollState();
+    private final Anim open = new Anim(0f, 14f);
 
     private TextField search;
     private SettingsList details;
-    private Switch enabledSwitch;
+    private Button powerButton;
     private KeybindButton keybindButton;
     private Button hudButton;
     private Button resetButton;
-    private Button hudEditorButton;
-    private Button settingsButton;
-    /** Only in versions that render cosmetics. */
-    private Button cosmeticsButton;
+    private final List<Button> hotbar = new ArrayList<Button>();
+    private Button closeButton;
 
     public ModMenuScreen(MedirianScreen parent) {
         super(parent);
@@ -77,14 +84,25 @@ public final class ModMenuScreen extends MedirianScreen {
 
     @Override
     protected void init() {
-        pw = Math.min(660, width - 32);
-        ph = Math.min(390, height - 32);
-        px = (width - pw) / 2f;
-        py = (height - ph) / 2f;
-        listX = px + SIDEBAR_W + 10;
-        listW = Math.min(230, (pw - SIDEBAR_W) * 0.44f);
-        detailX = listX + listW + 12;
-        detailW = px + pw - detailX - 12;
+        pw = Math.min(width - TAB_W - 24, 640);
+        ph = Math.min(height - 20, 380);
+        px = (width - pw + TAB_W) / 2;
+        py = (height - ph) / 2;
+        detailW = Math.max(176, Math.min(232, Math.round(pw * 0.36f)));
+        detailX = px + pw - 8 - detailW;
+        gridX = px + 8;
+        gridY = py + HEADER_H + 16;
+        gridW = detailX - 8 - gridX;
+        gridH = py + ph - FOOTER_H - 6 - gridY;
+        columns = Math.max(1, (gridW + TILE_GAP) / (TILE_W + TILE_GAP));
+
+        tabs.clear();
+        tabs.add(null);
+        for (Category c : Category.values()) {
+            if (!Medirian.get().modules().byCategory(c).isEmpty()) {
+                tabs.add(c);
+            }
+        }
 
         if (search == null) {
             search = new TextField(this, query, 32)
@@ -94,29 +112,29 @@ public final class ModMenuScreen extends MedirianScreen {
                         refreshList();
                     });
         }
-        search.bounds(listX, py + 12, listW, 16);
-        hudEditorButton = new Button(I18n.tr("ui.hudEditor", "Edit HUD"), Button.Style.PRIMARY,
-                () -> Medirian.get().platform().openScreen(new HudEditorScreen(this)))
-                .bounds(px + 10, py + ph - 46, SIDEBAR_W - 20, 16);
-        settingsButton = new Button(I18n.tr("ui.settings", "Settings"), Button.Style.SECONDARY,
-                () -> Medirian.get().platform().openScreen(new SettingsScreen(this)))
-                .bounds(px + 10, py + ph - 26, SIDEBAR_W - 20, 16);
-        cosmeticsButton = Medirian.get().cosmetics().available()
-                ? new Button(I18n.tr("ui.cosmetics", "Cosmetics"), Button.Style.SECONDARY,
-                        () -> Medirian.get().platform().openScreen(new CosmeticsScreen(this)))
-                        .bounds(px + 10, py + ph - 66, SIDEBAR_W - 20, 16)
-                : null;
-        refreshList();
-        if (selected == null && !visibleModules.isEmpty()) {
-            select(visibleModules.get(0));
-        } else if (selected != null) {
-            select(selected);
+        int searchW = Math.min(170, pw / 3);
+        search.bounds(px + pw - 8 - 18 - 6 - searchW, py + 7, searchW, 16);
+        closeButton = new Button("", Button.Style.SECONDARY, this::close).icon("close").bounds(px + pw - 8 - 18, py + 7, 18, 16);
+
+        hotbar.clear();
+        hotbar.add(new Button(I18n.tr("ui.hudEditor", "Edit HUD"), Button.Style.SECONDARY,
+                () -> Medirian.get().platform().openScreen(new HudEditorScreen(this))).icon("hudedit"));
+        if (Medirian.get().cosmetics().available()) {
+            hotbar.add(new Button(I18n.tr("ui.cosmetics", "Cosmetics"), Button.Style.SECONDARY,
+                    () -> Medirian.get().platform().openScreen(new CosmeticsScreen(this))).icon("cosmetics"));
         }
+        hotbar.add(new Button(I18n.tr("ui.waypoints", "Waypoints"), Button.Style.SECONDARY,
+                () -> Medirian.get().platform().openScreen(new WaypointsScreen(this))).icon("waypoints"));
+        hotbar.add(new Button(I18n.tr("ui.settings", "Settings"), Button.Style.SECONDARY,
+                () -> Medirian.get().platform().openScreen(new SettingsScreen(this))).icon("settings"));
+
+        refreshList();
+        select(selected);
     }
 
     private void refreshList() {
         visibleModules = Medirian.get().modules().search(query, query.isEmpty() ? category : null);
-        listScroll.reset();
+        gridScroll.reset();
     }
 
     private void select(Module module) {
@@ -126,11 +144,12 @@ public final class ModMenuScreen extends MedirianScreen {
         if (module == null) {
             return;
         }
-        enabledSwitch = new Switch(module::isEnabled, module::setEnabled);
+        powerButton = new Button(() -> module.isEnabled() ? I18n.tr("ui.modmenu.on", "Enabled") : I18n.tr("ui.modmenu.off", "Disabled"),
+                Button.Style.SECONDARY, module::toggle);
         keybindButton = new KeybindButton(this, module.keybind());
         hudButton = module.hasHud()
                 ? new Button(I18n.tr("ui.modmenu.position", "Position"), Button.Style.SECONDARY,
-                        () -> Medirian.get().platform().openScreen(new HudEditorScreen(this, module)))
+                        () -> Medirian.get().platform().openScreen(new HudEditorScreen(this, module))).icon("hudedit")
                 : null;
         resetButton = new Button(I18n.tr("ui.modmenu.reset", "Reset"), Button.Style.GHOST, () -> {
             for (Setting<?> setting : module.settings()) {
@@ -140,18 +159,6 @@ public final class ModMenuScreen extends MedirianScreen {
             }
             module.keybind().reset();
         });
-        if (module.isLocked()) {
-            details.add(new SettingsList.InfoRow(I18n.tr("ui.modmenu.enabled", "Enabled"), module::lockReason));
-        } else {
-            details.add(new SettingsList.ControlRow(I18n.tr("ui.modmenu.enabled", "Enabled"), null, enabledSwitch, 22));
-        }
-        details.add(new SettingsList.ControlRow(
-                module.keybindWorksWhenDisabled() ? I18n.tr("ui.modmenu.keybind", "Keybind") : I18n.tr("ui.modmenu.keybindHold", "Activation key"),
-                null, keybindButton, 72));
-        if (hudButton != null) {
-            details.add(new SettingsList.ControlRow(I18n.tr("ui.modmenu.hud", "HUD element"),
-                    I18n.tr("ui.modmenu.hud.desc", "Move and scale it in the HUD editor"), hudButton, 72));
-        }
         details.addSettings(module.settings());
     }
 
@@ -162,240 +169,329 @@ public final class ModMenuScreen extends MedirianScreen {
         if (!closeKeyArmed && !Medirian.get().platform().input().isKeyDown(Medirian.get().settings().modMenuKey.key())) {
             closeKeyArmed = true;
         }
-        Theme theme = Theme.current();
+        Theme t = Theme.current();
         renderBackdrop(g);
         float appear = open.target(1f).get();
+        int offset = Math.round((1f - appear) * 10f);
         g.push();
-        float offset = (1f - appear) * 8f;
         g.translate(0, offset);
+        float my2 = my - offset;
 
-        UiDraw.shadow(g, px, py, pw, ph, 8, 4);
-        UiDraw.roundRectBordered(g, px, py, pw, ph, 8, theme.panel, theme.border);
-        // sidebar
-        UiDraw.roundRect(g, px + 1, py + 1, SIDEBAR_W, ph - 2, 7, theme.surface);
-        g.fill((int) (px + SIDEBAR_W), (int) py + 1, (int) (px + SIDEBAR_W) + 1, (int) (py + ph) - 1, theme.border);
+        // shadow, tabs behind the window, the window, then the selected tab in front of it
+        g.fill(px + 3, py + 3, px + pw + 3, py + ph + 3, 0x50000000);
+        renderTabs(g, t, mx, my2, false);
+        Pixel.panel(g, px, py, pw, ph);
+        renderTabs(g, t, mx, my2, true);
 
-        renderBrand(g, theme);
-        renderCategories(g, theme, mx, my - offset);
-        hudEditorButton.render(g, mx, my - offset);
-        settingsButton.render(g, mx, my - offset);
-        if (cosmeticsButton != null) {
-            cosmeticsButton.render(g, mx, my - offset);
-        }
-
-        search.render(g, mx, my - offset);
-        renderModuleList(g, theme, mx, my - offset);
-        g.fill((int) (detailX - 6), (int) py + 12, (int) (detailX - 5), (int) (py + ph) - 12, theme.border);
-        renderDetails(g, theme, mx, my - offset);
+        renderHeader(g, t, mx, my2);
+        renderGrid(g, t, mx, my2);
+        renderDetails(g, t, mx, my2);
+        renderFooter(g, t, mx, my2);
+        renderTabTooltip(g, t, mx, my2);
         g.pop();
     }
 
-    private void renderBrand(Gfx g, Theme theme) {
-        float bx = px + 12;
-        float by = py + 13;
-        g.texture("gui/mark.png", (int) bx, (int) by, 24, 13, 0xFFFFFFFF);
-        g.text("§lMEDIRIAN", bx + 30, by - 1, theme.text, false);
-        g.push();
-        g.translate(bx + 30, by + 9);
-        g.scale(0.7f, 0.7f);
-        g.text("CLIENT", 0, 0, theme.textDim, false);
-        g.pop();
-        if (theme.decorations) {
-            UiDraw.moon(g, px + SIDEBAR_W - 13, by + 5, 3.5f, Colors.withAlpha(0xFFE9E2F5, 0xB0), theme.surface);
+    private void renderHeader(Gfx g, Theme t, float mx, float my) {
+        g.texture("gui/mark.png", px + 8, py + 6, 32, 18, 0xFFFFFFFF);
+        Pixel.text(g, "MEDIRIAN CLIENT", px + 46, py + 7, t.text);
+        String section = query.isEmpty()
+                ? (category == null ? I18n.tr("category.all", "All") : category.displayName())
+                : I18n.tr("ui.modmenu.results", "Search results");
+        g.text(section, px + 46, py + 17, t.pumpkinLight, false);
+        search.render(g, mx, my);
+        Pixel.icon(g, "search", search.x + search.w - 17, search.y, 1, 0xFFFFFFFF);
+        closeButton.render(g, mx, my);
+        Pixel.groove(g, px + 4, py + HEADER_H, pw - 8);
+    }
+
+    private int tabY(int index) {
+        return py + HEADER_H + 4 + index * (TAB_H + 3);
+    }
+
+    private void renderTabs(Gfx g, Theme t, float mx, float my, boolean selectedOnly) {
+        for (int i = 0; i < tabs.size(); i++) {
+            Category c = tabs.get(i);
+            boolean active = query.isEmpty() && category == c;
+            if (active != selectedOnly) {
+                continue;
+            }
+            int y = tabY(i);
+            int x = px - TAB_W + (active ? 0 : 3);
+            boolean hovered = mx >= x && mx < px && my >= y && my < y + TAB_H;
+            if (active) {
+                // merges into the window: no outline on its right side
+                Pixel.frame(g, x, y, TAB_W + 3, TAB_H, t.panel, t.panelLight, t.panelDark);
+                g.fill(px, y + 1, px + 2, y + TAB_H - 1, t.panel);
+                g.fill(px - 2, y + TAB_H - 2, px + 2, y + TAB_H - 1, t.panelDark);
+            } else {
+                Pixel.frame(g, x, y, TAB_W, TAB_H, hovered ? t.surfaceLight : t.surfaceDark, hovered ? 0xFF4C3870 : t.surface, t.panelDark);
+            }
+            String icon = c == null ? "cat-all" : "cat-" + c.name().toLowerCase();
+            Pixel.icon(g, icon, x + (active ? 6 : 5), y + 4, 1, active || hovered ? 0xFFFFFFFF : 0xB0FFFFFF);
         }
     }
 
-    private void renderCategories(Gfx g, Theme theme, float mx, float my) {
-        float y = py + 40;
-        y = categoryItem(g, theme, null, I18n.tr("category.all", "All"), y, mx, my);
-        for (Category c : Category.values()) {
-            if (!Medirian.get().modules().byCategory(c).isEmpty()) {
-                y = categoryItem(g, theme, c, c.displayName(), y, mx, my);
+    private void renderTabTooltip(Gfx g, Theme t, float mx, float my) {
+        for (int i = 0; i < tabs.size(); i++) {
+            int y = tabY(i);
+            if (mx >= px - TAB_W && mx < px && my >= y && my < y + TAB_H) {
+                Category c = tabs.get(i);
+                String label = c == null ? I18n.tr("category.all", "All") : c.displayName();
+                int count = c == null ? Medirian.get().modules().all().size() : Medirian.get().modules().byCategory(c).size();
+                tooltip(g, t, label + "  §7" + count, Math.round(mx) + 8, Math.round(my) - 4);
+                return;
             }
         }
-        // footer: version and target
-        String footer = "v" + BuildInfo.VERSION + " · " + Medirian.get().platform().minecraftVersion();
-        g.push();
-        g.translate(px + 12, py + ph - (cosmeticsButton != null ? 78 : 58));
-        g.scale(0.75f, 0.75f);
-        g.text(footer, 0, 0, theme.textMuted, false);
-        g.pop();
     }
 
-    private float categoryItem(Gfx g, Theme theme, Category c, String label, float y, float mx, float my) {
-        float x = px + 8;
-        float w = SIDEBAR_W - 16;
-        float h = 17;
-        boolean active = query.isEmpty() && category == c;
-        boolean hovered = mx >= x && my >= y && mx < x + w && my < y + h;
-        float t = anim(c == null ? "all" : c, hovered || active);
-        if (active) {
-            UiDraw.roundRect(g, x, y, w, h, 3, theme.accentSoft);
-            UiDraw.roundRect(g, x, y + 4, 2, h - 8, 1, theme.accent);
-        } else if (t > 0.01f) {
-            UiDraw.roundRect(g, x, y, w, h, 3, Colors.fade(theme.elevated, t));
+    private static void tooltip(Gfx g, Theme t, String text, int x, int y) {
+        int w = g.textWidth(text) + 8;
+        Pixel.frame(g, x, y, w, 14, t.panelDark, t.accentDark, t.panelDark);
+        g.text(text, x + 4, y + 3, t.text, false);
+    }
+
+    private void renderGrid(Gfx g, Theme t, float mx, float my) {
+        int enabled = 0;
+        for (Module module : visibleModules) {
+            if (module.isEnabled()) {
+                enabled++;
+            }
         }
-        int color = active ? theme.text : Colors.lerp(theme.textDim, theme.text, t);
-        g.text(label, x + 9, y + 5, color, false);
-        int count = c == null ? Medirian.get().modules().all().size() : Medirian.get().modules().byCategory(c).size();
-        String countText = String.valueOf(count);
-        g.text(countText, x + w - 6 - g.textWidth(countText), y + 5, theme.textMuted, false);
-        return y + h + 2;
-    }
+        String count = I18n.tr("ui.modmenu.count", "{0} modules", visibleModules.size());
+        g.text(count, gridX + 1, py + HEADER_H + 5, t.textMuted, false);
+        String on = I18n.tr("ui.modmenu.enabledCount", "{0} on", enabled);
+        int onW = g.textWidth(on);
+        g.fill(gridX + gridW - onW - 7, py + HEADER_H + 7, gridX + gridW - onW - 3, py + HEADER_H + 11, t.pumpkin);
+        g.text(on, gridX + gridW - onW, py + HEADER_H + 5, t.textDim, false);
 
-    private void renderModuleList(Gfx g, Theme theme, float mx, float my) {
-        float top = py + 34;
-        float bottom = py + ph - 10;
-        float viewH = bottom - top;
-        listScroll.setBounds(visibleModules.size() * (CARD_H + CARD_GAP), viewH);
-        float offset = listScroll.offset();
         if (visibleModules.isEmpty()) {
             String empty = I18n.tr("ui.modmenu.empty", "No modules match your search");
-            g.text(empty, listX + (listW - g.textWidth(empty)) / 2f, top + 20, theme.textMuted, false);
+            g.text(empty, gridX + (gridW - g.textWidth(empty)) / 2f, gridY + 30, t.textMuted, false);
+            Pixel.icon(g, "cat-misc", gridX + gridW / 2f - 16, gridY + 44, 2, 0x90FFFFFF);
             return;
         }
-        boolean inside = mx >= listX && mx < listX + listW && my >= top && my < bottom;
-        g.enableScissor((int) listX, (int) top, (int) (listX + listW), (int) bottom);
-        float y = top - offset;
-        for (Module module : visibleModules) {
-            if (y + CARD_H >= top && y <= bottom) {
-                renderCard(g, theme, module, y, inside ? mx : -1, inside ? my : -1);
+        int rows = (visibleModules.size() + columns - 1) / columns;
+        gridScroll.setBounds(rows * (TILE_H + TILE_GAP) - TILE_GAP + 4, gridH);
+        int scroll = Math.round(gridScroll.offset());
+        int used = columns * TILE_W + (columns - 1) * TILE_GAP;
+        int left = gridX + (gridW - used) / 2;
+        boolean inside = mx >= gridX && mx < gridX + gridW && my >= gridY && my < gridY + gridH;
+        g.enableScissor(gridX - 2, gridY - 2, gridX + gridW + 2, gridY + gridH);
+        for (int i = 0; i < visibleModules.size(); i++) {
+            int x = left + (i % columns) * (TILE_W + TILE_GAP);
+            int y = gridY + 2 + (i / columns) * (TILE_H + TILE_GAP) - scroll;
+            if (y + TILE_H < gridY || y > gridY + gridH) {
+                continue;
             }
-            y += CARD_H + CARD_GAP;
+            renderTile(g, t, visibleModules.get(i), x, y, inside ? mx : -1, inside ? my : -1);
         }
         g.disableScissor();
-        listScroll.renderBar(g, listX + listW + 3, top);
+        gridScroll.renderBar(g, gridX + gridW + 2, gridY);
     }
 
-    private void renderCard(Gfx g, Theme theme, Module module, float y, float mx, float my) {
+    private void renderTile(Gfx g, Theme t, Module module, int x, int y, float mx, float my) {
+        boolean on = module.isEnabled();
+        boolean hovered = mx >= x && my >= y && mx < x + TILE_W && my < y + TILE_H;
         boolean active = module == selected;
-        boolean hovered = mx >= listX && my >= y && mx < listX + listW && my < y + CARD_H;
-        float t = anim(module, hovered);
-        int fill = active ? theme.elevated : Colors.lerp(theme.surface, theme.elevated, t * 0.7f);
-        UiDraw.roundRectBordered(g, listX, y, listW, CARD_H, 4, fill, active ? Colors.withAlpha(theme.accent, 0xB0) : theme.border);
-        if (module.isEnabled()) {
-            UiDraw.roundRect(g, listX + 4, y + 9, 2, CARD_H - 18, 1, theme.accent);
+        int fill = hovered ? t.surfaceLight : on ? 0xFF2E1F3C : t.surface;
+        Pixel.frame(g, x, y, TILE_W, TILE_H, fill, hovered ? 0xFF4C3870 : t.surfaceLight, t.surfaceDark);
+        if (on) {
+            // warm candlelight behind the icon
+            g.fill(x + 15, y + 6, x + TILE_W - 15, y + 36, Colors.withAlpha(t.pumpkin, 0x18));
+            g.fill(x + 19, y + 4, x + TILE_W - 19, y + 38, Colors.withAlpha(t.pumpkin, 0x14));
         }
-        if (module.isLocked()) {
-            String locked = I18n.tr("ui.modmenu.locked", "Locked");
-            g.push();
-            g.translate(listX + listW - 8 - g.textWidth(locked) * 0.8f, y + (CARD_H - 7) / 2f);
-            g.scale(0.8f, 0.8f);
-            g.text(locked, 0, 0, theme.textMuted, false);
-            g.pop();
+        Pixel.icon(g, Pixel.moduleIcon(module.id()), x + (TILE_W - 32) / 2, y + 4, 2, on ? 0xFFFFFFFF : 0x8CFFFFFF);
+        // the name on one or two lines
+        List<String> lines = UiDraw.wrap(g, module.displayName(), TILE_W - 6);
+        int color = on ? t.text : t.textDim;
+        if (lines.size() == 1) {
+            String name = UiDraw.ellipsize(g, lines.get(0), TILE_W - 6);
+            g.text(name, x + (TILE_W - g.textWidth(name)) / 2f, y + 43, color, false);
         } else {
-            Switch toggle = switches.get(module);
-            if (toggle == null) {
-                toggle = new Switch(module::isEnabled, module::setEnabled);
-                switches.put(module, toggle);
+            String first = UiDraw.ellipsize(g, lines.get(0), TILE_W - 6);
+            StringBuilder rest = new StringBuilder(lines.get(1));
+            for (int i = 2; i < lines.size(); i++) {
+                rest.append(' ').append(lines.get(i));
             }
-            toggle.bounds(listX + listW - 30, y + (CARD_H - 12) / 2f, 22, 12);
-            toggle.render(g, mx, my);
+            String second = UiDraw.ellipsize(g, rest.toString(), TILE_W - 6);
+            g.text(first, x + (TILE_W - g.textWidth(first)) / 2f, y + 38, color, false);
+            g.text(second, x + (TILE_W - g.textWidth(second)) / 2f, y + 48, color, false);
         }
-        float textW = listW - 50;
-        g.text(UiDraw.ellipsize(g, module.displayName(), (int) textW), listX + 11, y + 6, theme.text, false);
-        g.push();
-        g.translate(listX + 11, y + 17);
-        g.scale(0.8f, 0.8f);
-        g.text(UiDraw.ellipsize(g, module.displayDescription(), (int) (textW / 0.8f)), 0, 0, theme.textMuted, false);
-        g.pop();
+        renderLamp(g, t, module, x + 4, y + TILE_H - 14, TILE_W - 8, 11, mx, my);
+        if (active) {
+            Pixel.highlight(g, x, y, TILE_W, TILE_H, t.pumpkinLight);
+        } else if (hovered) {
+            Pixel.highlight(g, x, y, TILE_W, TILE_H, t.accentHover);
+        }
     }
 
-    private void renderDetails(Gfx g, Theme theme, float mx, float my) {
+    /** The ON/OFF lamp of a tile: a lit pumpkin bar or a dark well. */
+    private void renderLamp(Gfx g, Theme t, Module module, int x, int y, int w, int h, float mx, float my) {
+        boolean hovered = mx >= x && my >= y && mx < x + w && my < y + h;
+        String label;
+        int color;
+        if (module.isLocked()) {
+            Pixel.inset(g, x, y, w, h, t.inset);
+            label = I18n.tr("ui.modmenu.locked", "Locked");
+            color = t.textMuted;
+        } else if (module.isEnabled()) {
+            Pixel.frame(g, x, y, w, h, hovered ? t.pumpkinLight : t.pumpkin, t.ember, t.pumpkinDark);
+            label = I18n.tr("ui.modmenu.lampOn", "ON");
+            color = t.onPumpkin;
+        } else {
+            Pixel.inset(g, x, y, w, h, hovered ? t.surfaceDark : t.inset);
+            label = I18n.tr("ui.modmenu.lampOff", "OFF");
+            color = hovered ? t.textDim : t.textMuted;
+        }
+        label = UiDraw.ellipsize(g, label, w - 4);
+        g.text(label, x + (w - g.textWidth(label)) / 2f, y + 2, color, false);
+    }
+
+    private void renderDetails(Gfx g, Theme t, float mx, float my) {
+        int top = py + HEADER_H + 6;
+        int bottom = py + ph - FOOTER_H - 4;
+        Pixel.inset(g, detailX, top, detailW, bottom - top, t.panelDark);
+        int x = detailX + 6;
+        int w = detailW - 12;
         if (selected == null) {
+            renderOverview(g, t, x, top + 8, w);
             return;
         }
-        float y = py + 12;
-        g.text("§l" + selected.displayName(), detailX, y + 1, theme.text, false);
-        String chip = selected.category().displayName().toUpperCase();
-        float chipW = g.textWidth(chip) * 0.7f + 8;
-        float chipX = detailX + detailW - chipW;
-        UiDraw.roundRect(g, chipX, y, chipW, 11, 3, theme.accentSoft);
-        g.push();
-        g.translate(chipX + 4, y + 3);
-        g.scale(0.7f, 0.7f);
-        g.text(chip, 0, 0, theme.accentHover, false);
-        g.pop();
-        y += 14;
-        List<String> lines = UiDraw.wrap(g, selected.displayDescription(), (int) detailW);
-        for (int i = 0; i < Math.min(2, lines.size()); i++) {
-            g.text(lines.get(i), detailX, y, theme.textDim, false);
+        int y = top + 6;
+        // icon slot, name, category
+        Pixel.inset(g, x, y, 38, 38, t.inset);
+        Pixel.icon(g, Pixel.moduleIcon(selected.id()), x + 3, y + 3, 2, 0xFFFFFFFF);
+        int textX = x + 44;
+        Pixel.text(g, UiDraw.ellipsize(g, selected.displayName(), w - 44), textX, y + 4, t.text);
+        String cat = selected.category().displayName();
+        Pixel.icon(g, "cat-" + selected.category().name().toLowerCase(), textX - 1, y + 15, 1, 0xFFFFFFFF);
+        g.text(cat, textX + 17, y + 19, t.textMuted, false);
+        y += 44;
+        List<String> lines = UiDraw.wrap(g, selected.displayDescription(), w);
+        for (int i = 0; i < Math.min(3, lines.size()); i++) {
+            g.text(lines.get(i), x, y, t.textDim, false);
             y += 10;
         }
         y += 4;
-        g.fill((int) detailX, (int) y, (int) (detailX + detailW), (int) y + 1, theme.border);
-        y += 4;
-        float listBottom = py + ph - 30;
-        details.bounds(detailX, y, detailW + 6, listBottom - y);
-        details.render(g, mx, my);
-        // wide enough for longer translations ("Zurücksetzen", "Restablecer")
-        float resetW = Math.max(60, g.textWidth(I18n.tr("ui.modmenu.reset", "Reset")) + 14);
-        resetButton.bounds(detailX + detailW - resetW, py + ph - 24, resetW, 14);
+        if (selected.isLocked()) {
+            Pixel.inset(g, x, y, w, 16, t.inset);
+            g.text(UiDraw.ellipsize(g, selected.lockReason(), w - 8), x + 4, y + 4, t.warning, false);
+        } else {
+            powerButton.style(selected.isEnabled() ? Button.Style.PRIMARY : Button.Style.SECONDARY);
+            powerButton.bounds(x, y, w - 76, 16);
+            powerButton.render(g, mx, my);
+            keybindButton.bounds(x + w - 72, y, 72, 16);
+            keybindButton.render(g, mx, my);
+        }
+        y += 20;
+        if (hudButton != null) {
+            hudButton.bounds(x, y, (w - 4) / 2f, 16);
+            hudButton.render(g, mx, my);
+        }
+        float resetW = Math.max(56, g.textWidth(I18n.tr("ui.modmenu.reset", "Reset")) + 14);
+        resetButton.bounds(x + w - resetW, y, resetW, 16);
         resetButton.render(g, mx, my);
+        y += 22;
+        Pixel.groove(g, x, y, w);
+        y += 4;
+        details.bounds(x, y, w + 4, bottom - 4 - y);
+        if (details.isEmpty()) {
+            String none = I18n.tr("ui.modmenu.noSettings", "Nothing more to set up here.");
+            g.text(UiDraw.ellipsize(g, none, w), x, y + 6, t.textMuted, false);
+        } else {
+            details.render(g, mx, my);
+        }
     }
 
-    private float anim(Object key, boolean on) {
-        Anim anim = hoverAnims.get(key);
-        if (anim == null) {
-            anim = new Anim(0f, 18f);
-            hoverAnims.put(key, anim);
+    private void renderOverview(Gfx g, Theme t, int x, int y, int w) {
+        g.texture("gui/mark.png", x + (w - 64) / 2, y + 4, 64, 36, 0xFFFFFFFF);
+        y += 48;
+        String title = I18n.tr("ui.modmenu.welcome", "Welcome to Medirian Client");
+        for (String line : UiDraw.wrap(g, title, w)) {
+            Pixel.text(g, line, x + (w - g.textWidth(line)) / 2f, y, t.text);
+            y += 11;
         }
-        return anim.target(on ? 1f : 0f).get();
+        y += 4;
+        String hint = I18n.tr("ui.modmenu.hint", "Pick a module to see its settings. Click its lamp to switch it on or off.");
+        for (String line : UiDraw.wrap(g, hint, w)) {
+            g.text(line, x + (w - g.textWidth(line)) / 2f, y, t.textDim, false);
+            y += 10;
+        }
+    }
+
+    private void renderFooter(Gfx g, Theme t, float mx, float my) {
+        int y = py + ph - FOOTER_H;
+        Pixel.groove(g, px + 4, y - 2, pw - 8);
+        int x = px + 8;
+        for (Button button : hotbar) {
+            float bw = button.preferredWidth(g, 60);
+            button.bounds(x, y + 4, bw, 18);
+            button.render(g, mx, my);
+            x += Math.round(bw) + 4;
+        }
+        String version = "v" + BuildInfo.VERSION + " · " + Medirian.get().platform().minecraftVersion();
+        int vw = g.textWidth(version);
+        if (px + pw - 8 - vw > x + 4) {
+            g.text(version, px + pw - 8 - vw, y + 9, t.textMuted, false);
+        }
     }
 
     // ------------------------------------------------------------------ input
 
     @Override
     protected boolean mouseClicked(float mx, float my, int button) {
-        if (search.mouseClicked(mx, my, button) || hudEditorButton.mouseClicked(mx, my, button)
-                || settingsButton.mouseClicked(mx, my, button)
-                || (cosmeticsButton != null && cosmeticsButton.mouseClicked(mx, my, button))) {
+        float y0 = my;
+        if (search.mouseClicked(mx, y0, button) || closeButton.mouseClicked(mx, y0, button)) {
             return true;
         }
-        // categories
-        float y = py + 40;
-        if (mx >= px + 8 && mx < px + SIDEBAR_W - 8) {
-            if (my >= y && my < y + 17) {
-                setCategory(null);
+        for (Button b : hotbar) {
+            if (b.mouseClicked(mx, y0, button)) {
                 return true;
             }
-            y += 19;
-            for (Category c : Category.values()) {
-                if (Medirian.get().modules().byCategory(c).isEmpty()) {
+        }
+        // category tabs
+        if (mx >= px - TAB_W && mx < px) {
+            for (int i = 0; i < tabs.size(); i++) {
+                int y = tabY(i);
+                if (my >= y && my < y + TAB_H) {
+                    setCategory(tabs.get(i));
+                    return true;
+                }
+            }
+        }
+        // tiles
+        if (mx >= gridX && mx < gridX + gridW && my >= gridY && my < gridY + gridH && !visibleModules.isEmpty()) {
+            int used = columns * TILE_W + (columns - 1) * TILE_GAP;
+            int left = gridX + (gridW - used) / 2;
+            int scroll = Math.round(gridScroll.offset());
+            for (int i = 0; i < visibleModules.size(); i++) {
+                int x = left + (i % columns) * (TILE_W + TILE_GAP);
+                int y = gridY + 2 + (i / columns) * (TILE_H + TILE_GAP) - scroll;
+                if (mx < x || my < y || mx >= x + TILE_W || my >= y + TILE_H) {
                     continue;
                 }
-                if (my >= y && my < y + 17) {
-                    setCategory(c);
-                    return true;
-                }
-                y += 19;
-            }
-        }
-        // module cards
-        float top = py + 34;
-        float bottom = py + ph - 10;
-        if (mx >= listX && mx < listX + listW && my >= top && my < bottom) {
-            float cardY = top - listScroll.offset();
-            for (Module module : visibleModules) {
-                if (my >= cardY && my < cardY + CARD_H) {
-                    Switch toggle = switches.get(module);
-                    if (toggle != null && !module.isLocked() && toggle.mouseClicked(mx, my, button)) {
-                        return true;
-                    }
-                    if (button == 1) {
+                Module module = visibleModules.get(i);
+                boolean onLamp = my >= y + TILE_H - 14;
+                if (button == 1 || (button == 0 && onLamp)) {
+                    if (!module.isLocked()) {
                         module.toggle();
-                    } else {
-                        select(module);
                     }
-                    return true;
+                } else if (button == 0) {
+                    select(module);
                 }
-                cardY += CARD_H + CARD_GAP;
+                return true;
             }
         }
-        if (details != null && details.mouseClicked(mx, my, button)) {
-            return true;
+        if (selected != null) {
+            if (!selected.isLocked() && (powerButton.mouseClicked(mx, my, button) || keybindButton.mouseClicked(mx, my, button))) {
+                return true;
+            }
+            if ((hudButton != null && hudButton.mouseClicked(mx, my, button)) || resetButton.mouseClicked(mx, my, button)) {
+                return true;
+            }
+            return details.mouseClicked(mx, my, button);
         }
-        return resetButton != null && resetButton.mouseClicked(mx, my, button);
+        return false;
     }
 
     private void setCategory(Category c) {
@@ -424,8 +520,8 @@ public final class ModMenuScreen extends MedirianScreen {
 
     @Override
     protected boolean mouseScrolled(float mx, float my, double amount) {
-        if (mx >= listX && mx < listX + listW) {
-            listScroll.scroll(amount);
+        if (mx >= gridX && mx < gridX + gridW && my >= gridY && my < gridY + gridH) {
+            gridScroll.scroll(amount);
             return true;
         }
         return details != null && details.mouseScrolled(mx, my, amount);

@@ -18,7 +18,8 @@ export function defaultSettings(localDistributionDir: string): LauncherSettings 
   return {
     version: 1,
     language: 'en',
-    theme: 'auto',
+    sceneMotion: true,
+    winterSnow: true,
     afterLaunch: 'keep',
     updateChannel: localDistributionDir ? 'local' : 'stable',
     manifestUrl: '',
@@ -45,7 +46,9 @@ export class SettingsStore {
   }
 
   static async load(file: string, defaults: LauncherSettings): Promise<SettingsStore> {
-    const stored = await readJson<Partial<LauncherSettings>>(file, {});
+    const stored = await readJson<Partial<LauncherSettings> & { theme?: unknown }>(file, {});
+    // seasonal themes are gone: Halloween is Medirian's look all year
+    delete stored.theme;
     return new SettingsStore(file, { ...defaults, ...stored, version: 1 });
   }
 

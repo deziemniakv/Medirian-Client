@@ -1,10 +1,9 @@
 package dev.medirian.ui.widget;
 
 import dev.medirian.input.Key;
-import dev.medirian.render.Colors;
 import dev.medirian.render.Gfx;
 import dev.medirian.render.Theme;
-import dev.medirian.render.UiDraw;
+import dev.medirian.render.Pixel;
 import dev.medirian.setting.NumberSetting;
 
 /** Horizontal slider with value label. Arrow keys adjust by one step while hovered. */
@@ -61,16 +60,21 @@ public final class Slider extends Widget {
         float hov = dragging ? 1f : hoverValue(mx, my);
         String value = model.label();
         int valueWidth = g.textWidth(value);
-        float trackW = Math.max(1, w - Math.max(valueWidth, 30) - 6);
+        int trackW = Math.max(8, Math.round(w - Math.max(valueWidth, 30) - 6));
         trackWidth = trackW;
-        float trackY = y + h / 2f - 1.5f;
+        int x0 = Math.round(x);
+        int trackY = Math.round(y + h / 2f) - 3;
         float p = (float) model.progress();
-        UiDraw.roundRect(g, x, trackY, trackW, 3, 1.5f, theme.borderStrong);
-        UiDraw.roundRect(g, x, trackY, Math.max(3, trackW * p), 3, 1.5f, theme.accent);
-        float knob = 7 + hov;
-        float knobX = x + trackW * p - knob / 2f;
-        UiDraw.roundRect(g, knobX, y + h / 2f - knob / 2f, knob, knob, knob / 2f, Colors.lerp(0xFFE6E1F0, 0xFFFFFFFF, hov));
-        g.text(value, x + w - valueWidth, y + (h - g.fontHeight()) / 2f + 1, theme.textDim, false);
+        Pixel.inset(g, x0, trackY, trackW, 6, theme.inset);
+        int filled = Math.round((trackW - 4) * p);
+        if (filled > 0) {
+            g.fill(x0 + 2, trackY + 2, x0 + 2 + filled, trackY + 4, theme.pumpkin);
+        }
+        // a Minecraft-style block knob
+        int knobX = Math.round(x0 + 1 + (trackW - 8) * p);
+        Pixel.frame(g, knobX, Math.round(y), 6, Math.round(h), hov > 0.5f ? theme.text : theme.textDim,
+                hov > 0.5f ? 0xFFFFFFFF : theme.text, theme.textMuted);
+        g.text(value, x + w - valueWidth, Math.round(y + (h - g.fontHeight()) / 2f + 1), hov > 0.5f ? theme.text : theme.textDim, false);
     }
 
     @Override

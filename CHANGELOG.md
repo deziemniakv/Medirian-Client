@@ -2,6 +2,17 @@
 
 All notable changes to Medirian Client. The launcher shows the newest entries on its home screen.
 
+## 0.2.0 — 2026-10-05 — A Night in Medirian
+
+- Medirian Client finally carries its real name everywhere: Medirian. Your settings and profiles move over automatically.
+- A brand-new look: cozy pixel art and a Halloween night all year round — the logo's purple, pumpkin orange, moonlight, pumpkins and drifting fog. Halloween is part of Medirian, not a season.
+- Medirian's own main menu in the game instead of Minecraft's: a night scene with a cabin and glowing pumpkins, the Medirian Client logo and a new menu (Singleplayer, Multiplayer, Medirian Mods, Options, Language, Quit). You can switch back to Minecraft's in Settings → General.
+- A new Mod Menu: every module has its own pixel-art icon and an ON/OFF lamp. Click a tile to see its settings, click its lamp (or right-click the tile) to switch it on or off. Category tabs on the side, search at the top, Edit HUD, Cosmetics, Waypoints and Settings at the bottom.
+- Settings, Cosmetics, the HUD editor, Waypoints and notifications in the game use the new pixel style too.
+- The launcher is rebuilt from scratch: an animated night behind it, a notice board with the latest news, a launch bar with your profile and a big pumpkin PLAY button, profiles listed like worlds, and Medirian's own pixel font.
+- In winter (December to 6 January) snow may fall over the night; switch it off in the settings. The animated night can be switched off in the launcher too.
+- New app and mod icon.
+
 ## 0.1.4 — 2026-10-04 — Polish & Platform
 
 - Smoother menus and HUD: rounded corners, switches and circles now have anti-aliased edges in both versions.

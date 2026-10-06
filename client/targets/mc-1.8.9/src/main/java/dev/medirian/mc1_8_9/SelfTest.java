@@ -94,16 +94,18 @@ public final class SelfTest {
         }
         switch (step) {
             case 0:
-                if (client.currentScreen instanceof TitleScreen) {
+                if (client.currentScreen instanceof ScreenBridge && ((ScreenBridge) client.currentScreen).medirian() instanceof dev.medirian.ui.TitleMenuScreen) {
                     // the menu screenshots are compared with baselines (scripts/visual-test.mjs):
-                    // no animations, toasts or seasonal theme (runtime only, the settings are untouched)
+                    // no animations, toasts or winter snow (runtime only, the settings are untouched)
                     dev.medirian.render.Anim.setEnabled(false);
-                    dev.medirian.render.Theme.apply(dev.medirian.render.Theme.Mode.DEFAULT);
+                    dev.medirian.render.Theme.setWinterSnow(false);
                     medirian.notifications().setEnabled(false);
                     next(40);
                 }
                 return;
             case 1:
+                // Medirian's main menu replaced Minecraft's title screen
+                shot(client, "0-title");
                 medirian.platform().openScreen(new ModMenuScreen(null));
                 next(30);
                 return;
@@ -291,15 +293,16 @@ public final class SelfTest {
                 next(20);
                 return;
             case 19:
-                // the Christmas theme (runtime only, the setting is untouched)
-                dev.medirian.render.Theme.apply(dev.medirian.render.Theme.Mode.CHRISTMAS);
+                // winter snow over the menu (forced, whatever the date)
+                dev.medirian.render.Theme.previewSnow(true);
                 // and a translation other than English/Polish (umlauts in the font)
                 dev.medirian.i18n.I18n.setLanguage(dev.medirian.i18n.I18n.Language.DE_DE);
                 medirian.platform().openScreen(new ModMenuScreen(null));
                 next(30);
                 return;
             case 20:
-                shot(client, "9-christmas");
+                shot(client, "9-winter");
+                dev.medirian.render.Theme.previewSnow(false);
                 medirian.platform().openScreen(new HudEditorScreen(null));
                 next(20);
                 return;

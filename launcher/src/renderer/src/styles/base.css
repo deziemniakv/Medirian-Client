@@ -1,0 +1,471 @@
+/* Reset, typography and the pixel-art building blocks shared by every page. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--night-0);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.45;
+  overflow: hidden;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+img {
+  image-rendering: pixelated;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+::selection {
+  background: var(--accent-dark);
+  color: var(--text);
+}
+
+.boot {
+  height: 100%;
+  background: var(--night-0);
+}
+
+/* ------------------------------------------------------------------ type */
+
+.pixel {
+  font-family: var(--font-pixel);
+  font-size: 16px;
+  line-height: 18px;
+  -webkit-font-smoothing: none;
+  font-smooth: never;
+}
+
+.pixel-shadow {
+  text-shadow: var(--px) var(--px) 0 rgba(7, 4, 12, 0.8);
+}
+
+.dim {
+  color: var(--text-dim);
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.row--between {
+  justify-content: space-between;
+}
+
+.icon {
+  flex: none;
+  image-rendering: pixelated;
+}
+
+.art-icon {
+  flex: none;
+  image-rendering: pixelated;
+}
+
+/* ------------------------------------------------------------------ frames */
+
+/* A raised block: ink outline with cut corners, lit from the top left. */
+.px-frame {
+  --fill: var(--panel);
+  --light: var(--panel-light);
+  --dark: var(--panel-dark);
+  background: var(--fill);
+  border: var(--px) solid var(--ink);
+  box-shadow: inset var(--px) var(--px) 0 var(--light), inset calc(-1 * var(--px)) calc(-1 * var(--px)) 0 var(--dark);
+  clip-path: var(--cut);
+}
+
+.px-frame--surface {
+  --fill: var(--surface);
+  --light: var(--surface-light);
+  --dark: var(--surface-dark);
+}
+
+/* A sunken well. */
+.px-inset {
+  background: var(--inset);
+  border: var(--px) solid var(--ink);
+  box-shadow: inset var(--px) var(--px) 0 rgba(0, 0, 0, 0.5), inset calc(-1 * var(--px)) calc(-1 * var(--px)) 0 rgba(58, 41, 84, 0.55);
+  clip-path: var(--cut);
+}
+
+/* Drop shadow for clipped frames: put it on a wrapper. */
+.px-shadow {
+  filter: drop-shadow(4px 4px 0 rgba(7, 4, 12, 0.55));
+}
+
+.groove {
+  height: 4px;
+  border: none;
+  margin: 0;
+  background: linear-gradient(var(--panel-dark) 0 50%, var(--panel-light) 50% 100%);
+}
+
+/* ------------------------------------------------------------------ buttons */
+
+.btn {
+  --fill: var(--elevated);
+  --light: var(--surface-light);
+  --dark: var(--surface-dark);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px 2px;
+  font-family: var(--font-pixel);
+  font-size: 16px;
+  line-height: 16px;
+  -webkit-font-smoothing: none;
+  white-space: nowrap;
+  color: var(--text);
+  background: var(--fill);
+  border: var(--px) solid var(--ink);
+  box-shadow: inset var(--px) var(--px) 0 var(--light), inset calc(-1 * var(--px)) calc(-2 * var(--px)) 0 var(--dark);
+  clip-path: var(--cut);
+  cursor: pointer;
+  transition: background var(--fast), color var(--fast);
+}
+
+.btn:hover:not(:disabled) {
+  --fill: var(--surface-light);
+  --light: var(--surface-hover);
+}
+
+.btn:active:not(:disabled) {
+  box-shadow: inset var(--px) calc(2 * var(--px)) 0 var(--dark);
+  padding-top: 2px;
+  padding-bottom: 0;
+}
+
+.btn:disabled {
+  cursor: default;
+  color: var(--text-muted);
+  --fill: var(--surface);
+  --light: var(--surface);
+}
+
+.btn:focus-visible {
+  outline: var(--px) solid var(--accent-light);
+  outline-offset: -6px;
+}
+
+.btn--primary {
+  --fill: var(--pumpkin);
+  --light: var(--pumpkin-light);
+  --dark: var(--pumpkin-dark);
+  color: var(--on-pumpkin);
+}
+
+.btn--primary:hover:not(:disabled) {
+  --fill: var(--pumpkin-light);
+  --light: var(--ember);
+}
+
+.btn--primary:disabled {
+  --fill: #6b4a3c;
+  --light: #7d5847;
+  --dark: #4a3128;
+  color: #2d2019;
+}
+
+.btn--danger {
+  --fill: #b8403c;
+  --light: var(--danger);
+  --dark: var(--danger-dark);
+  color: #fff;
+}
+
+.btn--danger:hover:not(:disabled) {
+  --fill: var(--danger);
+  --light: #ec8a84;
+}
+
+.btn--ghost {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  color: var(--text-dim);
+}
+
+.btn--ghost:hover:not(:disabled) {
+  background: rgba(58, 41, 84, 0.7);
+  color: var(--text);
+}
+
+.btn--ghost:active:not(:disabled) {
+  box-shadow: none;
+}
+
+.btn--small {
+  height: 30px;
+  padding: 0 10px 2px;
+}
+
+.btn--icon {
+  width: 36px;
+  padding: 0;
+}
+
+.btn--icon.btn--small {
+  width: 30px;
+}
+
+/* ------------------------------------------------------------------ inputs */
+
+.input,
+.select {
+  height: 36px;
+  min-width: 0;
+  padding: 0 12px;
+  font-family: var(--font);
+  font-size: 14px;
+  color: var(--text);
+  background: var(--inset);
+  border: var(--px) solid var(--ink);
+  box-shadow: inset var(--px) var(--px) 0 rgba(0, 0, 0, 0.5), inset calc(-1 * var(--px)) calc(-1 * var(--px)) 0 rgba(58, 41, 84, 0.55);
+  clip-path: var(--cut);
+  outline: none;
+  user-select: text;
+}
+
+.input:focus,
+.select:focus {
+  border-color: var(--accent);
+}
+
+.input::placeholder {
+  color: var(--text-muted);
+}
+
+.select {
+  appearance: none;
+  padding-right: 34px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8' shape-rendering='crispEdges' fill='%23b9aacb'%3E%3Crect x='0' y='2' width='1' height='1'/%3E%3Crect x='7' y='2' width='1' height='1'/%3E%3Crect x='0' y='3' width='2' height='1'/%3E%3Crect x='6' y='3' width='2' height='1'/%3E%3Crect x='1' y='4' width='2' height='1'/%3E%3Crect x='5' y='4' width='2' height='1'/%3E%3Crect x='2' y='5' width='4' height='1'/%3E%3Crect x='3' y='6' width='2' height='1'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px 12px;
+}
+
+.select option {
+  background: var(--panel);
+  color: var(--text);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.field__label {
+  font-family: var(--font-pixel);
+  font-size: 16px;
+  line-height: 16px;
+  -webkit-font-smoothing: none;
+  color: var(--text-dim);
+}
+
+.field__hint {
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+/* Pixel lever: a sunken track with a raised knob; the track glows pumpkin when on. */
+.toggle {
+  position: relative;
+  flex: none;
+  width: 52px;
+  height: 28px;
+  padding: 0;
+  background: var(--inset);
+  border: var(--px) solid var(--ink);
+  box-shadow: inset var(--px) var(--px) 0 rgba(0, 0, 0, 0.5);
+  clip-path: var(--cut);
+  cursor: pointer;
+}
+
+.toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: var(--text-dim);
+  border: var(--px) solid var(--ink);
+  box-shadow: inset var(--px) var(--px) 0 var(--text), inset calc(-1 * var(--px)) calc(-1 * var(--px)) 0 var(--text-muted);
+  transition: left var(--normal) steps(4);
+}
+
+.toggle--on {
+  background: var(--pumpkin);
+  box-shadow: inset var(--px) var(--px) 0 var(--pumpkin-light), inset calc(-1 * var(--px)) calc(-1 * var(--px)) 0 var(--pumpkin-dark);
+}
+
+.toggle--on::after {
+  left: 26px;
+  background: var(--text);
+  box-shadow: inset var(--px) var(--px) 0 #fff, inset calc(-1 * var(--px)) calc(-1 * var(--px)) 0 var(--text-dim);
+}
+
+.toggle:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+/* Minecraft-style slider: a sunken track filled in pumpkin up to a block knob. */
+.range {
+  --p: 50%;
+  appearance: none;
+  height: 28px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.range::-webkit-slider-runnable-track {
+  height: 14px;
+  background: linear-gradient(to right, var(--pumpkin) 0 var(--p), var(--inset) var(--p) 100%);
+  border: var(--px) solid var(--ink);
+  box-shadow: inset 0 var(--px) 0 rgba(0, 0, 0, 0.35);
+}
+
+.range::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 28px;
+  margin-top: -9px;
+  background: var(--text-dim);
+  border: var(--px) solid var(--ink);
+  box-shadow: inset var(--px) var(--px) 0 var(--text), inset calc(-1 * var(--px)) calc(-1 * var(--px)) 0 var(--text-muted);
+}
+
+.range:hover::-webkit-slider-thumb {
+  background: var(--text);
+  box-shadow: inset var(--px) var(--px) 0 #fff, inset calc(-1 * var(--px)) calc(-1 * var(--px)) 0 var(--text-dim);
+}
+
+/* ------------------------------------------------------------------ small parts */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 7px 1px;
+  font-family: var(--font-pixel);
+  font-size: 16px;
+  line-height: 16px;
+  -webkit-font-smoothing: none;
+  color: var(--text);
+  background: var(--accent-dark);
+  border: var(--px) solid var(--ink);
+  clip-path: var(--cut);
+  white-space: nowrap;
+}
+
+.chip--pumpkin {
+  background: var(--pumpkin);
+  color: var(--on-pumpkin);
+}
+
+.chip--muted {
+  background: var(--surface);
+  color: var(--text-dim);
+}
+
+/* Three blinking pixels. */
+.spinner {
+  display: inline-block;
+  flex: none;
+  width: 4px;
+  height: 4px;
+  margin: 0 8px;
+  background: currentColor;
+  box-shadow: -6px 0 currentColor, 6px 0 currentColor;
+  animation: px-dots 0.9s steps(3) infinite;
+}
+
+@keyframes px-dots {
+  0% { box-shadow: -6px 0 currentColor, 6px 0 transparent; background: transparent; }
+  33% { box-shadow: -6px 0 transparent, 6px 0 transparent; background: currentColor; }
+  66% { box-shadow: -6px 0 transparent, 6px 0 currentColor; background: transparent; }
+}
+
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  font-size: 13.5px;
+  color: var(--text-dim);
+  background: var(--surface-dark);
+  border: var(--px) solid var(--ink);
+  border-left: 6px solid var(--accent);
+  clip-path: var(--cut);
+}
+
+.alert--error {
+  border-left-color: var(--danger);
+  color: #f2c4c1;
+}
+
+.alert--warn {
+  border-left-color: var(--warning);
+}
+
+/* Pixel scrollbars. */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--panel-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--surface-light);
+  border: 3px solid var(--panel-dark);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--surface-hover);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}

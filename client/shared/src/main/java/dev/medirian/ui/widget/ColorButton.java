@@ -4,7 +4,7 @@ import dev.medirian.input.Key;
 import dev.medirian.render.Colors;
 import dev.medirian.render.Gfx;
 import dev.medirian.render.Theme;
-import dev.medirian.render.UiDraw;
+import dev.medirian.render.Pixel;
 import dev.medirian.setting.ColorSetting;
 import dev.medirian.ui.MedirianScreen;
 
@@ -47,9 +47,14 @@ public final class ColorButton extends Widget {
     public void render(Gfx g, float mx, float my) {
         Theme theme = Theme.current();
         float t = hoverValue(mx, my);
-        UiDraw.roundRectBordered(g, x, y, w, h, 3, theme.surface, open ? theme.accent : Colors.lerp(theme.border, theme.borderStrong, t));
-        checker(g, (int) x + 3, (int) y + 3, (int) w - 6, (int) h - 6);
-        g.fill((int) x + 3, (int) y + 3, (int) (x + w) - 3, (int) (y + h) - 3, setting.argb());
+        Pixel.inset(g, x, y, w, h, theme.inset);
+        int x0 = Math.round(x);
+        int y0 = Math.round(y);
+        checker(g, x0 + 2, y0 + 2, Math.round(w) - 4, Math.round(h) - 4);
+        g.fill(x0 + 2, y0 + 2, Math.round(x + w) - 2, Math.round(y + h) - 2, setting.argb());
+        if (open || t > 0.5f) {
+            Pixel.outline(g, x0, y0, Math.round(w), Math.round(h), open ? theme.pumpkinLight : theme.accentHover);
+        }
     }
 
     private static void checker(Gfx g, int x, int y, int w, int h) {
@@ -72,8 +77,8 @@ public final class ColorButton extends Widget {
         }
         Theme theme = Theme.current();
         float ph = pickerHeight();
-        UiDraw.shadow(g, px, py, PICKER_W, ph, 5, 3);
-        UiDraw.roundRectBordered(g, px, py, PICKER_W, ph, 5, theme.panel, theme.borderStrong);
+        g.fill(Math.round(px) + 2, Math.round(py) + 2, Math.round(px) + PICKER_W + 2, Math.round(py + ph) + 2, 0x66000000);
+        Pixel.panel(g, px, py, PICKER_W, ph);
         int fx = (int) px + 6;
         int fy = (int) py + 6;
         int fw = PICKER_W - 12;
@@ -84,7 +89,7 @@ public final class ColorButton extends Widget {
         }
         float knobX = fx + sat * (fw - 1);
         float knobY = fy + (1f - val) * FIELD_H;
-        UiDraw.hairline(g, knobX - 2, knobY - 2, 5, 5, 0xFFFFFFFF);
+        Pixel.outline(g, Math.round(knobX) - 2, Math.round(knobY) - 2, 5, 5, 0xFFFFFFFF);
         // hue bar
         int hy = fy + FIELD_H + 5;
         for (int i = 0; i < fw; i++) {

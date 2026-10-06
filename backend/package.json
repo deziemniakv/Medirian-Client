@@ -1,6 +1,6 @@
 {
   "name": "medirian-services",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "description": "Medirian services: accounts via the Mojang session handshake, cosmetics and cloud profiles",
   "private": true,
   "type": "module",

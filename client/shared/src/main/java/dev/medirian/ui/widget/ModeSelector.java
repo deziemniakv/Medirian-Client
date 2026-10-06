@@ -3,6 +3,7 @@ package dev.medirian.ui.widget;
 import dev.medirian.render.Colors;
 import dev.medirian.render.Gfx;
 import dev.medirian.render.Theme;
+import dev.medirian.render.Pixel;
 import dev.medirian.render.UiDraw;
 import dev.medirian.setting.ModeSetting;
 
@@ -20,13 +21,22 @@ public final class ModeSelector extends Widget {
     public void render(Gfx g, float mx, float my) {
         Theme theme = Theme.current();
         float t = hoverValue(mx, my);
-        UiDraw.roundRectBordered(g, x, y, w, h, 3, Colors.lerp(theme.surface, theme.elevated, t), theme.border);
-        String value = UiDraw.ellipsize(g, setting.valueLabel(), (int) w - 22);
-        float textY = y + (h - g.fontHeight()) / 2f + 1;
-        g.text(value, x + (w - g.textWidth(value)) / 2f, textY, theme.text, false);
-        int arrow = Colors.lerp(theme.textMuted, theme.accentHover, t);
-        g.text("<", x + 4, textY, arrow, false);
-        g.text(">", x + w - 4 - g.textWidth(">"), textY, arrow, false);
+        Pixel.inset(g, x, y, w, h, Colors.lerp(theme.inset, theme.surfaceDark, t));
+        String value = UiDraw.ellipsize(g, setting.valueLabel(), (int) w - 24);
+        float textY = Math.round(y + (h - g.fontHeight()) / 2f + 1);
+        g.text(value, Math.round(x + (w - g.textWidth(value)) / 2f), textY, theme.text, false);
+        boolean left = t > 0.5f && mx < x + w / 3f;
+        boolean right = t > 0.5f && mx >= x + w / 3f;
+        arrow(g, Math.round(x + 5), Math.round(y + h / 2f), -1, left ? theme.pumpkinLight : theme.textMuted);
+        arrow(g, Math.round(x + w - 6), Math.round(y + h / 2f), 1, right ? theme.pumpkinLight : theme.textMuted);
+    }
+
+    /** A 3×5 pixel triangle pointing left (-1) or right (1). */
+    private static void arrow(Gfx g, int x, int cy, int dir, int argb) {
+        for (int i = 0; i < 3; i++) {
+            int col = dir > 0 ? x + i - 1 : x - i + 1;
+            g.fill(col, cy - 2 + i, col + 1, cy + 3 - i, argb);
+        }
     }
 
     @Override

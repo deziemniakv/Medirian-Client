@@ -5,6 +5,7 @@ import dev.medirian.input.Key;
 import dev.medirian.render.Colors;
 import dev.medirian.render.Gfx;
 import dev.medirian.render.Theme;
+import dev.medirian.render.Pixel;
 import dev.medirian.render.UiDraw;
 import dev.medirian.setting.KeySetting;
 import dev.medirian.ui.MedirianScreen;
@@ -29,13 +30,15 @@ public final class KeybindButton extends Widget {
     public void render(Gfx g, float mx, float my) {
         Theme theme = Theme.current();
         float t = hoverValue(mx, my);
-        int border = listening ? theme.accent : theme.border;
-        UiDraw.roundRectBordered(g, x, y, w, h, 3, Colors.lerp(theme.surface, theme.elevated, t), border);
+        // a key cap: raised, with a thick dark bottom edge
+        int fill = listening ? theme.pumpkinDark : Colors.lerp(theme.elevated, theme.surfaceLight, t);
+        Pixel.frame(g, x, y, w, h, fill, listening ? theme.pumpkin : theme.surfaceLight, theme.surfaceDark);
+        g.fill(Math.round(x) + 1, Math.round(y + h) - 3, Math.round(x + w) - 1, Math.round(y + h) - 1, theme.surfaceDark);
         String label;
         int color;
         if (listening) {
             label = I18n.tr("ui.keybind.listening", "Press a key...");
-            color = theme.accentHover;
+            color = theme.ember;
         } else if (setting.isBound()) {
             label = setting.key().label();
             color = theme.text;
@@ -44,7 +47,7 @@ public final class KeybindButton extends Widget {
             color = theme.textMuted;
         }
         label = UiDraw.ellipsize(g, label, (int) w - 6);
-        g.text(label, x + (w - g.textWidth(label)) / 2f, y + (h - g.fontHeight()) / 2f + 1, color, false);
+        g.text(label, Math.round(x + (w - g.textWidth(label)) / 2f), Math.round(y + (h - g.fontHeight()) / 2f), color, false);
     }
 
     @Override

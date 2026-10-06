@@ -75,9 +75,12 @@ public final class NotificationManager {
             int height = toast.message == null ? 20 : 30;
             float x = width - 6 - WIDTH * slide;
             float alpha = Math.max(0f, Math.min(1f, slide));
-            UiDraw.shadow(g, x, y, WIDTH, height, 4, 2);
-            UiDraw.roundRectBordered(g, x, y, WIDTH, height, 4, Colors.fade(theme.panel, alpha), Colors.fade(theme.border, alpha));
-            UiDraw.roundRect(g, x + 4, y + 5, 2, height - 10, 1, Colors.fade(color(toast.level, theme), alpha));
+            if (alpha > 0.98f) {
+                dev.medirian.render.Pixel.panel(g, x, y, WIDTH, height);
+            } else {
+                g.fill(Math.round(x) + 1, Math.round(y) + 1, Math.round(x + WIDTH) - 1, Math.round(y + height) - 1, Colors.fade(theme.panel, alpha));
+            }
+            g.fill(Math.round(x) + 3, Math.round(y) + 4, Math.round(x) + 5, Math.round(y + height) - 4, Colors.fade(color(toast.level, theme), alpha));
             g.text(UiDraw.ellipsize(g, toast.title, WIDTH - 20), x + 11, y + 6, Colors.fade(theme.text, alpha), false);
             if (toast.message != null) {
                 g.text(UiDraw.ellipsize(g, toast.message, WIDTH - 20), x + 11, y + 17, Colors.fade(theme.textDim, alpha), false);
@@ -94,7 +97,7 @@ public final class NotificationManager {
         switch (level) {
             case SUCCESS: return theme.success;
             case WARNING: return theme.warning;
-            case SEASONAL: return theme.seasonal;
+            case SEASONAL: return theme.pumpkin;
             default: return theme.accent;
         }
     }

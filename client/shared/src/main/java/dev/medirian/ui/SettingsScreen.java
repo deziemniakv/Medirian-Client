@@ -16,6 +16,7 @@ import dev.medirian.platform.ClientActions;
 import dev.medirian.render.Anim;
 import dev.medirian.render.Colors;
 import dev.medirian.render.Gfx;
+import dev.medirian.render.Pixel;
 import dev.medirian.render.Theme;
 import dev.medirian.render.UiDraw;
 import dev.medirian.services.CloudProfiles;
@@ -72,8 +73,19 @@ public final class SettingsScreen extends MedirianScreen {
         px = (width - pw) / 2f;
         py = (height - ph) / 2f;
         backButton = new Button(parent != null ? I18n.tr("ui.back", "Back") : I18n.tr("ui.done", "Done"),
-                Button.Style.SECONDARY, this::close).bounds(px + 10, py + ph - 26, NAV_W - 20, 16);
+                Button.Style.SECONDARY, this::close).icon("back").bounds(px + 6, py + ph - 26, NAV_W - 6, 18);
         buildTab();
+    }
+
+    private static String tabIcon(Tab t) {
+        switch (t) {
+            case GENERAL: return "settings";
+            case HUD: return "cat-hud";
+            case GAME: return "singleplayer";
+            case PERFORMANCE: return "cat-performance";
+            case PROFILES: return "profiles";
+            default: return "cat-player";
+        }
     }
 
     private String tabName(Tab t) {
@@ -89,13 +101,13 @@ public final class SettingsScreen extends MedirianScreen {
 
     private void buildTab() {
         list = new SettingsList(this);
-        list.bounds(px + NAV_W + 14, py + 36, pw - NAV_W - 24, ph - 46);
+        list.bounds(px + NAV_W + 14, py + 38, pw - NAV_W - 24, ph - 48);
         Medirian medirian = Medirian.get();
         GlobalSettings global = medirian.settings();
         switch (tab) {
             case GENERAL:
                 list.addSettings(java.util.Arrays.<dev.medirian.setting.Setting<?>>asList(
-                        global.language, global.theme, global.font, global.notifications, global.animations));
+                        global.language, global.mainMenu, global.font, global.notifications, global.animations, global.winterSnow));
                 list.add(new SettingsList.HeaderRow(I18n.tr("settings.keys", "Keys")));
                 list.addSettings(java.util.Arrays.<dev.medirian.setting.Setting<?>>asList(global.modMenuKey, global.hudEditorKey, global.emoteKey));
                 break;
@@ -409,16 +421,15 @@ public final class SettingsScreen extends MedirianScreen {
         lastRealHeight = (int) Math.round(g.height() * g.guiScale());
         Theme theme = Theme.current();
         renderBackdrop(g);
-        UiDraw.shadow(g, px, py, pw, ph, 8, 4);
-        UiDraw.roundRectBordered(g, px, py, pw, ph, 8, theme.panel, theme.border);
-        UiDraw.roundRect(g, px + 1, py + 1, NAV_W, ph - 2, 7, theme.surface);
-        g.fill((int) (px + NAV_W), (int) py + 1, (int) (px + NAV_W) + 1, (int) (py + ph) - 1, theme.border);
-
-        g.text("§l" + I18n.tr("ui.settings", "Settings"), px + 12, py + 14, theme.text, false);
-        float y = py + 36;
+        g.fill(Math.round(px) + 3, Math.round(py) + 3, Math.round(px + pw) + 3, Math.round(py + ph) + 3, 0x50000000);
+        Pixel.panel(g, px, py, pw, ph);
+        Pixel.inset(g, px + 6, py + 30, NAV_W - 6, ph - 62, theme.panelDark);
+        Pixel.icon(g, "settings", px + 8, py + 7, 1, 0xFFFFFFFF);
+        Pixel.text(g, I18n.tr("ui.settings", "Settings"), px + 28, py + 11, theme.text);
+        float y = py + 34;
         for (Tab t : Tab.values()) {
             boolean active = t == tab;
-            boolean hovered = mx >= px + 8 && mx < px + NAV_W - 8 && my >= y && my < y + 17;
+            boolean hovered = mx >= px + 10 && mx < px + NAV_W - 4 && my >= y && my < y + 20;
             Anim anim = navAnims.get(t);
             if (anim == null) {
                 anim = new Anim(0f, 18f);
@@ -426,18 +437,20 @@ public final class SettingsScreen extends MedirianScreen {
             }
             float h = anim.target(hovered ? 1f : 0f).get();
             if (active) {
-                UiDraw.roundRect(g, px + 8, y, NAV_W - 16, 17, 3, theme.accentSoft);
-                UiDraw.roundRect(g, px + 8, y + 4, 2, 9, 1, theme.accent);
+                Pixel.frame(g, px + 10, y, NAV_W - 14, 20, theme.surfaceLight, 0xFF4C3870, theme.surfaceDark);
+                g.fill(Math.round(px) + 11, Math.round(y) + 2, Math.round(px) + 13, Math.round(y) + 18, theme.pumpkin);
             } else if (h > 0.01f) {
-                UiDraw.roundRect(g, px + 8, y, NAV_W - 16, 17, 3, Colors.fade(theme.elevated, h));
+                g.fill(Math.round(px) + 10, Math.round(y), Math.round(px + NAV_W) - 4, Math.round(y) + 20, Colors.fade(theme.surface, h));
             }
-            g.text(tabName(t), px + 17, y + 5, active ? theme.text : Colors.lerp(theme.textDim, theme.text, h), false);
-            y += 19;
+            Pixel.icon(g, tabIcon(t), px + 15, y + 2, 1, active || h > 0.5f ? 0xFFFFFFFF : 0xA0FFFFFF);
+            g.text(UiDraw.ellipsize(g, tabName(t), (int) NAV_W - 40), px + 34, y + 6, active ? theme.text : Colors.lerp(theme.textDim, theme.text, h), false);
+            y += 22;
         }
         backButton.render(g, mx, my);
 
-        g.text("§l" + tabName(tab), px + NAV_W + 14, py + 14, theme.text, false);
-        g.fill((int) (px + NAV_W + 14), (int) py + 28, (int) (px + pw) - 10, (int) py + 29, theme.border);
+        Pixel.icon(g, tabIcon(tab), px + NAV_W + 12, py + 7, 1, 0xFFFFFFFF);
+        Pixel.text(g, tabName(tab), px + NAV_W + 32, py + 11, theme.pumpkinLight);
+        Pixel.groove(g, px + NAV_W + 12, py + 28, pw - NAV_W - 20);
         list.render(g, mx, my);
     }
 
@@ -445,17 +458,17 @@ public final class SettingsScreen extends MedirianScreen {
 
     @Override
     protected boolean mouseClicked(float mx, float my, int button) {
-        float y = py + 36;
-        if (mx >= px + 8 && mx < px + NAV_W - 8) {
+        float y = py + 34;
+        if (mx >= px + 10 && mx < px + NAV_W - 4) {
             for (Tab t : Tab.values()) {
-                if (my >= y && my < y + 17) {
+                if (my >= y && my < y + 20) {
                     tab = t;
                     lastTab = t;
                     pendingDelete = null;
                     buildTab();
                     return true;
                 }
-                y += 19;
+                y += 22;
             }
         }
         if (backButton.mouseClicked(mx, my, button)) {

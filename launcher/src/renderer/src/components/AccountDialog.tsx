@@ -59,12 +59,21 @@ export function AccountDialog() {
 
   return (
     <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && !code && close()}>
-      <div className="dialog">
-        <h2 className="dialog__title">{t('account.title')}</h2>
+      <div className="dialog px-frame">
+        <div className="dialog__header">
+          <Icon name="user" size={16} />
+          <h2 className="dialog__title">{t('account.title')}</h2>
+          {!code && (
+            <button className="btn btn--ghost btn--small btn--icon" aria-label={t('account.close')} onClick={close}>
+              <Icon name="close" size={16} />
+            </button>
+          )}
+        </div>
+        <div className="dialog__body">
 
         {account && !code && (
           <div className="account-card">
-            <div className="account-card__avatar">{account.name.slice(0, 1).toUpperCase()}</div>
+            <div className="account-card__avatar pixel">{account.name.slice(0, 1).toUpperCase()}</div>
             <div>
               <div className="account-card__name">{t('account.signedInAs', { name: account.name })}</div>
               <div className="muted">{account.type === 'microsoft' ? t('account.microsoft') : t('account.offline')}</div>
@@ -75,17 +84,17 @@ export function AccountDialog() {
         {code ? (
           <>
             <p className="dim">{t('account.step')}</p>
-            <div className="device-code">{code.userCode}</div>
+            <div className="device-code px-inset pixel">{code.userCode}</div>
             <div className="row">
               <button className="btn btn--primary" onClick={() => void invoke('shell:openExternal', code.verificationUri)}>
-                <Icon name="external" size={15} />
+                <Icon name="external" size={16} />
                 {t('account.openLink')}
               </button>
               <button className="btn" onClick={() => {
                 void navigator.clipboard.writeText(code.userCode);
                 setCopied(true);
               }}>
-                <Icon name={copied ? 'check' : 'copy'} size={15} />
+                <Icon name={copied ? 'check' : 'copy'} size={16} />
                 {copied ? t('account.copied') : t('account.copy')}
               </button>
             </div>
@@ -119,6 +128,7 @@ export function AccountDialog() {
           </div>
         )}
 
+        </div>
         <div className="dialog__actions">
           {code && <button className="btn btn--ghost" onClick={cancel}>{t('account.close')}</button>}
           {account && !code && (

@@ -1,6 +1,6 @@
 # Medirian — roadmapa
 
-Stan: **0.1.4** (launcher, cztery targety klienta — 1.8.9, 1.21.8, 1.21.11, 26.3 — HUD, 41 modułów, konfiguracja, wydajność).
+Stan: **0.2.0** (nowy wygląd: pixel art + noc Halloween; launcher, cztery targety klienta — 1.8.9, 1.21.8, 1.21.11, 26.3 — HUD, 41 modułów, konfiguracja, wydajność).
 Poniżej kolejne etapy. Zasada bez zmian: funkcja trafia do UI dopiero, gdy naprawdę działa.
 
 ## Etap 1 — przed pierwszym publicznym wydaniem
@@ -92,4 +92,9 @@ Każdy wymaga hooka w obu adapterach (nowe `Capability`):
       startuje z czystą konfiguracją bez animacji/powiadomień/motywu sezonowego — dwa przebiegi lokalnie: 0 px różnicy
       (edytor HUD: 148 px = licznik FPS).
 - [x] Więcej języków (0.1.3): niemiecki i hiszpański w kliencie i launcherze; test pilnuje kompletności plików `lang`.
-- [x] Sezonowe motywy: Christmas (0.1.3) — `Theme.CHRISTMAS` z opadami śniegu, tokeny CSS i śnieg w launcherze; AUTO: grudzień–6 stycznia.
+- [x] Sezonowe motywy: Christmas (0.1.3) — w 0.2.0 zastąpione stałą tożsamością Halloween; został śnieg zimą (do wyłączenia).
+- [x] **Nowa tożsamość wizualna** (0.2.0) — nazwa Medirian wszędzie (także identyfikatory techniczne), pixel art i noc Halloween
+      na stałe: generator grafik `scripts/generate-pixel-art.mjs` (scena, logo, 70+ ikon, czcionka Medirian Pixel, ikona aplikacji),
+      własne menu główne w grze (`TitleMenuScreen`, wszystkie 4 wersje), nowe Mod Menu (kafelki z ikonami i lampką ON/OFF,
+      zakładki kategorii, hotbar akcji), wszystkie ekrany w stylu pixel art, launcher przebudowany od zera (animowana scena,
+      tablica nowości, pasek startu, profile jak lista światów).

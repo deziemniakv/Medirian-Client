@@ -1,14 +1,16 @@
 // Types shared by the main process and the renderer. Keep this file free of Node/DOM imports.
 
 export type Language = 'en' | 'pl' | 'de' | 'es';
-export type ThemeMode = 'auto' | 'default' | 'halloween' | 'christmas';
 export type AfterLaunch = 'keep' | 'minimize';
 export type UpdateChannel = 'stable' | 'local';
 
 export interface LauncherSettings {
   version: 1;
   language: Language;
-  theme: ThemeMode;
+  /** The night scene moves (fog, lights, a bat, parallax). */
+  sceneMotion: boolean;
+  /** Snow over the night from December to 6 January. */
+  winterSnow: boolean;
   afterLaunch: AfterLaunch;
   updateChannel: UpdateChannel;
   /** URL of the release manifest for the stable channel ('' = not configured yet). */

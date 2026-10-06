@@ -5,21 +5,21 @@ import org.junit.jupiter.api.Test;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ThemeTest {
 
-    private static Theme on(int month, int day) {
-        return Theme.seasonal(new GregorianCalendar(2026, month, day));
+    private static boolean winter(int month, int day) {
+        return Theme.isWinter(new GregorianCalendar(2026, month, day));
     }
 
     @Test
-    void seasonsFollowTheCalendar() {
-        assertSame(Theme.HALLOWEEN, on(Calendar.OCTOBER, 31));
-        assertSame(Theme.DEFAULT, on(Calendar.NOVEMBER, 30));
-        assertSame(Theme.CHRISTMAS, on(Calendar.DECEMBER, 1));
-        assertSame(Theme.CHRISTMAS, on(Calendar.JANUARY, 6));
-        assertSame(Theme.DEFAULT, on(Calendar.JANUARY, 7));
-        assertSame(Theme.CHRISTMAS, Theme.resolve(Theme.Mode.CHRISTMAS));
+    void snowFallsFromDecemberToTheSixthOfJanuary() {
+        assertFalse(winter(Calendar.OCTOBER, 31));
+        assertFalse(winter(Calendar.NOVEMBER, 30));
+        assertTrue(winter(Calendar.DECEMBER, 1));
+        assertTrue(winter(Calendar.JANUARY, 6));
+        assertFalse(winter(Calendar.JANUARY, 7));
     }
 }

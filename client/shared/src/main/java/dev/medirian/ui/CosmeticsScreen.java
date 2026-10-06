@@ -8,6 +8,7 @@ import dev.medirian.cosmetics.CosmeticsManager;
 import dev.medirian.i18n.I18n;
 import dev.medirian.render.Colors;
 import dev.medirian.render.Gfx;
+import dev.medirian.render.Pixel;
 import dev.medirian.render.Theme;
 import dev.medirian.render.UiDraw;
 import dev.medirian.ui.widget.Button;
@@ -69,10 +70,10 @@ public final class CosmeticsScreen extends MedirianScreen {
         px = (width - pw) / 2f;
         py = (height - ph) / 2f;
         gridX = px + 14;
-        gridY = py + 50;
+        gridY = py + 54;
         columns = Math.max(1, (int) ((pw - 190 - 14) / (CARD_W + GAP)));
         doneButton = new Button(parent != null ? I18n.tr("ui.back", "Back") : I18n.tr("ui.done", "Done"),
-                Button.Style.SECONDARY, this::close).bounds(px + pw - 164, py + ph - 26, 150, 16);
+                Button.Style.SECONDARY, this::close).icon("back").bounds(px + pw - 172, py + ph - 28, 164, 18);
     }
 
     private List<Cosmetic> items() {
@@ -99,9 +100,11 @@ public final class CosmeticsScreen extends MedirianScreen {
         Theme theme = Theme.current();
         CosmeticsManager cosmetics = Medirian.get().cosmetics();
         renderBackdrop(g);
-        UiDraw.shadow(g, px, py, pw, ph, 8, 4);
-        UiDraw.roundRectBordered(g, px, py, pw, ph, 8, theme.panel, theme.border);
-        g.text("§l" + I18n.tr("cosmetics.title", "Cosmetics"), px + 14, py + 13, theme.text, false);
+        g.fill(Math.round(px) + 3, Math.round(py) + 3, Math.round(px + pw) + 3, Math.round(py + ph) + 3, 0x50000000);
+        Pixel.panel(g, px, py, pw, ph);
+        Pixel.icon(g, "cosmetics", px + 10, py + 7, 1, 0xFFFFFFFF);
+        Pixel.text(g, I18n.tr("cosmetics.title", "Cosmetics"), px + 30, py + 11, theme.text);
+        Pixel.groove(g, px + 4, py + 46, pw - 8);
         renderTabs(g, theme, mx, my);
 
         List<Cosmetic> items = items();
@@ -128,10 +131,13 @@ public final class CosmeticsScreen extends MedirianScreen {
             tabBounds[i * 2 + 1] = w;
             boolean active = type == tab;
             boolean hover = mx >= x && mx < x + w && my >= y && my < y + 14;
-            if (active || hover) {
-                UiDraw.roundRect(g, x, y, w, 14, 4, active ? theme.accentSoft : theme.surface);
+            if (active) {
+                Pixel.frame(g, x, y, w, 15, theme.surfaceLight, 0xFF4C3870, theme.surfaceDark);
+                g.fill(Math.round(x) + 2, Math.round(y) + 13, Math.round(x + w) - 2, Math.round(y) + 14, theme.pumpkin);
+            } else if (hover) {
+                Pixel.frame(g, x, y, w, 15, theme.surface, theme.surfaceLight, theme.surfaceDark);
             }
-            g.text(name, x + 7, y + 3, active ? theme.text : theme.textDim, false);
+            g.text(name, x + 7, y + 4, active ? theme.text : theme.textDim, false);
             x += w + 4;
         }
     }
@@ -163,61 +169,65 @@ public final class CosmeticsScreen extends MedirianScreen {
         boolean hover = mx >= x && mx < x + CARD_W && my >= y && my < y + CARD_H;
         boolean owned = item == null || cosmetics.owns(item);
         boolean isSelected = item == selected.get(tab);
-        int border = equipped ? theme.accent : isSelected ? theme.borderStrong : theme.border;
-        UiDraw.roundRectBordered(g, x, y, CARD_W, CARD_H, 5, hover ? theme.elevated : theme.surface, border);
+        Pixel.frame(g, x, y, CARD_W, CARD_H, hover ? theme.surfaceLight : theme.surface, hover ? 0xFF4C3870 : theme.surfaceLight, theme.surfaceDark);
         int previewW = 36;
         int previewH = 58;
         int ix = (int) (x + (CARD_W - previewW) / 2f);
         int iy = (int) y + 7;
         if (item == null) {
-            UiDraw.roundRect(g, ix, iy, previewW, previewH, 3, Colors.withAlpha(theme.border, 0x80));
+            Pixel.inset(g, ix, iy, previewW, previewH, theme.inset);
             UiDraw.centeredText(g, "—", ix + previewW / 2f, iy + previewH / 2f - 4, theme.textMuted, false);
         } else {
             preview(g, item, ix, iy, previewW, previewH, owned ? 0xFFFFFFFF : 0x60FFFFFF);
+            if (!owned) {
+                Pixel.icon(g, "lock", ix + (previewW - 16) / 2, iy + (previewH - 16) / 2, 1, 0xFFFFFFFF);
+            }
         }
         String name = item == null ? I18n.tr("cosmetics.none", "None") : item.name();
-        g.push();
-        g.translate(x + CARD_W / 2f, y + CARD_H - 23);
-        g.scale(0.8f, 0.8f);
-        UiDraw.centeredText(g, UiDraw.ellipsize(g, name, (int) ((CARD_W - 6) / 0.8f)), 0, 0, owned ? theme.text : theme.textMuted, false);
+        UiDraw.centeredText(g, UiDraw.ellipsize(g, name, CARD_W - 6), Math.round(x + CARD_W / 2f), y + CARD_H - 25, owned ? theme.text : theme.textMuted, false);
         String tag = equipped ? I18n.tr("cosmetics.equipped", "Equipped")
                 : !owned ? I18n.tr("cosmetics.locked", "Locked")
                 : item != null && item.seasonal() ? I18n.tr("cosmetics.seasonal", "Seasonal") : "";
         if (!tag.isEmpty()) {
-            UiDraw.centeredText(g, tag, 0, 12, equipped ? theme.accent : theme.textMuted, false);
+            UiDraw.centeredText(g, UiDraw.ellipsize(g, tag, CARD_W - 6), Math.round(x + CARD_W / 2f), y + CARD_H - 14,
+                    equipped ? theme.pumpkinLight : theme.textMuted, false);
         }
-        g.pop();
+        if (equipped) {
+            Pixel.highlight(g, x, y, CARD_W, CARD_H, theme.pumpkinLight);
+        } else if (isSelected) {
+            Pixel.highlight(g, x, y, CARD_W, CARD_H, theme.accentHover);
+        }
     }
 
     private void renderPreview(Gfx g, Theme theme, CosmeticsManager cosmetics) {
         float x = px + pw - 178;
         float w = 164;
-        float y = py + 50;
-        UiDraw.roundRectBordered(g, x, y, w, ph - 86, 6, theme.surface, theme.border);
+        float y = py + 54;
+        Pixel.inset(g, x, y, w, ph - 90, theme.panelDark);
         Cosmetic item = selected.get(tab);
         int previewW = tab == CosmeticType.CAPE ? 64 : 96;
         int previewH = tab == CosmeticType.CAPE ? 102 : 96;
         int ix = (int) (x + (w - previewW) / 2f);
         int iy = (int) y + 10;
         if (item == null) {
-            UiDraw.roundRect(g, ix, iy, previewW, previewH, 4, Colors.withAlpha(theme.border, 0x80));
+            Pixel.inset(g, ix, iy, previewW, previewH, theme.inset);
         } else {
             preview(g, item, ix, iy, previewW, previewH, 0xFFFFFFFF);
         }
         float ty = iy + previewH + 8;
-        UiDraw.centeredText(g, item == null ? I18n.tr("cosmetics.none", "None") : item.name(), x + w / 2f, ty, theme.text, false);
+        String title = item == null ? I18n.tr("cosmetics.none", "None") : item.name();
+        Pixel.text(g, title, Math.round(x + (w - g.textWidth(title)) / 2f), ty, theme.text);
         ty += 14;
         String line = item != null && !cosmetics.owns(item)
                 ? I18n.tr("cosmetics.notOwned", "Not available on your account.")
                 : visibility(Medirian.get().account());
         g.push();
         g.translate(x + 8, ty);
-        g.scale(0.75f, 0.75f);
-        int maxWidth = (int) ((w - 16) / 0.75f);
+        int maxWidth = (int) (w - 16);
         float ly = 0;
         for (String part : UiDraw.wrap(g, line, maxWidth)) {
             g.text(part, 0, ly, theme.textDim, false);
-            ly += 11;
+            ly += 10;
         }
         ly += 4;
         String hint = tab == CosmeticType.TRAIL
@@ -227,7 +237,7 @@ public final class CosmeticsScreen extends MedirianScreen {
                 : I18n.tr("cosmetics.hint", "Shown in third person (F5) and in your inventory.");
         for (String part : UiDraw.wrap(g, hint, maxWidth)) {
             g.text(part, 0, ly, theme.textMuted, false);
-            ly += 11;
+            ly += 10;
         }
         g.pop();
     }

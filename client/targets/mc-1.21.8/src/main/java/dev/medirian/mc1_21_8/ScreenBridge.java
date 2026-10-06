@@ -9,6 +9,17 @@ import net.minecraft.network.chat.Component;
 /** Native 1.21.8 screen hosting a shared {@link MedirianScreen}. */
 public final class ScreenBridge extends Screen {
 
+    /** Medirian's main menu in place of Minecraft's title screen, unless it is switched off. */
+    public static Screen replaceTitle(Screen screen) {
+        if (screen != null && screen.getClass() == net.minecraft.client.gui.screens.TitleScreen.class) {
+            MedirianScreen menu = dev.medirian.platform.Hooks.titleScreen();
+            if (menu != null) {
+                return new ScreenBridge(menu);
+            }
+        }
+        return screen;
+    }
+
     private final MedirianScreen screen;
 
     public ScreenBridge(MedirianScreen screen) {

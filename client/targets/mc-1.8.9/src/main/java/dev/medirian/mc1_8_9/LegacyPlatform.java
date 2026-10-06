@@ -438,6 +438,28 @@ public final class LegacyPlatform implements Platform, GameView, InputView, Clie
     }
 
     @Override
+    public void openSingleplayer() {
+        client.setScreen(new net.minecraft.client.gui.screen.world.SelectWorldScreen(client.currentScreen));
+    }
+
+    @Override
+    public boolean openMultiplayer() {
+        client.setScreen(new net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen(client.currentScreen));
+        return true;
+    }
+
+    @Override
+    public void openLanguageSettings() {
+        client.setScreen(new net.minecraft.client.gui.screen.options.LanguageOptionsScreen(client.currentScreen, client.options,
+                client.getLanguageManager()));
+    }
+
+    @Override
+    public void quitGame() {
+        client.scheduleStop();
+    }
+
+    @Override
     public boolean isFullscreen() {
         return client.isFullscreen();
     }

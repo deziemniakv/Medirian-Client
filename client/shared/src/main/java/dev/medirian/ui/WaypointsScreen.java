@@ -8,6 +8,7 @@ import dev.medirian.platform.GameView;
 import dev.medirian.platform.PlayerView;
 import dev.medirian.render.Colors;
 import dev.medirian.render.Gfx;
+import dev.medirian.render.Pixel;
 import dev.medirian.render.Theme;
 import dev.medirian.render.UiDraw;
 import dev.medirian.setting.BooleanSetting;
@@ -254,16 +255,16 @@ public final class WaypointsScreen extends MedirianScreen {
     protected void render(Gfx g, float mx, float my, float delta) {
         Theme theme = Theme.current();
         renderBackdrop(g);
-        UiDraw.shadow(g, px, py, pw, ph, 8, 4);
-        UiDraw.roundRectBordered(g, px, py, pw, ph, 8, theme.panel, theme.border);
-        UiDraw.roundRect(g, px + 1, py + 1, LIST_W, ph - 2, 7, theme.surface);
-        g.fill((int) (px + LIST_W), (int) py + 1, (int) (px + LIST_W) + 1, (int) (py + ph) - 1, theme.border);
-
-        g.text("§l" + I18n.tr("waypoints.title", "Waypoints"), px + 12, py + 12, theme.text, false);
+        g.fill(Math.round(px) + 3, Math.round(py) + 3, Math.round(px + pw) + 3, Math.round(py + ph) + 3, 0x50000000);
+        Pixel.panel(g, px, py, pw, ph);
+        Pixel.inset(g, px + 5, listTop - 3, LIST_W - 4, listBottom - listTop + 6, theme.panelDark);
+        Pixel.grooveV(g, px + LIST_W + 4, py + 6, ph - 12);
+        Pixel.icon(g, "waypoints", px + 8, py + 6, 1, 0xFFFFFFFF);
+        Pixel.text(g, I18n.tr("waypoints.title", "Waypoints"), px + 28, py + 10, theme.text);
         String world = world();
         String worldLabel = world == null ? I18n.tr("waypoints.noWorld", "Not in a world")
                 : world.substring(world.indexOf(':') + 1);
-        g.text(UiDraw.ellipsize(g, worldLabel, (int) LIST_W - 24), px + 12, py + 26, theme.textMuted, false);
+        g.text(UiDraw.ellipsize(g, worldLabel, (int) LIST_W - 24), px + 28, py + 22, theme.pumpkinLight, false);
         renderList(g, mx, my, theme);
         addButton.enabled(world != null).render(g, mx, my);
         exportButton.enabled(world != null && !waypoints().isEmpty()).render(g, mx, my);
@@ -277,8 +278,8 @@ public final class WaypointsScreen extends MedirianScreen {
             g.text(hint, dx, py + 40, theme.textDim, false);
             return;
         }
-        g.text("§l" + UiDraw.ellipsize(g, selected.name, (int) (pw - LIST_W - 40)), dx, py + 14, theme.text, false);
-        g.fill((int) dx, (int) py + 28, (int) (px + pw) - 10, (int) py + 29, theme.border);
+        Pixel.text(g, UiDraw.ellipsize(g, selected.name, (int) (pw - LIST_W - 40)), dx, py + 12, theme.text);
+        Pixel.groove(g, dx, py + 27, px + pw - 10 - dx);
         details.render(g, mx, my);
     }
 
@@ -303,9 +304,10 @@ public final class WaypointsScreen extends MedirianScreen {
             if (y + ITEM_H > listTop && y < listBottom) {
                 boolean hovered = mx >= px + 6 && mx < px + LIST_W - 6 && my >= Math.max(y, listTop) && my < Math.min(y + ITEM_H, listBottom);
                 if (waypoint == selected) {
-                    UiDraw.roundRect(g, px + 6, y + 1, LIST_W - 12, ITEM_H - 2, 3, theme.accentSoft);
+                    Pixel.frame(g, px + 7, y + 1, LIST_W - 14, ITEM_H - 2, theme.surfaceLight, 0xFF4C3870, theme.surfaceDark);
+                    g.fill(Math.round(px) + 8, Math.round(y) + 3, Math.round(px) + 10, Math.round(y + ITEM_H) - 3, theme.pumpkin);
                 } else if (hovered) {
-                    UiDraw.roundRect(g, px + 6, y + 1, LIST_W - 12, ITEM_H - 2, 3, theme.elevated);
+                    g.fill(Math.round(px) + 7, Math.round(y) + 1, Math.round(px + LIST_W) - 7, Math.round(y + ITEM_H) - 1, theme.surface);
                 }
                 int color = waypoint.visible ? waypoint.color : Colors.fade(waypoint.color, 0.35f);
                 marker(g, px + 16, y + ITEM_H / 2f, color);
@@ -317,11 +319,7 @@ public final class WaypointsScreen extends MedirianScreen {
                 } else if (player != null) {
                     sub += " · " + WaypointsModule.formatDistance(Math.sqrt(waypoint.distanceSq(player.x(), player.y(), player.z())));
                 }
-                g.push();
-                g.translate(px + 26, y + 15);
-                g.scale(0.8f, 0.8f);
-                g.text(UiDraw.ellipsize(g, sub, (int) ((LIST_W - 44) / 0.8f)), 0, 0, theme.textMuted, false);
-                g.pop();
+                g.text(UiDraw.ellipsize(g, sub, (int) LIST_W - 44), px + 26, y + 15, theme.textMuted, false);
             }
             y += ITEM_H;
         }

@@ -447,6 +447,34 @@ public final class ModernPlatform implements Platform, GameView, InputView, Clie
     }
 
     @Override
+    public void openSingleplayer() {
+        minecraft.setScreen(new net.minecraft.client.gui.screens.worldselection.SelectWorldScreen(minecraft.screen));
+    }
+
+    @Override
+    public boolean openMultiplayer() {
+        if (!minecraft.allowsMultiplayer()) {
+            return false;
+        }
+        net.minecraft.client.gui.screens.Screen parent = minecraft.screen;
+        minecraft.setScreen(minecraft.options.skipMultiplayerWarning
+                ? new net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen(parent)
+                : new net.minecraft.client.gui.screens.multiplayer.SafetyScreen(parent));
+        return true;
+    }
+
+    @Override
+    public void openLanguageSettings() {
+        minecraft.setScreen(new net.minecraft.client.gui.screens.options.LanguageSelectScreen(minecraft.screen, minecraft.options,
+                minecraft.getLanguageManager()));
+    }
+
+    @Override
+    public void quitGame() {
+        minecraft.stop();
+    }
+
+    @Override
     public boolean isFullscreen() {
         return minecraft.getWindow().isFullscreen();
     }

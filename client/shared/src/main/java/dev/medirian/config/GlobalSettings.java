@@ -23,9 +23,11 @@ public final class GlobalSettings implements SettingsOwner {
 
     public final ModeSetting<I18n.Language> language = add(new ModeSetting<I18n.Language>("language", "Language", I18n.Language.EN_US)
             .onChange(I18n::setLanguage));
-    public final ModeSetting<Theme.Mode> theme = add(new ModeSetting<Theme.Mode>("theme", "Theme", Theme.Mode.AUTO)
-            .description("Auto switches to seasonal themes such as Halloween.")
-            .onChange(Theme::apply));
+    public final BooleanSetting mainMenu = add(new BooleanSetting("mainMenu", "Medirian main menu", true)
+            .description("Medirian's own title screen instead of Minecraft's."));
+    public final BooleanSetting winterSnow = add(new BooleanSetting("winterSnow", "Snow in winter", true)
+            .description("Snow falls over the night from December to 6 January.")
+            .onChange(Theme::setWinterSnow));
     public final ModeSetting<dev.medirian.render.font.UiFont> font = add(new ModeSetting<dev.medirian.render.font.UiFont>("font", "Font",
             dev.medirian.render.font.UiFont.MINECRAFT)
             .description("Medirian's smooth font stays sharp at every GUI scale."));
@@ -47,7 +49,7 @@ public final class GlobalSettings implements SettingsOwner {
     /** Re-applies side effects of the current values (after loading from disk). */
     public void applyAll() {
         I18n.setLanguage(language.get());
-        Theme.apply(theme.get());
+        Theme.setWinterSnow(winterSnow.on());
     }
 
     public void setChangeListener(Runnable listener) {

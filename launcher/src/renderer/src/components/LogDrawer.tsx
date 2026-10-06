@@ -19,20 +19,20 @@ export function LogDrawer() {
   }, [log]);
 
   return (
-    <div className="drawer">
+    <div className="drawer px-frame">
       <div className="drawer__header">
-        <span className="drawer__title">
+        <span className="drawer__title row pixel">
           <Icon name="terminal" size={16} /> {t('home.log')}
         </span>
         <div className="row">
-          <button className="btn btn--ghost btn--small" onClick={() => void navigator.clipboard.writeText(log.join('\n'))}>
-            <Icon name="copy" size={14} />
+          <button className="btn btn--ghost btn--small btn--icon" onClick={() => void navigator.clipboard.writeText(log.join('\n'))}>
+            <Icon name="copy" size={16} />
           </button>
-          <button className="btn btn--ghost btn--small" onClick={() => void invoke('shell:open', 'logs')}>
-            <Icon name="folder" size={14} />
+          <button className="btn btn--ghost btn--small btn--icon" onClick={() => void invoke('shell:open', 'logs')}>
+            <Icon name="folder" size={16} />
           </button>
-          <button className="btn btn--ghost btn--small" onClick={() => close(false)}>
-            <Icon name="x" size={14} />
+          <button className="btn btn--ghost btn--small btn--icon" onClick={() => close(false)}>
+            <Icon name="x" size={16} />
           </button>
         </div>
       </div>

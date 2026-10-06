@@ -3,122 +3,81 @@ package dev.medirian.render;
 import java.util.Calendar;
 
 /**
- * Colour tokens of the Medirian design system. Must stay in sync with
- * {@code launcher/src/renderer/styles/tokens.css}.
+ * Colour tokens of Medirian Client: a cozy Halloween night. The logo's purple is the main colour,
+ * pumpkin orange the accent, and everything sits on deep violet-black. Must stay in sync with
+ * {@code launcher/src/renderer/src/styles/tokens.css} and {@code scripts/pixel/palette.mjs}.
  *
- * <p>Seasonal themes only change tokens (and enable small decorative details such as the
- * Halloween fog/moon); components never hard-code colours.
+ * <p>Halloween is Medirian's identity, not a season: the palette never changes. The only seasonal
+ * touch is snow over the night scenes in winter (December to 6 January), which can be switched off.
  */
 public final class Theme {
 
-    /** User choice in Settings → General → Theme. */
-    public enum Mode { AUTO, DEFAULT, HALLOWEEN, CHRISTMAS }
+    private static final Theme CURRENT = new Theme();
+    private static volatile boolean winterSnow = true;
+    private static volatile boolean snowPreview;
 
-    public static final Theme DEFAULT = new Theme("default", false,
-            0xB0080610, 0xF4100D17, 0xFF16131F, 0xFF1D1928, 0xFF2A2438, 0xFF3A3150,
-            0xFFECEAF2, 0xFF9A94AB, 0xFF6C6680,
-            0xFF9B55D6, 0xFFAE6FE3, 0x2E9B55D6, 0xFF9B55D6,
-            0xFF5BC98A, 0xFFE5B454, 0xFFE5566A, 0x8C0B0A10);
+    /** Dims the game behind Medirian's screens. */
+    public final int backdrop = 0xC40A0612;
+    /** Window fill and its bevel (light top-left, dark bottom-right). */
+    public final int panel = 0xFF1B1228;
+    public final int panelLight = 0xFF2E2042;
+    public final int panelDark = 0xFF0E0916;
+    /** Raised elements inside windows: tiles, buttons, key caps. */
+    public final int surface = 0xFF261A37;
+    public final int surfaceLight = 0xFF3A2954;
+    public final int surfaceDark = 0xFF150E1F;
+    public final int elevated = 0xFF31234A;
+    /** Sunken wells: text fields, tracks, lists. */
+    public final int inset = 0xFF0F0A18;
+    public final int border = 0xFF3A2A52;
+    public final int borderStrong = 0xFF4E3A6C;
+    /** The ink outline every pixel element gets. */
+    public final int outline = 0xFF07040C;
+    public final int text = 0xFFF3EADB;
+    public final int textDim = 0xFFB9AACB;
+    public final int textMuted = 0xFF7C6D92;
+    /** Brand purple. */
+    public final int accent = 0xFF9B5FD0;
+    public final int accentHover = 0xFFC49AE8;
+    public final int accentDark = 0xFF5C1D7C;
+    public final int accentSoft = 0x339B5FD0;
+    /** Pumpkin orange: enabled states, primary actions, highlights. */
+    public final int pumpkin = 0xFFE07A2F;
+    public final int pumpkinLight = 0xFFF39C4A;
+    public final int pumpkinDark = 0xFFA8481A;
+    public final int ember = 0xFFFFBF66;
+    /** Dark text on pumpkin. */
+    public final int onPumpkin = 0xFF2A1206;
+    public final int success = 0xFF7CC36A;
+    public final int warning = 0xFFF2C14E;
+    public final int danger = 0xFFD9534F;
+    public final int hudBackground = 0x9C0C0814;
 
-    public static final Theme HALLOWEEN = new Theme("halloween", true,
-            0xB80A0712, 0xF4120E1A, 0xFF181221, 0xFF1F182B, 0xFF2D243C, 0xFF3D3254,
-            0xFFECEAF2, 0xFF9C95AE, 0xFF6E6683,
-            0xFF9B55D6, 0xFFAE6FE3, 0x2E9B55D6, 0xFFE8833A,
-            0xFF5BC98A, 0xFFE5B454, 0xFFE5566A, 0x8C0A0812);
-
-    /** Winter night: cooler panels, the brand violet stays, icy blue as the seasonal accent, snowfall. */
-    public static final Theme CHRISTMAS = new Theme("christmas", true,
-            0xB8070A14, 0xF40E1020, 0xFF131726, 0xFF1A1F31, 0xFF262C42, 0xFF353D58,
-            0xFFECEFF6, 0xFF97A0B6, 0xFF687089,
-            0xFF9B55D6, 0xFFAE6FE3, 0x2E9B55D6, 0xFF8FD3F4,
-            0xFF5BC98A, 0xFFE5B454, 0xFFE5566A, 0x8C090B14);
-
-    private static volatile Theme current = resolve(Mode.AUTO);
-
-    public final String id;
-    /** Enables seasonal decorations (fog and moon, or snow). */
-    public final boolean decorations;
-    public final int backdrop;
-    public final int panel;
-    public final int surface;
-    public final int elevated;
-    public final int border;
-    public final int borderStrong;
-    public final int text;
-    public final int textDim;
-    public final int textMuted;
-    public final int accent;
-    public final int accentHover;
-    public final int accentSoft;
-    /** Seasonal accent (orange for Halloween); used sparingly. */
-    public final int seasonal;
-    public final int success;
-    public final int warning;
-    public final int danger;
-    public final int hudBackground;
-
-    private Theme(String id, boolean decorations, int backdrop, int panel, int surface, int elevated, int border,
-                  int borderStrong, int text, int textDim, int textMuted, int accent, int accentHover, int accentSoft,
-                  int seasonal, int success, int warning, int danger, int hudBackground) {
-        this.id = id;
-        this.decorations = decorations;
-        this.backdrop = backdrop;
-        this.panel = panel;
-        this.surface = surface;
-        this.elevated = elevated;
-        this.border = border;
-        this.borderStrong = borderStrong;
-        this.text = text;
-        this.textDim = textDim;
-        this.textMuted = textMuted;
-        this.accent = accent;
-        this.accentHover = accentHover;
-        this.accentSoft = accentSoft;
-        this.seasonal = seasonal;
-        this.success = success;
-        this.warning = warning;
-        this.danger = danger;
-        this.hudBackground = hudBackground;
+    private Theme() {
     }
 
     public static Theme current() {
-        return current;
+        return CURRENT;
     }
 
-    public static void apply(Mode mode) {
-        current = resolve(mode);
+    /** Settings → General → Snow in winter. */
+    public static void setWinterSnow(boolean on) {
+        winterSnow = on;
     }
 
-    /**
-     * AUTO picks the seasonal theme: Halloween during October, Christmas from December to
-     * 6 January, otherwise the default theme.
-     */
-    public static Theme resolve(Mode mode) {
-        switch (mode) {
-            case HALLOWEEN:
-                return HALLOWEEN;
-            case CHRISTMAS:
-                return CHRISTMAS;
-            case DEFAULT:
-                return DEFAULT;
-            default:
-                return seasonal(Calendar.getInstance());
-        }
+    /** Shows the winter snow whatever the date (the self-test's screenshot of it). */
+    public static void previewSnow(boolean on) {
+        snowPreview = on;
     }
 
-    static Theme seasonal(Calendar date) {
+    /** Whether snow falls over the night scenes right now. */
+    public static boolean snowing() {
+        return snowPreview || (winterSnow && isWinter(Calendar.getInstance()));
+    }
+
+    /** December to 6 January. */
+    static boolean isWinter(Calendar date) {
         int month = date.get(Calendar.MONTH);
-        if (month == Calendar.OCTOBER) {
-            return HALLOWEEN;
-        }
-        if (month == Calendar.DECEMBER || (month == Calendar.JANUARY && date.get(Calendar.DAY_OF_MONTH) <= 6)) {
-            return CHRISTMAS;
-        }
-        return DEFAULT;
-    }
-
-    /** Snow instead of fog in the seasonal decorations. */
-    public boolean snow() {
-        return this == CHRISTMAS;
+        return month == Calendar.DECEMBER || (month == Calendar.JANUARY && date.get(Calendar.DAY_OF_MONTH) <= 6);
     }
 }

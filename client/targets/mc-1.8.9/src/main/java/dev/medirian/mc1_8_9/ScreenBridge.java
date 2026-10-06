@@ -11,6 +11,24 @@ import org.lwjgl.input.Mouse;
  */
 public final class ScreenBridge extends Screen {
 
+    /**
+     * Medirian's main menu in place of Minecraft's title screen, unless it is switched off. Does
+     * what Minecraft does when its title screen opens: hides the debug screen and clears the chat.
+     */
+    public static Screen replaceTitle(net.minecraft.client.MinecraftClient client, Screen screen) {
+        if (screen != null && screen.getClass() == net.minecraft.client.gui.screen.TitleScreen.class) {
+            MedirianScreen menu = dev.medirian.platform.Hooks.titleScreen();
+            if (menu != null) {
+                client.options.debugEnabled = false;
+                if (client.inGameHud != null) {
+                    client.inGameHud.getChatHud().clear();
+                }
+                return new ScreenBridge(menu);
+            }
+        }
+        return screen;
+    }
+
     private final MedirianScreen screen;
     private int pressedButton = -1;
 
