@@ -68,7 +68,8 @@ public final class LegacyCosmetics {
             boolean local = player == client.player;
             Cosmetic hat = Hooks.wornCosmetic(player.getUuid(), local, CosmeticType.HAT);
             Cosmetic wings = Hooks.wornCosmetic(player.getUuid(), local, CosmeticType.WINGS);
-            if (hat != null) {
+            // a helmet, pumpkin or skull covers the head: a hat would cut through it (slot 3 = helmet)
+            if (hat != null && player.getArmorSlot(3) == null) {
                 draw(client, player, renderer.getModel().head, CosmeticModels.model(hat.id()), hat.asset(), scale);
             }
             if (wings != null) {

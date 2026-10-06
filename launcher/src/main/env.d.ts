@@ -12,6 +12,8 @@ interface ImportMetaEnv {
   readonly MAIN_VITE_MANIFEST_URL?: string;
   /** Medirian services URL passed to the client, injected at build time (MAIN_VITE_SERVICES_URL). */
   readonly MAIN_VITE_SERVICES_URL?: string;
+  /** CurseForge API key (CurseForge for Studios), injected at build time (MAIN_VITE_CURSEFORGE_API_KEY). */
+  readonly MAIN_VITE_CURSEFORGE_API_KEY?: string;
 }
 
 interface ImportMeta {

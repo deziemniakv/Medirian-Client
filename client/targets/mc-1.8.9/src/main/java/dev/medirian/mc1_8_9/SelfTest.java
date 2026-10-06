@@ -200,6 +200,9 @@ public final class SelfTest {
                 next(20);
                 return;
             case 10:
+                if (hatTour(client)) {
+                    return;
+                }
                 verifyCape(client);
                 if (dev.medirian.mc1_8_9.LegacyCosmetics.drawn > 0) {
                     Log.info("Self-test: hat and wings OK ({} drawn)", dev.medirian.mc1_8_9.LegacyCosmetics.drawn);
@@ -556,6 +559,64 @@ public final class SelfTest {
         store.add(world, new Waypoint("Gold", x, y, z, medirian.game().player().dimensionId(), 0xFFE8C547));
         // behind the camera (it looks east): shown as a marker at the screen edge
         store.add(world, new Waypoint("Behind", x - 30, y, z + 4, medirian.game().player().dimensionId(), 0xFF4C8DFF));
+    }
+
+    private static final String[] HATS = {"hat_tophat", "hat_crown", "hat_witch", "hat_santa"};
+    private static int hat = -1;
+    private static float tourYaw;
+    private static float tourPitch;
+    private static float tourFov;
+
+    /**
+     * Every hat on the player seen from the front (third person, close up), one screenshot each:
+     * how the hats sit on the head. Returns true while the tour is still running.
+     */
+    private static boolean hatTour(MinecraftClient client) {
+        if (hat >= HATS.length) {
+            return false;
+        }
+        Medirian medirian = Medirian.get();
+        if (hat < 0) {
+            // turn away from the test scene so the camera in front of the face has a free view
+            tourYaw = client.player.yaw;
+            tourPitch = client.player.pitch;
+            tourFov = client.options.fov;
+            face(client, tourYaw + 180f, 0f);
+            // hats hide under a helmet: the tour is about the bare head
+            client.player.sendChatMessage("/replaceitem entity @p slot.armor.head air");
+            client.options.hudHidden = true;
+            client.options.fov = 30f;
+            client.options.perspective = 2;
+        } else {
+            shot(client, "4c-" + HATS[hat]);
+        }
+        hat++;
+        if (hat < HATS.length) {
+            medirian.cosmetics().equip(medirian.cosmetics().byId(HATS[hat]));
+        } else {
+            // back to the cape screenshot's view, hat and wave
+            face(client, tourYaw, tourPitch);
+            client.player.sendChatMessage("/replaceitem entity @p slot.armor.head diamond_helmet");
+            client.options.hudHidden = false;
+            client.options.fov = tourFov;
+            medirian.cosmetics().equip(medirian.cosmetics().byId("hat_tophat"));
+            client.options.perspective = 1;
+            medirian.emotes().playEquipped();
+        }
+        // the first shot waits for the wave started before the cape screenshot to end (2.4 s)
+        wait = hat == 0 ? 30 : hat < HATS.length ? 8 : 20;
+        return true;
+    }
+
+    private static void face(MinecraftClient client, float yaw, float pitch) {
+        client.player.yaw = yaw;
+        client.player.prevYaw = yaw;
+        client.player.headYaw = yaw;
+        client.player.prevHeadYaw = yaw;
+        client.player.bodyYaw = yaw;
+        client.player.prevBodyYaw = yaw;
+        client.player.pitch = pitch;
+        client.player.prevPitch = pitch;
     }
 
     private static void next(int ticks) {

@@ -54,11 +54,34 @@ export async function runDevAutomation(
     await run('window.__medirianDev.completeSetup()');
     await wait(1200);
   }
-  for (const page of ['home', 'profiles', 'changelog', 'settings']) {
+  // with MEDIRIAN_DEV_OFFLINE the screenshots show that player's real skin
+  if (process.env.MEDIRIAN_DEV_OFFLINE) {
+    await deps.accounts.offline(process.env.MEDIRIAN_DEV_OFFLINE);
+    await wait(2500);
+  }
+  for (const page of ['home', 'mods', 'profiles', 'changelog', 'settings']) {
     await run(`window.__medirianDev.navigate('${page}')`);
     await wait(900);
     await capture(`page-${page}`);
+    if (page === 'mods') {
+      // the search results load from Modrinth
+      await wait(3500);
+      await capture('page-mods-results');
+    }
   }
+  // the top bar with a launcher update waiting, at the default and at the smallest window width
+  await run("window.__medirianDev.navigate('home')");
+  await run("window.__medirianDev.updateReady('0.3.1')");
+  await wait(500);
+  await capture('topbar-update');
+  const [width, height] = window.getSize();
+  window.setSize(980, height);
+  await wait(700);
+  await capture('topbar-update-narrow');
+  window.setSize(width, height);
+  await run('window.__medirianDev.updateReady(null)');
+  await run("window.__medirianDev.navigate('settings')");
+  await wait(700);
   // settings tabs beyond the first one
   await run(`[...document.querySelectorAll('.settings__tab')].find((tab) => tab.textContent === 'Discord')?.click()`);
   await wait(600);

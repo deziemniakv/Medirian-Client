@@ -29,6 +29,12 @@ public abstract class MinecraftClientMixin {
         for (dev.medirian.cosmetics.CosmeticRenderer renderer : dev.medirian.mc1_8_9.LegacyCosmetics.RENDERERS) {
             Medirian.get().cosmetics().registerRenderer(renderer);
         }
+        // Minecraft opened its title screen a moment ago, before Medirian booted: open it again so
+        // the replacement in setScreen shows Medirian's main menu from the start
+        MinecraftClient client = (MinecraftClient) (Object) this;
+        if (client.currentScreen != null && client.currentScreen.getClass() == net.minecraft.client.gui.screen.TitleScreen.class) {
+            client.setScreen(new net.minecraft.client.gui.screen.TitleScreen());
+        }
         if (Boolean.getBoolean("medirian.mixinAudit")) {
             // Development only: force every mixin target to load so broken injections fail fast.
             MixinEnvironment.getCurrentEnvironment().audit();

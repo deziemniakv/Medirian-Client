@@ -16,8 +16,19 @@ import java.util.Map;
  * Meshes of worn cosmetics. Hats are boxes described in {@code /medirian/cosmetics/models/<id>.json}
  * (the same files the texture generator paints); wings are two textured planes on the back whose
  * spread is animated every frame.
+ *
+ * <p>Hat boxes are in head space (model pixels from the neck pivot: the head spans y -8..0 and
+ * x/z -4..4) and are authored resting on top of the head; {@code seat} then sinks the whole hat
+ * that many pixels so it sits down over the forehead like a real hat. Every box that reaches into
+ * the head wraps it together with the skin's hat layer ({@link #fits}), so no part of the head
+ * pokes through, whatever the skin.
  */
 public final class CosmeticModels {
+
+    /** The head's half width, its top and how far the skin's hat layer stands out (head space). */
+    public static final float HEAD_HALF = 4f;
+    public static final float HEAD_TOP = -8f;
+    public static final float HAT_LAYER = 0.5f;
 
     private static final Map<String, CosmeticMesh> CACHE = new HashMap<String, CosmeticMesh>();
     private static final CosmeticMesh EMPTY = new MeshBuilder(1, 1).build();
@@ -42,12 +53,26 @@ public final class CosmeticModels {
         return mesh;
     }
 
+    /**
+     * Whether a (seated) hat box sits right on the head: it either wraps the head and its hat
+     * layer on all four sides, or stays completely outside them.
+     */
+    public static boolean fits(float x0, float y0, float z0, float x1, float y1, float z1) {
+        float outer = HEAD_HALF + HAT_LAYER;
+        float wrap = outer + 0.05f;
+        boolean outside = y1 <= HEAD_TOP - HAT_LAYER || x1 <= -outer || x0 >= outer || z1 <= -outer || z0 >= outer;
+        boolean wraps = x0 <= -wrap && x1 >= wrap && z0 <= -wrap && z1 >= wrap;
+        return outside || wraps;
+    }
+
     static CosmeticMesh parse(JsonObject json) {
         JsonArray texture = json.getAsJsonArray("texture");
         MeshBuilder builder = new MeshBuilder(texture.get(0).getAsInt(), texture.get(1).getAsInt());
+        float seat = json.has("seat") ? json.get("seat").getAsFloat() : 0f;
         for (JsonElement element : json.getAsJsonArray("boxes")) {
             JsonObject box = element.getAsJsonObject();
             float[] from = floats(box.getAsJsonArray("from"));
+            from[1] += seat;
             float[] size = floats(box.getAsJsonArray("size"));
             float[] uv = floats(box.getAsJsonArray("uv"));
             float[] uvSize = box.has("uvSize") ? floats(box.getAsJsonArray("uvSize")) : size;

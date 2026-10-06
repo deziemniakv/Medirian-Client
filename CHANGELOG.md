@@ -2,6 +2,18 @@
 
 All notable changes to Medirian Client. The launcher shows the newest entries on its home screen.
 
+## 0.3.0 — 2026-10-06 — Mods, Skins & a Real Home on Windows
+
+- Mods: a new Mods tab in the launcher. Search Modrinth and CurseForge, see each mod's icon, author, description, downloads and category, and install it into the profile you pick — with the mods it needs. Medirian checks the Minecraft version and loader first and tells you plainly when a mod does not fit (for example "This mod is not compatible with Minecraft 1.8.9").
+- Installed mods: switch a mod off without deleting it, remove it, check for updates and update, open its page, and see what it needs and what needs it.
+- Every profile now has its own folder (mods, mod settings, worlds), so the mods of one profile never load in another. Duplicating a profile copies its mods. Existing worlds move to your first profile of that version.
+- Your Minecraft skin everywhere: a 3D figure on the home screen and in the account window, your head in the top bar, and a player card with your skin in the game's main menu. A skin changed on minecraft.net shows up by itself; without an account you see Medirian's own skin.
+- Hats sit on your head now instead of floating above it: they sink a little over the forehead, wrap the head and its hat layer, and follow every head movement on all four versions. They hide while you wear a helmet, a pumpkin or a skull.
+- Medirian Client installs like a real Windows app: MedirianClientSetup.exe installs it for you without administrator rights, with shortcuts on the desktop and in the Start Menu and an entry in Apps & features. Updates install quietly in the same place and keep your profiles and worlds.
+- A download page: Download Medirian Client → Windows → MedirianClientSetup.exe.
+- Minecraft 1.8.9 opens straight into Medirian's main menu (it used to show Minecraft's title screen first).
+- The launcher's top bar fits narrow windows, also with an update waiting.
+
 ## 0.2.0 — 2026-10-05 — A Night in Medirian
 
 - Medirian Client finally carries its real name everywhere: Medirian. Your settings and profiles move over automatically.

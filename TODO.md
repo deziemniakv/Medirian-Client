@@ -1,6 +1,8 @@
 # Medirian — roadmapa
 
-Stan: **0.2.0** (nowy wygląd: pixel art + noc Halloween; launcher, cztery targety klienta — 1.8.9, 1.21.8, 1.21.11, 26.3 — HUD, 41 modułów, konfiguracja, wydajność).
+Stan: **0.3.0** (mody z Modrinth i CurseForge w osobnych profilach, skin konta w launcherze i w grze, czapki osadzone na głowie,
+instalator Windows `MedirianClientSetup.exe`, strona pobierania; pixel art + noc Halloween; cztery targety klienta —
+1.8.9, 1.21.8, 1.21.11, 26.3 — HUD, 41 modułów, konfiguracja, wydajność).
 Poniżej kolejne etapy. Zasada bez zmian: funkcja trafia do UI dopiero, gdy naprawdę działa.
 
 ## Etap 1 — przed pierwszym publicznym wydaniem
@@ -13,7 +15,19 @@ Poniżej kolejne etapy. Zasada bez zmian: funkcja trafia do UI dopiero, gdy napr
 - [x] **Auto-update launchera** (0.1.4) — `electron-updater` (`main/updates/launcherUpdate.ts`), feed z GitHub Releases;
       sprawdzone lokalnie end-to-end (0.1.4 wykrył i pobrał 0.1.5 z lokalnego serwera).
 - [ ] **Podpisywanie kodu** — konfiguracja gotowa (sekrety `CSC_LINK`, `CSC_KEY_PASSWORD`, `APPLE_*` w workflow),
-      brakuje certyfikatów właściciela (Authenticode, Apple Developer ID). Bez podpisu auto-update na macOS nie działa.
+      brakuje certyfikatów właściciela (Authenticode, Apple Developer ID). Bez podpisu auto-update na macOS nie działa,
+      a Windows 11 ze Smart App Control blokuje niepodpisany instalator / aplikację / deinstalator (sprawdzone w 0.3.0).
+- [x] **Instalator Windows** (0.3.0) — `MedirianClientSetup.exe` (NSIS, per-user bez administratora, skróty, wpis
+      w „Aplikacje i funkcje”, cicha auto-aktualizacja w tym samym folderze). Sprawdzone: instalacja, start, aktualizacja
+      0.3.0 → 0.3.2 z zachowaniem danych, deinstalacja.
+- [x] **Strona pobierania** (0.3.0) — `website/` + `.github/workflows/pages.yml`. Właściciel: repozytorium na GitHubie,
+      *Settings → Pages → Source: GitHub Actions*.
+- [x] **Mody w launcherze** (0.3.0) — zakładka Mods (`main/mods`): Modrinth (bez klucza) i CurseForge (klucz API),
+      zgodność z wersją MC i loaderem, zależności, instalacja do profilu, włącz/wyłącz/usuń/aktualizuj; każdy profil
+      z własnym folderem gry. Sprawdzone end-to-end: Mod Menu + Fabric API z Modrinth ładują się tylko w swoim profilu,
+      wyłączony i usunięty mod nie ładuje się po ponownym starcie.
+- [ ] **Klucz CurseForge** — sekret `CURSEFORGE_API_KEY` (console.curseforge.com); bez niego zakładka Mods działa z Modrinth,
+      a CurseForge po wpisaniu własnego klucza w *Ustawienia → Mody*.
 - [ ] Licencja projektu (do wyboru przez właściciela) i pola `license` w `fabric.mod.json` / `package.json`.
 - [x] CI (0.1.4) — `.github/workflows/ci.yml`: testy Shared, build wszystkich targetów, launcher (build + testy) na
       Windows/macOS/Linux, testy skryptów, self-test w Xvfb z porównaniem zrzutów.
@@ -56,6 +70,12 @@ Każdy wymaga hooka w obu adapterach (nowe `Capability`):
 - [x] **Czapki i skrzydła** (0.1.4) — warstwa renderera gracza we wszystkich wersjach (1.8.9: feature renderer, modern:
       `RenderLayer` + `submitCustomGeometry`); modele czapek jako bryły w JSON (`medirian/cosmetics/models`), skrzydła
       generowane z animacją machania; tekstury i ikony z `scripts/generate-cosmetics.mjs`.
+- [x] **Osadzenie czapek** (0.3.0) — modele czapek mają `seat` (ile pikseli schodzą na głowę) i reguła dopasowania
+      (`CosmeticModels.fits`, test `WornCosmeticsTest`): każda bryła sięgająca głowy obejmuje ją razem z warstwą „hat”
+      skina albo leży całkiem na zewnątrz; czapka siedzi 2–2,5 px nad oczami, porusza się z transformacją głowy (obrót,
+      kucanie, emotki) i jest ukryta pod hełmem / dynią / czaszką. Self-test robi zbliżenie każdej czapki (`4c-hat_*`).
+- [x] **Skin gracza** (0.3.0) — launcher (`SkinService`: serwer sesji Mojang, cache `cache/skins/`, model 3D/2D, odświeżanie)
+      i menu główne gry (`PlayerSkins`: ten sam cache, przygotowanie skina jak w Minecrafcie, domyślny skin Medirian).
 - [x] **Ślady** (0.1.4) — cząsteczki za poruszającymi się graczami (`Trails`), widoczne dla innych przez loadouty.
 - [x] **Emotki** (0.1.4) — Wave/Cheer/Dance, klawisz emotki (domyślnie B), widok z przodu podczas emotki; inni gracze
       widzą emotki przez usługi (`/v1/emotes/play`, `/v1/emotes/active`, odpytywanie co sekundę).

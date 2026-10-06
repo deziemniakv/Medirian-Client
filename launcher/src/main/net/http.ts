@@ -1,8 +1,13 @@
 /** Small HTTP helpers on top of fetch with timeouts and retries. */
 
 export class HttpError extends Error {
-  constructor(public readonly url: string, public readonly status: number, message?: string) {
+  readonly url: string;
+  readonly status: number;
+
+  constructor(url: string, status: number, message?: string) {
     super(message ?? `HTTP ${status} for ${url}`);
+    this.url = url;
+    this.status = status;
   }
 }
 
@@ -12,7 +17,15 @@ export interface RequestOptions {
   init?: RequestInit;
 }
 
-export const USER_AGENT = 'MedirianLauncher/0.1 (+https://github.com/medirian-client)';
+/**
+ * Identifies Medirian to the services it talks to (Modrinth requires a unique User-Agent with the
+ * application, its version and a contact). Set once at startup with the launcher version.
+ */
+export let USER_AGENT = 'medirian-client/launcher/dev (+https://github.com/medirian-client)';
+
+export function setUserAgent(version: string): void {
+  USER_AGENT = `medirian-client/launcher/${version} (+https://github.com/medirian-client)`;
+}
 
 export async function request(url: string, { timeoutMs = 20_000, retries = 2, init }: RequestOptions = {}): Promise<Response> {
   let lastError: unknown;

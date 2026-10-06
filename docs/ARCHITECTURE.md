@@ -181,7 +181,9 @@ Medirian/
 |---|---|---|
 | `paths` | `core/paths.ts` | lokalizacja `MEDIRIAN_HOME` i podkatalogów |
 | `SettingsStore` | `core/settings.ts` | ustawienia launchera (JSON, atomowy zapis) |
-| `ProfileStore` | `profiles/profiles.ts` | profile uruchomieniowe |
+| `ProfileStore` | `profiles/profiles.ts` | profile uruchomieniowe; każdy z własnym folderem gry `profiles/<profil>/` |
+| `ModService` | `mods/mods.ts` (+ `modrinth.ts`, `curseforge.ts`, `provider.ts`) | mody profilu: wyszukiwanie (Modrinth API v2, CurseForge API v1 z kluczem), zgodność z wersją MC i loaderem, plan z zależnościami, instalacja / usuwanie / włączanie / aktualizacje, rozpoznawanie ręcznie dodanych jarów (SHA-1 w Modrinth, `fabric.mod.json`) |
+| `SkinService` | `skins/skins.ts` | skin konta z serwera sesji Mojang, cache w `cache/skins/` (wspólny z grą), odświeżanie |
 | `Downloader` | `net/downloader.ts` | kolejka pobierania: równoległość, retry z backoffem, SHA-1, atomowe `.part` → rename |
 | `MojangService` | `minecraft/mojang.ts` | manifest wersji, version JSON, biblioteki (reguły OS), assety, natywki |
 | `LoaderService` | `minecraft/loader.ts` | profile Fabric / Legacy Fabric z meta API, scalanie z version JSON |
@@ -213,8 +215,10 @@ pliki `.sha1` z repozytorium.
 ### 4.3 Magazyn danych gry
 
 Pliki gry są przechowywane raz (`game/versions`, `game/libraries`, `game/assets`) i współdzielone
-przez wszystkie targety; każdy target ma osobny `gameDir` (`instances/<target>/`) — inne `mods/`,
-inny format `options.txt`, niekompatybilne światy. Jeśli w systemie istnieje `.minecraft`, assety są
+przez wszystkie targety; każdy **profil** ma osobny `gameDir` (`profiles/<profil>/`) — własne `mods/`,
+`config/`, `options.txt` i światy, także gdy dwa profile uruchamiają tę samą wersję. Instalator kopiuje jar
+Medirian do `mods/` profilu jako `medirian-client.jar`; pozostałe jary w `mods/` to mody gracza (`ModService`).
+Zmiany modów są blokowane, gdy gra działa na danym profilu. Jeśli w systemie istnieje `.minecraft`, assety są
 kopiowane z niego (po weryfikacji hash), zamiast pobierania z sieci.
 
 ## 5. Architektura klienta
@@ -327,8 +331,9 @@ MEDIRIAN_HOME/config/
   (`clients/<target>/<version>/`) → pobiera nowe jary, weryfikuje SHA-1, przełącza atomowo.
   Stare wersje są usuwane przy „Clear cache”.
 * Wersje loaderów są **przypięte w manifeście** (reprodukowalność — nie „latest”).
-* Aktualizacja samego launchera: interfejs `LauncherUpdater` (TODO: `electron-updater` + podpisywanie
-  kodu; wymaga hostingu wydań).
+* Aktualizacja samego launchera: `electron-updater` (`updates/launcherUpdate.ts`) z kanałem GitHub Releases
+  (`latest.yml`), pobieranie w tle, cicha instalacja przy zamknięciu albo po „Aktualizuj”. Instalator Windows:
+  `MedirianClientSetup.exe` (NSIS, per-user) — szczegóły w `docs/RELEASING.md`.
 
 ## 10. Komunikacja launcher ↔ klient
 

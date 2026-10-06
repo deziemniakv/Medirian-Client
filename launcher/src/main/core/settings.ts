@@ -33,7 +33,8 @@ export function defaultSettings(localDistributionDir: string): LauncherSettings 
     discordPresence: true,
     discordShowServer: true,
     discordShowInLauncher: false,
-    discordAppId: ''
+    discordAppId: '',
+    curseforgeApiKey: ''
   };
 }
 

@@ -7,7 +7,8 @@
 //           assets/medirian/icon.png (mod icon)
 //   launcher src/renderer/assets/scene/*.png (400×250), logo.png, mark.png, icon.png,
 //           src/renderer/assets/icons/<name>.png (colour icons), src/renderer/assets/fonts/medirian-pixel.ttf,
-//           resources/icon.png (app icon, 512 px)
+//           resources/icon.png (app icon, 512 px), resources/{installer,uninstaller}Sidebar.bmp and
+//           resources/installerHeader.bmp (Windows installer)
 //   branding medirian-icon-{512,256,128}.png, medirian-logo.png
 //
 // Usage: node scripts/generate-pixel-art.mjs
@@ -17,9 +18,10 @@ import { fileURLToPath } from 'node:url';
 import { Canvas, bayer, hash } from './pixel/canvas.mjs';
 import { buildTtf } from './pixel/font.mjs';
 import { ALL_ICONS, icon } from './pixel/icons.mjs';
-import { lockup, mark } from './pixel/logo.mjs';
+import { chunkyText, lockup, mark, text } from './pixel/logo.mjs';
 import { PAL } from './pixel/palette.mjs';
-import { PUMPKIN, buildScene } from './pixel/scene.mjs';
+import { PUMPKIN, buildScene, flatten } from './pixel/scene.mjs';
+import { defaultSkin } from './pixel/skin.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const GUI = join(ROOT, 'client/shared/src/main/resources/assets/medirian/textures/gui');
@@ -123,6 +125,69 @@ function bat() {
   return c;
 }
 
+/**
+ * The installer's welcome/finish sidebar (164×314, NSIS' fixed size): the cabin corner of the
+ * night scene at 2× with the mark and the wordmark above it.
+ */
+function installerSidebar() {
+  const W = 82;
+  const H = 157;
+  const scene = flatten(buildScene(200, H, { moon: [166, 70, 11] }));
+  const c = scene.crop(200 - W, 0, W, H);
+  const m = mark(ROOT, 22);
+  c.draw(m, Math.round((W - m.width) / 2), 10);
+  const word = chunkyText('MEDIRIAN', { scale: 1, top: PAL.lavender, bottom: PAL.lilac, side: PAL.purple, depth: 1 });
+  c.draw(word, Math.round((W - word.width) / 2), 12 + m.height);
+  const client = text('CLIENT', PAL.pumpkinLight, { outline: PAL.ink });
+  c.draw(client, Math.round((W - client.width) / 2), 12 + m.height + word.height - 1);
+  return c.scaled(2);
+}
+
+/** The header of the installer's inner pages (150×57): the mark on the night sky. */
+function installerHeader() {
+  const c = new Canvas(150, 57);
+  const stops = [PAL.night2, PAL.night1, PAL.night0];
+  for (let y = 0; y < 57; y++) {
+    for (let x = 0; x < 150; x++) {
+      const f = (x / 150) * (stops.length - 1);
+      const k = Math.floor(f);
+      c.set(x, y, f - k > bayer(x, y) ? stops[Math.min(stops.length - 1, k + 1)] : stops[k]);
+    }
+  }
+  const m = mark(ROOT, 22);
+  const big = m.scaled(2);
+  c.draw(big, 150 - big.width - 6, Math.round((57 - big.height) / 2));
+  return c;
+}
+
+/** A 24-bit BMP (what NSIS' wizard images must be), opaque pixels over the darkest night tone. */
+function bmp(canvas) {
+  const { width, height, data } = canvas;
+  const stride = Math.ceil((width * 3) / 4) * 4;
+  const file = Buffer.alloc(54 + stride * height);
+  file.write('BM', 0);
+  file.writeUInt32LE(file.length, 2);
+  file.writeUInt32LE(54, 10);
+  file.writeUInt32LE(40, 14);
+  file.writeInt32LE(width, 18);
+  file.writeInt32LE(height, 22);
+  file.writeUInt16LE(1, 26);
+  file.writeUInt16LE(24, 28);
+  file.writeUInt32LE(stride * height, 34);
+  const [br, bg, bb] = [0x0c, 0x08, 0x14];
+  for (let y = 0; y < height; y++) {
+    const row = 54 + (height - 1 - y) * stride;
+    for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * 4;
+      const a = data[i + 3] / 255;
+      file[row + x * 3] = Math.round(data[i + 2] * a + bb * (1 - a));
+      file[row + x * 3 + 1] = Math.round(data[i + 1] * a + bg * (1 - a));
+      file[row + x * 3 + 2] = Math.round(data[i] * a + br * (1 - a));
+    }
+  }
+  return file;
+}
+
 // ------------------------------------------------------------------ client
 writeScene(join(GUI, 'scene'), 480, 270);
 out(join(GUI, 'logo.png'), lockup(ROOT).png());
@@ -130,6 +195,7 @@ out(join(GUI, 'mark.png'), mark(ROOT, 30).png());
 out(join(GUI, 'icons.png'), iconAtlas().png());
 out(join(GUI, 'icons.txt'), ALL_ICONS.join('\n') + '\n');
 out(join(GUI, 'bat.png'), bat().png());
+out(join(GUI, 'default_skin.png'), defaultSkin().png());
 const app = appIcon();
 out(join(ROOT, 'client/shared/src/main/resources/assets/medirian/icon.png'), app.scaled(2).png());
 
@@ -140,10 +206,29 @@ out(join(ASSETS, 'logo.png'), lockup(ROOT).png());
 out(join(ASSETS, 'mark.png'), mark(ROOT, 30).png());
 out(join(ASSETS, 'bat.png'), bat().png());
 out(join(ASSETS, 'snow.png'), snowTile().png());
+out(join(ASSETS, 'default-skin.png'), defaultSkin().png());
 out(join(ASSETS, 'icon.png'), app.scaled(4).png());
 out(join(LAUNCHER, 'resources/icon.png'), app.scaled(8).png());
 for (const name of ALL_ICONS) out(join(ASSETS, 'icons', `${name}.png`), (name === 'mods' ? markIcon() : icon(name)).png());
 out(join(ASSETS, 'fonts/medirian-pixel.ttf'), buildTtf());
+
+// ------------------------------------------------------------------ Windows installer
+out(join(LAUNCHER, 'resources/installerSidebar.bmp'), bmp(installerSidebar()));
+out(join(LAUNCHER, 'resources/uninstallerSidebar.bmp'), bmp(installerSidebar()));
+out(join(LAUNCHER, 'resources/installerHeader.bmp'), bmp(installerHeader()));
+
+// ------------------------------------------------------------------ download page (website/)
+{
+  const WEB = join(ROOT, 'website/assets');
+  const scene = buildScene(480, 270, { moon: [300, 58, 22] });
+  const { fog, ...rest } = scene;
+  out(join(WEB, 'scene.png'), flatten({ ...rest, fog: new Canvas(fog.width, fog.height) }).png());
+  out(join(WEB, 'fog.png'), fog.png());
+  out(join(WEB, 'logo.png'), lockup(ROOT).png());
+  out(join(WEB, 'icon.png'), app.scaled(2).png());
+  out(join(WEB, 'medirian-pixel.ttf'), buildTtf());
+  for (const name of ['mods', 'cosmetics', 'profiles', 'hudedit', 'fps', 'news', 'play', 'singleplayer']) out(join(WEB, `icon-${name}.png`), icon(name).png());
+}
 
 // ------------------------------------------------------------------ branding
 for (const size of [512, 256, 128]) out(join(ROOT, `branding/medirian-icon-${size}.png`), app.scaled(size / 64).png());

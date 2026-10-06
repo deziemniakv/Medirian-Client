@@ -65,6 +65,12 @@ export function Profiles() {
     setSelectedId(created.id);
   };
 
+  const duplicate = async () => {
+    const copy = await invoke('profiles:duplicate', draft.id, `${draft.name} (2)`);
+    setProfiles(await invoke('profiles:list'));
+    setSelectedId(copy.id);
+  };
+
   const remove = async () => {
     if (!confirmDelete) {
       setConfirmDelete(true);
@@ -209,12 +215,12 @@ export function Profiles() {
 
             <hr className="groove" />
             <div className="profile-editor__actions">
-              <button className="btn btn--ghost" onClick={() => void invoke('shell:open', 'instance', draft.targetId)}>
+              <button className="btn btn--ghost" onClick={() => void invoke('shell:open', 'instance', draft.id)}>
                 <Icon name="folder" size={16} />
                 {t('profiles.openFolder')}
               </button>
               <div className="row">
-                <button className="btn" onClick={() => void create({ ...draft, name: `${draft.name} (2)` })}>
+                <button className="btn" onClick={() => void duplicate()}>
                   <Icon name="copy" size={16} />
                   {t('profiles.duplicate')}
                 </button>

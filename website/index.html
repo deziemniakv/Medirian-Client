@@ -1,0 +1,106 @@
+<!doctype html>
+<!-- data-repo is the GitHub repository whose releases the page links to; the Pages workflow
+     (.github/workflows/pages.yml) fills it in when it publishes the site. -->
+<html lang="en" data-repo="OWNER/REPO">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Medirian Client — download</title>
+  <meta name="description" content="Medirian Client: a cozy Minecraft client and launcher for 1.8.9, 1.21.8, 1.21.11 and 26.3. Download for Windows.">
+  <meta name="theme-color" content="#120b1e">
+  <link rel="icon" type="image/png" href="assets/icon.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="#" aria-label="Medirian Client">
+      <img src="assets/logo.png" alt="Medirian Client" width="276" height="80">
+    </a>
+    <nav class="links">
+      <a href="#features" data-t="nav.features">Features</a>
+      <a href="#download" data-t="nav.download">Download</a>
+      <a class="js-releases" href="#" data-t="nav.releases">Releases</a>
+      <button class="lang" type="button" aria-label="Language">PL</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="scene" aria-hidden="true">
+        <div class="scene__fog"></div>
+      </div>
+      <div class="hero__text">
+        <h1 class="pixel" data-t="hero.title">A cozy night in Minecraft</h1>
+        <p class="hero__lead" data-t="hero.lead">Medirian Client is a launcher and a client for Minecraft 1.8.9, 1.21.8, 1.21.11 and 26.3 — 41 modules, a HUD you arrange yourself, your own skin everywhere, cosmetics and mods from Modrinth and CurseForge in separate profiles.</p>
+        <div class="download" id="download">
+          <a class="btn btn--pumpkin js-windows" href="#">
+            <img src="assets/icon-play.png" alt="" width="32" height="32">
+            <span>
+              <span class="pixel" data-t="download.windows">Download for Windows</span>
+              <small class="js-meta">MedirianClientSetup.exe</small>
+            </span>
+          </a>
+          <p class="download__other">
+            <span data-t="download.other">Also for</span>
+            <a class="js-mac" href="#">macOS</a> ·
+            <a class="js-linux" href="#">Linux</a> ·
+            <a class="js-releases" href="#" data-t="download.all">all releases</a>
+          </p>
+          <p class="download__note js-note" hidden></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="steps">
+      <h2 class="pixel" data-t="steps.title">Three steps to the night</h2>
+      <ol>
+        <li><span class="pixel">1</span><p data-t="steps.1">Download <b>MedirianClientSetup.exe</b>.</p></li>
+        <li><span class="pixel">2</span><p data-t="steps.2">Run it — Medirian Client installs for your Windows user, no administrator needed, with shortcuts on the desktop and in the Start Menu.</p></li>
+        <li><span class="pixel">3</span><p data-t="steps.3">Open Medirian Client, sign in with Microsoft and press Play. Updates install themselves.</p></li>
+      </ol>
+    </section>
+
+    <section class="features" id="features">
+      <h2 class="pixel" data-t="features.title">What is inside</h2>
+      <div class="grid">
+        <article class="card">
+          <img src="assets/icon-mods.png" alt="" width="48" height="48">
+          <h3 class="pixel" data-t="f.mods.t">Mods per profile</h3>
+          <p data-t="f.mods.d">Search Modrinth and CurseForge, install with dependencies into one profile. Medirian checks the Minecraft version and loader for you.</p>
+        </article>
+        <article class="card">
+          <img src="assets/icon-profiles.png" alt="" width="48" height="48">
+          <h3 class="pixel" data-t="f.profiles.t">Separate profiles</h3>
+          <p data-t="f.profiles.d">Every profile has its own folder: mods, settings and worlds never mix between your PvP and survival setups.</p>
+        </article>
+        <article class="card">
+          <img src="assets/icon-hudedit.png" alt="" width="48" height="48">
+          <h3 class="pixel" data-t="f.hud.t">41 modules and a HUD</h3>
+          <p data-t="f.hud.d">Keystrokes, CPS, armor, coordinates, zoom, freelook and more — drag every element where you want it.</p>
+        </article>
+        <article class="card">
+          <img src="assets/icon-cosmetics.png" alt="" width="48" height="48">
+          <h3 class="pixel" data-t="f.cosmetics.t">Your skin, your style</h3>
+          <p data-t="f.cosmetics.d">Your Minecraft skin in the launcher and in the game menu. Capes, hats, wings, trails and emotes.</p>
+        </article>
+        <article class="card">
+          <img src="assets/icon-fps.png" alt="" width="48" height="48">
+          <h3 class="pixel" data-t="f.perf.t">Fast</h3>
+          <p data-t="f.perf.d">Entity and block-entity culling, a light HUD and Java installed automatically for every version.</p>
+        </article>
+        <article class="card">
+          <img src="assets/icon-news.png" alt="" width="48" height="48">
+          <h3 class="pixel" data-t="f.updates.t">Always up to date</h3>
+          <p data-t="f.updates.d">The launcher and the client update in the background; your profiles and worlds stay where they are.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p data-t="foot.legal">Medirian Client is not an official Minecraft product and is not approved by or associated with Mojang or Microsoft.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -86,10 +86,13 @@ export class LauncherUpdateService {
     return this.status;
   }
 
-  /** Quits and installs the downloaded update (no-op until one is ready). */
+  /**
+   * Quits, installs the downloaded update without any installer window (into the same folder,
+   * for the same user) and starts the new version (no-op until one is ready).
+   */
   install(): void {
     if (this.updater && this.status.state === 'ready') {
-      this.updater.quitAndInstall(false, true);
+      this.updater.quitAndInstall(true, true);
     }
   }
 

@@ -8,13 +8,15 @@ import type {
   GameState,
   LaunchProfile,
   LauncherSettings,
+  ModTask,
+  PlayerSkin,
   ReleaseState,
   SystemInfo,
   TargetStatus
 } from '../../common/types';
 import { invoke, on } from './api';
 
-export type Page = 'home' | 'profiles' | 'changelog' | 'settings';
+export type Page = 'home' | 'mods' | 'profiles' | 'changelog' | 'settings';
 
 interface State {
   ready: boolean;
@@ -27,6 +29,8 @@ interface State {
   game: GameState;
   log: string[];
   account: Account | null;
+  skin: PlayerSkin | null;
+  modTask: ModTask | null;
   discord: DiscordStatus;
   launcherUpdate: LauncherUpdateStatus;
   app: AppInfo | null;
@@ -59,6 +63,8 @@ export const useStore = create<State>((set, get) => ({
   game: { state: 'idle' },
   log: [],
   account: null,
+  skin: null,
+  modTask: null,
   discord: { state: 'disabled' },
   launcherUpdate: { state: 'unsupported' },
   app: null,
@@ -71,7 +77,7 @@ export const useStore = create<State>((set, get) => ({
       subscribed = true;
       subscribe(set, get);
     }
-    const [settings, profiles, game, account, app, system, changelog, log, discord, launcherUpdate] = await Promise.all([
+    const [settings, profiles, game, account, app, system, changelog, log, discord, launcherUpdate, skin] = await Promise.all([
       invoke('settings:get'),
       invoke('profiles:list'),
       invoke('game:state'),
@@ -81,9 +87,10 @@ export const useStore = create<State>((set, get) => ({
       invoke('changelog:get'),
       invoke('game:log'),
       invoke('discord:status'),
-      invoke('launcherUpdate:status')
+      invoke('launcherUpdate:status'),
+      invoke('skin:get')
     ]);
-    set({ settings, profiles, game, account, app, system, changelog, log, discord, launcherUpdate, ready: true });
+    set({ settings, profiles, game, account, app, system, changelog, log, discord, launcherUpdate, skin, ready: true });
     void get().refreshReleases();
   },
 
@@ -138,6 +145,8 @@ function subscribe(set: (partial: Partial<State> | ((state: State) => Partial<St
   on('account:changed', (account) => set({ account }));
   on('discord:status', (discord) => set({ discord }));
   on('launcherUpdate:status', (launcherUpdate) => set({ launcherUpdate }));
+  on('skin:changed', (skin) => set({ skin }));
+  on('mods:task', (modTask) => set({ modTask }));
 }
 
 export function selectedProfile(state: Pick<State, 'profiles' | 'settings'>): LaunchProfile | undefined {

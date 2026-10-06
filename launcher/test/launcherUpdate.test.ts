@@ -60,7 +60,8 @@ test('an available update is downloaded and installed on request', async () => {
   updater.emit('update-downloaded', { version: '9.9.9' });
   assert.deepEqual(service.current(), { state: 'ready', version: '9.9.9' });
   service.install();
-  assert.deepEqual(updater.installed, [false, true]);
+  // silently, then the new version starts
+  assert.deepEqual(updater.installed, [true, true]);
   assert.deepEqual(events.map((e) => e.state), ['checking', 'downloading', 'downloading', 'ready']);
 });
 

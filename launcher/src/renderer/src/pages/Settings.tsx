@@ -5,12 +5,13 @@ import { ArtIcon, Icon, type IconName } from '../components/Icon';
 import { useT, type MessageKey } from '../i18n';
 import { useStore } from '../store';
 
-type Section = 'general' | 'updates' | 'installation' | 'java' | 'account' | 'discord' | 'developer' | 'about';
+type Section = 'general' | 'updates' | 'installation' | 'mods' | 'java' | 'account' | 'discord' | 'developer' | 'about';
 
 const SECTIONS: { id: Section; label: MessageKey; icon: IconName }[] = [
   { id: 'general', label: 'settings.general', icon: 'gear' },
   { id: 'updates', label: 'settings.updates', icon: 'download' },
   { id: 'installation', label: 'settings.installation', icon: 'folder' },
+  { id: 'mods', label: 'settings.mods', icon: 'box' },
   { id: 'java', label: 'settings.java', icon: 'cpu' },
   { id: 'account', label: 'settings.account', icon: 'user' },
   { id: 'discord', label: 'settings.discord', icon: 'globe' },
@@ -96,6 +97,7 @@ export function Settings() {
           )}
           {section === 'updates' && <UpdatesSection />}
           {section === 'installation' && <InstallationSection />}
+          {section === 'mods' && <ModsSection />}
           {section === 'java' && <JavaSection />}
           {section === 'account' && <AccountSection />}
           {section === 'discord' && <DiscordSection />}
@@ -377,6 +379,37 @@ function AboutSection() {
           {t('settings.open')}
         </button>
       </Row>
+    </>
+  );
+}
+
+function ModsSection() {
+  const t = useT();
+  const settings = useStore((s) => s.settings)!;
+  const update = useStore((s) => s.updateSettings);
+  const app = useStore((s) => s.app);
+  // the key is saved when editing ends (it is sent to CurseForge with every request)
+  const [key, setKey] = useState(settings.curseforgeApiKey);
+  const commit = () => {
+    if (key.trim() !== settings.curseforgeApiKey) {
+      void update({ curseforgeApiKey: key.trim() });
+    }
+  };
+  return (
+    <>
+      <Row label="Modrinth" hint={t('settings.modrinthHint')}>
+        <span className="chip chip--pumpkin">{t('settings.ready')}</span>
+      </Row>
+      <Row label={t('settings.curseforgeKey')} hint={app?.curseforgeKeyBuiltIn ? t('settings.curseforgeKeyBuiltIn') : t('settings.curseforgeKeyHint')}>
+        <input className="input mono settings__wide-input" type="password" value={key} placeholder={app?.curseforgeKeyBuiltIn ? '••••••••' : '$2a$10$…'}
+          autoComplete="off" spellCheck={false} onChange={(e) => setKey(e.target.value)} onBlur={commit}
+          onKeyDown={(e) => e.key === 'Enter' && commit()} />
+        <button className="btn btn--ghost btn--small" onClick={() => void invoke('shell:openExternal', 'https://console.curseforge.com/')}>
+          <Icon name="external" size={16} />
+          {t('settings.curseforgeOpen')}
+        </button>
+      </Row>
+      <p className="muted settings__intro">{t('settings.modsFolders')}</p>
     </>
   );
 }

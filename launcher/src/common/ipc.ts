@@ -2,6 +2,15 @@
 
 import type {
   Account,
+  InstalledModsState,
+  ModCategory,
+  ModDetails,
+  ModInstallPlan,
+  ModSearchQuery,
+  ModSearchResult,
+  ModSource,
+  ModSourceInfo,
+  ModTask,
   AppInfo,
   ChangelogEntry,
   DeviceCodeInfo,
@@ -13,6 +22,7 @@ import type {
   LaunchProfile,
   LauncherSettings,
   LoginResult,
+  PlayerSkin,
   OpenTarget,
   ReleaseState,
   RepairReport,
@@ -34,6 +44,7 @@ export interface InvokeApi {
   'profiles:create': (base: Partial<LaunchProfile>) => LaunchProfile;
   'profiles:save': (profile: LaunchProfile) => LaunchProfile[];
   'profiles:delete': (id: string) => LaunchProfile[];
+  'profiles:duplicate': (id: string, name: string) => LaunchProfile;
   'client:configProfiles': () => string[];
 
   'releases:get': (refresh: boolean) => ReleaseState;
@@ -57,6 +68,8 @@ export interface InvokeApi {
   'account:logout': () => void;
   'account:offline': (name: string) => Account;
   'account:offlineAllowed': () => boolean;
+  'skin:get': () => PlayerSkin;
+  'skin:refresh': () => PlayerSkin;
 
   'system:info': () => SystemInfo;
   'setup:run': () => SetupCheck[];
@@ -68,7 +81,19 @@ export interface InvokeApi {
   'launcherUpdate:check': () => LauncherUpdateStatus;
   'launcherUpdate:install': () => void;
 
-  'shell:open': (target: OpenTarget, targetId?: string) => void;
+  'mods:sources': () => ModSourceInfo[];
+  'mods:search': (query: ModSearchQuery) => ModSearchResult;
+  'mods:categories': (source: ModSource) => ModCategory[];
+  'mods:details': (source: ModSource, projectId: string, profileId: string) => ModDetails;
+  'mods:plan': (profileId: string, source: ModSource, projectId: string, versionId?: string) => ModInstallPlan;
+  'mods:install': (profileId: string, source: ModSource, projectId: string, versionId?: string) => InstalledModsState;
+  'mods:installed': (profileId: string) => InstalledModsState;
+  'mods:setEnabled': (profileId: string, file: string, enabled: boolean) => InstalledModsState;
+  'mods:remove': (profileId: string, file: string) => InstalledModsState;
+  'mods:checkUpdates': (profileId: string) => InstalledModsState;
+  'mods:update': (profileId: string, file: string) => InstalledModsState;
+
+  'shell:open': (target: OpenTarget, profileId?: string) => void;
   'shell:openExternal': (url: string) => void;
 }
 
@@ -80,6 +105,8 @@ export interface EventApi {
   'account:loginResult': LoginResult;
   'discord:status': DiscordStatus;
   'launcherUpdate:status': LauncherUpdateStatus;
+  'mods:task': ModTask | null;
+  'skin:changed': PlayerSkin;
 }
 
 export type InvokeChannel = keyof InvokeApi;
@@ -88,20 +115,23 @@ export type EventChannel = keyof EventApi;
 export const INVOKE_CHANNELS: InvokeChannel[] = [
   'app:info', 'window:minimize', 'window:close',
   'settings:get', 'settings:update',
-  'profiles:list', 'profiles:create', 'profiles:save', 'profiles:delete', 'client:configProfiles',
+  'profiles:list', 'profiles:create', 'profiles:save', 'profiles:delete', 'profiles:duplicate', 'client:configProfiles',
   'releases:get', 'targets:status', 'changelog:get',
   'game:state', 'game:launch', 'game:kill', 'game:log',
   'install:repair', 'install:clearCache', 'install:diskUsage',
   'java:detect',
   'account:get', 'account:loginStart', 'account:loginCancel', 'account:logout', 'account:offline', 'account:offlineAllowed',
+  'skin:get', 'skin:refresh',
   'system:info', 'setup:run', 'setup:fix',
   'discord:status',
   'launcherUpdate:status', 'launcherUpdate:check', 'launcherUpdate:install',
+  'mods:sources', 'mods:search', 'mods:categories', 'mods:details', 'mods:plan', 'mods:install', 'mods:installed',
+  'mods:setEnabled', 'mods:remove', 'mods:checkUpdates', 'mods:update',
   'shell:open', 'shell:openExternal'
 ];
 
 export const EVENT_CHANNELS: EventChannel[] = ['game:state', 'game:log', 'account:changed', 'account:loginResult', 'discord:status',
-  'launcherUpdate:status'];
+  'launcherUpdate:status', 'mods:task', 'skin:changed'];
 
 /** Shape of `window.medirian` exposed by the preload script. */
 export interface MedirianBridge {

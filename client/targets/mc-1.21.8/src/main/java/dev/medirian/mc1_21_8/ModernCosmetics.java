@@ -18,6 +18,7 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.world.entity.EquipmentSlot;
 
 import java.util.Arrays;
 import java.util.List;
@@ -55,6 +56,10 @@ public final class ModernCosmetics {
     public static void extract(AbstractClientPlayer player, PlayerRenderState state, float partialTick) {
         boolean local = player == Minecraft.getInstance().player;
         Cosmetic hat = Hooks.wornCosmetic(player.getUUID(), local, CosmeticType.HAT);
+        // a helmet, carved pumpkin or skull covers the head: a hat would cut through it
+        if (hat != null && !player.getItemBySlot(EquipmentSlot.HEAD).isEmpty()) {
+            hat = null;
+        }
         Cosmetic wings = Hooks.wornCosmetic(player.getUUID(), local, CosmeticType.WINGS);
         float spread = 0f;
         if (wings != null) {

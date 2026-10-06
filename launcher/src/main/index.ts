@@ -8,7 +8,7 @@ import { AccountService } from './auth/accounts';
 import { CHANGELOG } from './changelog';
 import { runDevAutomation } from './devAutomation';
 import { initLog, log } from './core/log';
-import { instanceDir, medirianPaths } from './core/paths';
+import { medirianPaths } from './core/paths';
 import { defaultManifestUrl, defaultServicesUrl, defaultSettings, SettingsStore } from './core/settings';
 import { buildActivity, DiscordPresenceService } from './discord/presence';
 import { Installer } from './install/installer';
@@ -19,14 +19,21 @@ import { JavaRuntimeService } from './java/runtime';
 import { GameService } from './launch/game';
 import { LoaderService } from './minecraft/loader';
 import { MojangService } from './minecraft/mojang';
+import { CurseForgeProvider } from './mods/curseforge';
+import { ModrinthProvider } from './mods/modrinth';
+import { ModService } from './mods/mods';
+import { setUserAgent } from './net/http';
+import { SkinService } from './skins/skins';
 import { listClientConfigProfiles, ProfileStore } from './profiles/profiles';
 import { LauncherUpdateService, type Updater } from './updates/launcherUpdate';
 import { UpdateService } from './updates/updates';
 
 const EXTERNAL_ALLOWED = [/^https:\/\/(www\.)?microsoft\.com\//, /^https:\/\/(www\.)?minecraft\.net\//, /^https:\/\/login\.live\.com\//,
-  /^https:\/\/discord\.com\/developers\//];
+  /^https:\/\/discord\.com\/developers\//, /^https:\/\/modrinth\.com\//, /^https:\/\/(www\.)?curseforge\.com\//,
+  /^https:\/\/console\.curseforge\.com\//];
 
 let window: BrowserWindow | null = null;
+let skinService: SkinService | null = null;
 
 function emit<K extends EventChannel>(channel: K, payload: EventApi[K]): void {
   window?.webContents.send(channel, payload);
@@ -57,6 +64,7 @@ async function loadUpdater(): Promise<Updater | null> {
 }
 
 async function bootstrap(): Promise<Services> {
+  setUserAgent(app.getVersion());
   const paths = medirianPaths();
   await mkdir(paths.launcher, { recursive: true });
   await initLog(paths.logs);
@@ -65,7 +73,7 @@ async function bootstrap(): Promise<Services> {
   // In development the local channel points at the repository's distribution folder.
   const devDistribution = app.isPackaged ? '' : resolve(app.getAppPath(), '..', 'distribution');
   const settings = await SettingsStore.load(paths.settingsFile, defaultSettings(devDistribution));
-  const profiles = new ProfileStore(paths.profilesFile);
+  const profiles = new ProfileStore(paths.profilesFile, paths.profiles, paths.instances);
   await profiles.load();
 
   const msaClientId = () => settings.get().msaClientId || import.meta.env.MAIN_VITE_MSA_CLIENT_ID || process.env.MEDIRIAN_MSA_CLIENT_ID || '';
@@ -73,10 +81,18 @@ async function bootstrap(): Promise<Services> {
     paths.accountsFile,
     msaClientId,
     !app.isPackaged,
-    (account) => emit('account:changed', account),
+    (account) => {
+      emit('account:changed', account);
+      void skins.refresh(true);
+    },
     (result) => emit('account:loginResult', result)
   );
   await accounts.load();
+  const skins = new SkinService(paths.cache, () => accounts.current(), (skin) => emit('skin:changed', skin));
+  await skins.loadCached();
+  void skins.refresh();
+  // a skin changed on minecraft.net shows up within 10 minutes (or when the launcher comes back to the front)
+  setInterval(() => void skins.refresh(), 10 * 60_000).unref();
 
   const mojang = new MojangService(paths);
   const loader = new LoaderService(paths);
@@ -116,6 +132,29 @@ async function bootstrap(): Promise<Services> {
     },
     () => settings.get().servicesUrl || defaultServicesUrl());
   const setup = new SetupService(paths, updates);
+  const curseforgeKey = () => settings.get().curseforgeApiKey || import.meta.env.MAIN_VITE_CURSEFORGE_API_KEY
+    || process.env.MEDIRIAN_CURSEFORGE_API_KEY || '';
+  const modrinth = new ModrinthProvider();
+  const mods = new ModService({
+    profiles,
+    target: (targetId) => {
+      const target = updates.target(targetId);
+      const loader = target?.loader.type ?? (targetId === '1.8.9' ? 'legacy-fabric' : 'fabric');
+      return {
+        minecraftVersion: target?.minecraftVersion ?? targetId,
+        loader,
+        loaderName: loader === 'legacy-fabric' ? 'Legacy Fabric' : 'Fabric'
+      };
+    },
+    isRunning: (profileId) => {
+      const state = game.current();
+      return (state.state === 'running' || state.state === 'preparing') && state.profileId === profileId;
+    },
+    providers: { modrinth, curseforge: new CurseForgeProvider(curseforgeKey) },
+    modrinth,
+    concurrency: () => settings.get().concurrentDownloads,
+    emitTask: (task) => emit('mods:task', task)
+  });
 
   handle('app:info', () => ({
     version: app.getVersion(),
@@ -126,6 +165,7 @@ async function bootstrap(): Promise<Services> {
     home: paths.root,
     platform: process.platform,
     defaultManifestUrl: defaultManifestUrl(),
+    curseforgeKeyBuiltIn: !!(import.meta.env.MAIN_VITE_CURSEFORGE_API_KEY || process.env.MEDIRIAN_CURSEFORGE_API_KEY),
     defaultServicesUrl: defaultServicesUrl()
   }));
   handle('window:minimize', () => window?.minimize());
@@ -142,6 +182,7 @@ async function bootstrap(): Promise<Services> {
   handle('profiles:create', (base) => profiles.create(base));
   handle('profiles:save', (profile) => profiles.save(profile));
   handle('profiles:delete', (id) => profiles.remove(id));
+  handle('profiles:duplicate', (id, name) => profiles.duplicate(id, name));
   handle('client:configProfiles', () => listClientConfigProfiles(paths.clientProfiles));
 
   handle('releases:get', (refresh) => updates.refresh(refresh));
@@ -155,7 +196,9 @@ async function bootstrap(): Promise<Services> {
   handle('launcherUpdate:install', () => launcherUpdates.install());
 
   handle('game:state', () => game.current());
-  handle('game:launch', (profileId) => {
+  handle('game:launch', async (profileId) => {
+    // the game's main menu shows the cached skin: make it current first (never wait long for Mojang)
+    await Promise.race([skins.refresh().catch(() => undefined), new Promise((resolve) => setTimeout(resolve, 4000))]);
     void game.launch(profileId);
   });
   handle('game:kill', () => game.kill());
@@ -180,6 +223,8 @@ async function bootstrap(): Promise<Services> {
   handle('account:logout', () => accounts.logout());
   handle('account:offline', (name) => accounts.offline(name));
   handle('account:offlineAllowed', () => accounts.isOfflineAllowed());
+  handle('skin:get', () => skins.get());
+  handle('skin:refresh', () => skins.refresh(true));
 
   handle('discord:status', () => discord.current());
 
@@ -187,12 +232,33 @@ async function bootstrap(): Promise<Services> {
   handle('setup:run', () => setup.run());
   handle('setup:fix', (id) => setup.fix(id));
 
-  handle('shell:open', async (target: OpenTarget, targetId?: string) => {
+  handle('mods:sources', () => mods.sources());
+  handle('mods:search', async (query) => {
+    await updates.refresh(false);
+    return mods.search(query);
+  });
+  handle('mods:categories', (source) => mods.categories(source));
+  handle('mods:details', (source, projectId, profileId) => mods.details(source, projectId, profileId));
+  handle('mods:plan', (profileId, source, projectId, versionId) => mods.plan(profileId, source, projectId, versionId));
+  handle('mods:install', (profileId, source, projectId, versionId) => mods.install(profileId, source, projectId, versionId));
+  handle('mods:installed', async (profileId) => {
+    await updates.refresh(false);
+    return mods.installed(profileId);
+  });
+  handle('mods:setEnabled', (profileId, file, enabled) => mods.setEnabled(profileId, file, enabled));
+  handle('mods:remove', (profileId, file) => mods.remove(profileId, file));
+  handle('mods:checkUpdates', (profileId) => mods.checkUpdates(profileId));
+  handle('mods:update', (profileId, file) => mods.update(profileId, file));
+
+  handle('shell:open', async (target: OpenTarget, profileId?: string) => {
+    const owner = profileId ? profiles.get(profileId) : undefined;
+    const gameDir = owner ? profiles.directoryOf(owner) : paths.profiles;
     const dirs: Record<OpenTarget, string> = {
       home: paths.root,
       logs: paths.logs,
-      instance: instanceDir(paths, targetId ?? ''),
-      screenshots: join(instanceDir(paths, targetId ?? ''), 'screenshots')
+      instance: gameDir,
+      mods: join(gameDir, 'mods'),
+      screenshots: join(gameDir, 'screenshots')
     };
     const dir = dirs[target];
     await mkdir(dir, { recursive: true });
@@ -205,6 +271,7 @@ async function bootstrap(): Promise<Services> {
     await shell.openExternal(url);
   });
   discord.refresh();
+  skinService = skins;
   return { settings, accounts, profiles, game };
 }
 
@@ -231,6 +298,7 @@ function createWindow(): void {
     }
   });
   window.once('ready-to-show', () => (offscreen ? window?.showInactive() : window?.show()));
+  window.on('focus', () => void skinService?.refresh());
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   window.webContents.on('will-navigate', (event, url) => {
     if (!url.startsWith('http://localhost') && !url.startsWith('file://')) {
@@ -245,6 +313,12 @@ function createWindow(): void {
   window.on('closed', () => {
     window = null;
   });
+}
+
+// the same id as the installer's shortcuts (electron-builder appId), so the taskbar groups the
+// window with the pinned/Start Menu "Medirian Client" and notifications carry its name
+if (process.platform === 'win32') {
+  app.setAppUserModelId('dev.medirian.launcher');
 }
 
 if (!app.requestSingleInstanceLock()) {

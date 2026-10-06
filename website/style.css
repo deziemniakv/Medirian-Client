@@ -1,0 +1,333 @@
+/* Medirian Client download page: the launcher's night palette and pixel font. */
+
+@font-face {
+  font-family: 'Medirian Pixel';
+  src: url('assets/medirian-pixel.ttf') format('truetype');
+  font-display: swap;
+}
+
+:root {
+  --ink: #07040c;
+  --night0: #0c0814;
+  --night1: #120b1e;
+  --night2: #1b1228;
+  --surface: #221733;
+  --surface-light: #2e2044;
+  --line: #3d2b58;
+  --text: #ece6f6;
+  --text-dim: #b9aecb;
+  --text-muted: #8a7fa0;
+  --accent: #9b55d6;
+  --accent-light: #c49ae8;
+  --pumpkin: #e07a2f;
+  --pumpkin-light: #f39c4a;
+  --pumpkin-deep: #9c4a17;
+  --px: 3px;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  color: var(--text);
+  background: var(--night0);
+  font: 16px/1.55 system-ui, 'Segoe UI', sans-serif;
+}
+
+img {
+  image-rendering: pixelated;
+}
+
+a {
+  color: var(--accent-light);
+}
+
+.pixel {
+  font-family: 'Medirian Pixel', monospace;
+  font-weight: normal;
+  letter-spacing: 0.02em;
+  text-shadow: var(--px) var(--px) 0 var(--ink);
+}
+
+/* ------------------------------------------------------------------ header */
+
+.top {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px clamp(16px, 4vw, 48px);
+}
+
+.brand img {
+  display: block;
+  width: clamp(170px, 22vw, 276px);
+  height: auto;
+}
+
+.links {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 2.4vw, 28px);
+}
+
+.links a {
+  color: var(--text-dim);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.links a:hover {
+  color: var(--text);
+}
+
+.lang {
+  padding: 4px 10px;
+  color: var(--text);
+  font: inherit;
+  font-weight: 700;
+  background: var(--surface);
+  border: var(--px) solid var(--ink);
+  box-shadow: inset 0 var(--px) 0 var(--surface-light);
+  cursor: pointer;
+}
+
+/* ------------------------------------------------------------------ hero */
+
+.hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: min(100vh, 860px);
+  padding: 120px clamp(16px, 5vw, 64px) 72px;
+  overflow: hidden;
+}
+
+.scene {
+  position: absolute;
+  inset: 0;
+  background: url('assets/scene.png') center bottom / cover no-repeat;
+  image-rendering: pixelated;
+}
+
+.scene::after {
+  /* the text stays readable over the sky */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(12, 8, 20, 0.88) 0%, rgba(12, 8, 20, 0.55) 45%, rgba(12, 8, 20, 0) 75%),
+    linear-gradient(0deg, var(--night0) 0%, rgba(12, 8, 20, 0) 18%);
+}
+
+.scene__fog {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 9%;
+  height: 22%;
+  background: url('assets/fog.png') 0 0 / auto 100% repeat-x;
+  image-rendering: pixelated;
+  opacity: 0.9;
+  animation: fog 90s linear infinite;
+}
+
+@keyframes fog {
+  to { background-position: -1440px 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene__fog {
+    animation: none;
+  }
+}
+
+.hero__text {
+  position: relative;
+  z-index: 1;
+  max-width: 620px;
+}
+
+.hero h1 {
+  margin: 0 0 16px;
+  font-size: clamp(34px, 5.4vw, 60px);
+  line-height: 1.1;
+  color: var(--accent-light);
+}
+
+.hero__lead {
+  margin: 0 0 28px;
+  color: var(--text-dim);
+  font-size: clamp(16px, 1.6vw, 18px);
+}
+
+/* ------------------------------------------------------------------ download */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 26px 14px 18px;
+  text-decoration: none;
+  border: var(--px) solid var(--ink);
+}
+
+.btn--pumpkin {
+  color: #2a1406;
+  background: var(--pumpkin);
+  box-shadow: inset 0 calc(var(--px) * -2) 0 var(--pumpkin-deep), inset 0 var(--px) 0 var(--pumpkin-light), 0 var(--px) 0 var(--ink);
+}
+
+.btn--pumpkin:hover {
+  background: var(--pumpkin-light);
+}
+
+.btn--pumpkin:active {
+  transform: translateY(var(--px));
+}
+
+.btn > span {
+  display: flex;
+  flex-direction: column;
+}
+
+.btn .pixel {
+  font-size: 24px;
+  color: #fff4e8;
+}
+
+.btn small {
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+.download__other {
+  margin: 14px 0 0;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.download__note {
+  margin: 10px 0 0;
+  font-size: 14px;
+  color: var(--pumpkin-light);
+}
+
+/* ------------------------------------------------------------------ sections */
+
+main > section:not(.hero) {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 56px clamp(16px, 4vw, 32px);
+}
+
+h2 {
+  margin: 0 0 24px;
+  font-size: clamp(24px, 3vw, 32px);
+  color: var(--text);
+}
+
+.steps ol {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.steps li {
+  display: flex;
+  gap: 14px;
+  padding: 18px;
+  background: var(--night2);
+  border: var(--px) solid var(--ink);
+  box-shadow: inset 0 var(--px) 0 var(--surface-light);
+}
+
+.steps li > span {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  font-size: 22px;
+  color: #fff4e8;
+  background: var(--accent);
+  border: var(--px) solid var(--ink);
+}
+
+.steps p {
+  margin: 0;
+  color: var(--text-dim);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  padding: 20px;
+  background: var(--surface);
+  border: var(--px) solid var(--ink);
+  box-shadow: inset 0 var(--px) 0 var(--surface-light), 0 var(--px) 0 var(--ink);
+}
+
+.card img {
+  display: block;
+  margin-bottom: 10px;
+}
+
+.card h3 {
+  margin: 0 0 6px;
+  font-size: 20px;
+  color: var(--pumpkin-light);
+}
+
+.card p {
+  margin: 0;
+  color: var(--text-dim);
+}
+
+.foot {
+  padding: 32px clamp(16px, 4vw, 32px) 48px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  border-top: var(--px) solid var(--night2);
+}
+
+@media (max-width: 640px) {
+  .links a:not(.js-releases) {
+    display: none;
+  }
+
+  .hero {
+    min-height: 0;
+    padding-top: 110px;
+  }
+
+  .scene::after {
+    background: linear-gradient(0deg, var(--night0) 0%, rgba(12, 8, 20, 0.78) 45%, rgba(12, 8, 20, 0.55) 100%);
+  }
+
+  .btn {
+    width: 100%;
+  }
+
+  .btn .pixel {
+    font-size: 20px;
+  }
+}

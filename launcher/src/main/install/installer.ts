@@ -3,7 +3,7 @@ import { copyFile, mkdir, readdir, rm, writeFile } from 'node:fs/promises';
 import { delimiter, join } from 'node:path';
 import type { LaunchProfile, ReleaseTarget, RepairReport, TaskProgress } from '../../common/types';
 import { log } from '../core/log';
-import { detectMinecraftDir, instanceDir, type MedirianPaths } from '../core/paths';
+import { detectMinecraftDir, profileDir, type MedirianPaths } from '../core/paths';
 import { probeJava } from '../java/detect';
 import type { JavaRuntimeService } from '../java/runtime';
 import { DEFAULT_GC_ARGS, expandArguments, mergeJvmArgs, splitArgs, substitute } from '../launch/arguments';
@@ -92,7 +92,7 @@ export class Installer {
       verify: 'quick',
       onProgress: report('assets', 'Downloading assets')
     });
-    const gameDir = instanceDir(this.paths, target.id);
+    const gameDir = profileDir(this.paths, profile);
     await mkdir(gameDir, { recursive: true });
     const assetsRoot = await this.prepareLegacyAssets(assets.index, assets.indexId, gameDir);
 

@@ -4,7 +4,9 @@
 
 <h1 align="center">Medirian Client</h1>
 
-<p align="center">Klient Minecraft z własnym launcherem: HUD, moduły PvP i wydajność — dla 1.8.9, 1.21.8, 1.21.11 i 26.3.</p>
+<p align="center">Klient Minecraft z własnym launcherem: HUD, moduły PvP, mody z Modrinth i CurseForge, wydajność — dla 1.8.9, 1.21.8, 1.21.11 i 26.3.</p>
+
+<p align="center"><b>Pobierz:</b> Medirian Client → Windows → <code>MedirianClientSetup.exe</code> (strona pobierania: <code>website/</code>)</p>
 
 ---
 
@@ -21,6 +23,7 @@
 | Dokumentacja | `docs/ARCHITECTURE.md`, `docs/PROTOCOL.md`, `docs/RELEASING.md`, `TODO.md` | |
 | CI i wydania | `.github/workflows/`, `scripts/` | GitHub Actions, Node |
 | **Usługi Medirian** (konta, kosmetyki, profile w chmurze) | `backend/` | Node 22+, bez zależności — [docs/SERVICES.md](docs/SERVICES.md) |
+| **Strona pobierania** (GitHub Pages) | `website/` | statyczny HTML/CSS/JS |
 | Branding | `branding/` (źródłowe logo w `branding/source/`) | |
 
 Pełny opis architektury i decyzji technologicznych: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
@@ -32,7 +35,23 @@ pomarańcz dyń, księżyc, mgła. Launcher i gra używają tej samej sceny, log
 `node scripts/generate-pixel-art.mjs` (`scripts/pixel/`: scena, logo, 70+ ikon 16×16, własna czcionka Medirian Pixel).
 W grze: własne menu główne, nowe Mod Menu (kafelki z ikonami modułów i lampką ON/OFF), wszystkie ekrany w stylu pixel art.
 
-## Funkcje (0.2.0)
+## Funkcje (0.3.0)
+
+**Instalacja (Windows)** — `MedirianClientSetup.exe` instaluje Medirian Client dla bieżącego użytkownika bez uprawnień
+administratora (`%LOCALAPPDATA%\Programs\Medirian Client\Medirian Client.exe`; opcjonalnie „dla wszystkich”), tworzy skrót
+na pulpicie i w menu Start oraz wpis w „Aplikacje i funkcje” z deinstalatorem. Launcher aktualizuje się sam (electron-updater,
+cicha instalacja w tym samym folderze); dane graczy w `MEDIRIAN_HOME` nie są ruszane przy instalacji, aktualizacji ani deinstalacji.
+
+**Mody** — zakładka *Mods*: wyszukiwanie w Modrinth i CurseForge (oficjalne API), ikona, autor, opis, pobrania, kategorie,
+sortowanie, paginacja; instalacja do wybranego profilu z wymaganymi zależnościami, sprawdzanie zgodności z wersją Minecrafta
+i loaderem (Fabric / Legacy Fabric) z czytelnym komunikatem („Ten mod nie jest kompatybilny z Minecraft 1.8.9”), lista
+zainstalowanych: włącz/wyłącz (`.jar.disabled`), usuń, aktualizacje, strona moda, zależności i „wymagany przez”.
+Każdy profil ma własny folder gry (`MEDIRIAN_HOME/profiles/<profil>/` — mody, konfiguracja, światy), więc mody jednego
+profilu nigdy nie trafiają do innego.
+
+**Skin** — aktualny skin konta Minecraft (serwer sesji Mojang) w launcherze (model 3D na ekranie głównym i w oknie konta,
+głowa w pasku) i w menu głównym gry; odświeżany przy zmianie konta, powrocie do launchera i co 10 minut. Bez konta lub
+bez skina: domyślny skin Medirian.
 
 **Launcher** — kreator pierwszego uruchomienia z diagnostyką i automatycznymi naprawami, automatyczna
 instalacja Javy (Mojang: Java 8 dla 1.8.9, Java 21 dla 1.21.8 i 1.21.11, Java 25 dla 26.3), pobieranie i weryfikacja SHA-1 plików
@@ -44,7 +63,8 @@ podgląd logu gry, status gry na żywo (kanał launcher ↔ klient), changelog, 
 **Klient** — własne menu główne, mod menu (zakładki kategorii, kafelki modułów z ikonami i lampką ON/OFF, strona ustawień modułu, wyszukiwarka), edytor HUD (przeciąganie,
 przyciąganie z liniami pomocniczymi, skalowanie, panel właściwości, dodawanie/usuwanie, reset),
 ustawienia globalne, profile konfiguracji (Default / PvP / Performance / własne) wspólne dla obu
-wersji gry, powiadomienia, i18n PL/EN/DE/ES, śnieg zimą, peleryny (ekran kosmetyków), konto Medirian
+wersji gry, powiadomienia, i18n PL/EN/DE/ES, śnieg zimą, kosmetyki (peleryny, czapki osadzone na głowie
+i ukrywane pod hełmem, skrzydła, ślady, emotki), karta gracza ze skinem w menu głównym, konto Medirian
 (logowanie kontem Minecraft przez handshake sesji Mojang) i profile w chmurze.
 
 Moduły (41): CPS, Combo Counter, Reach Display, Target HUD, Hit Color, Health Tags, Toggle Sprint, Toggle Sneak, Zoom, Freelook,
@@ -76,8 +96,12 @@ cd launcher
 npm install
 npm run dev          # tryb deweloperski (kanał "local" wskazuje na ../distribution)
 npm run build        # typecheck + bundle
-npm run dist         # instalator (electron-builder → launcher/dist/)
+npm run dist         # instalator Windows: launcher/dist/MedirianClientSetup.exe (electron-builder, NSIS)
+npm test             # testy jednostkowe launchera (mody, profile, skiny, aktualizacje, Discord)
 ```
+
+Lokalny `npm run dist` nie ma kanału auto-aktualizacji ani wbudowanego URL manifestu klienta (to dodaje workflow wydań);
+grę w takim buildzie uruchomisz po ustawieniu kanału w *Ustawienia → Aktualizacje*.
 
 Pojedynczy target / testy:
 
@@ -106,6 +130,7 @@ wszystkich ekranów, `MEDIRIAN_DEV_LAUNCH=<profil>` uruchamia grę przez pełny 
 | `MEDIRIAN_DISCORD_APP_ID` / `MAIN_VITE_DISCORD_APP_ID` | uruchomienie / build launchera (lub *Ustawienia → Discord*) | identyfikator aplikacji Discord dla Rich Presence |
 | `MEDIRIAN_SERVICES_URL` / `MAIN_VITE_SERVICES_URL` | uruchomienie / build launchera (lub *Ustawienia → Deweloperskie*) | adres usług Medirian, przekazywany klientowi jako `-Dmedirian.api` |
 | `MEDIRIAN_API_URL` | klient (bez launchera) | adres usług Medirian |
+| `MEDIRIAN_CURSEFORGE_API_KEY` / `MAIN_VITE_CURSEFORGE_API_KEY` | uruchomienie / build launchera (lub *Ustawienia → Mody*) | klucz API CurseForge dla zakładki Mods (Modrinth działa bez klucza) |
 | `MEDIRIAN_HOME` | launcher i klient | zmiana folderu danych (domyślnie `%APPDATA%\.medirian`) |
 
 **Logowanie Microsoft** wymaga własnej rejestracji aplikacji w Azure (konta osobiste, przepływ
@@ -119,10 +144,24 @@ offline do testów w singleplayer.
 przez `MAIN_VITE_DISCORD_APP_ID`. Launcher łączy się z lokalnym Discordem (named pipe / unix socket) i pokazuje
 wersję gry, profil Medirian, menu / singleplayer / serwer (adres można ukryć) oraz czas gry.
 
+**CurseForge** wymaga klucza API: załóż konto w [CurseForge for Studios](https://console.curseforge.com/),
+utwórz klucz (*API keys*) i wpisz go w *Ustawienia → Mody* albo wbuduj w wydania jako sekret repozytorium
+`CURSEFORGE_API_KEY` (workflow przekazuje go jako `MAIN_VITE_CURSEFORGE_API_KEY`). Bez klucza zakładka Mods pokazuje
+„CurseForge wymaga klucza API” i działa z Modrinth. Pliki, których autorzy zablokowali pobieranie przez inne aplikacje,
+launcher otwiera na stronie CurseForge zamiast je pobierać.
+
+**Podpis cyfrowy (Windows)**: bez certyfikatu Authenticode instalator jest niepodpisany — SmartScreen pokaże ostrzeżenie, a
+Windows 11 z włączonym *Smart App Control* może zablokować instalator, aplikację lub deinstalator. Do publicznej dystrybucji
+potrzebny jest certyfikat (sekrety `CSC_LINK` / `CSC_KEY_PASSWORD`, patrz [docs/RELEASING.md](docs/RELEASING.md)).
+
 **Publikacja**: tag `v<wersja>` uruchamia `.github/workflows/release.yml` — jary, manifest, instalatory launchera
 i kanał jego auto-aktualizacji trafiają do GitHub Releases (szczegóły i sekrety podpisywania: [docs/RELEASING.md](docs/RELEASING.md)).
-Własny serwer: `node scripts/build-clients.mjs --base-url https://twoj-cdn/medirian/0.2.0/`, wgraj
+Własny serwer: `node scripts/build-clients.mjs --base-url https://twoj-cdn/medirian/0.3.0/`, wgraj
 zawartość `distribution/` pod ten adres i ustaw URL manifestu w launcherze.
+
+**Strona pobierania**: `.github/workflows/pages.yml` publikuje `website/` na GitHub Pages (jednorazowo: *Settings → Pages →
+Source: GitHub Actions*). Przycisk „Pobierz dla Windows” prowadzi do
+`https://github.com/<repo>/releases/latest/download/MedirianClientSetup.exe`, więc zawsze daje najnowszy instalator.
 
 ## Struktura danych
 

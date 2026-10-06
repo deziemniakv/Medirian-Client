@@ -20,9 +20,11 @@ MEDIRIAN_HOME/
 ├── runtime/<component>/ Java od Mojang (jre-legacy, java-runtime-delta…)
 ├── game/                versions/, libraries/, assets/  (współdzielone przez wszystkie targety)
 ├── clients/<target>/    zainstalowany jar Medirian + installed.json
-├── instances/<target>/  katalog gry (mods/, saves/, options.txt, screenshots/)
+├── profiles/<profil>/   katalog gry każdego profilu: mods/ (medirian-client.jar + mody gracza, wyłączone jako *.jar.disabled),
+│                        medirian-mods.json (skąd jest każdy mod), config/, saves/, options.txt, screenshots/
+├── instances/<target>/  katalogi gry sprzed 0.2.0 (przenoszone do pierwszego profilu danej wersji)
 ├── config/              client.json, profiles/*.json, waypoints.json, cosmetics.json   ← klient
-└── cache/               manifesty, natywki — można bezpiecznie usunąć
+└── cache/               manifesty, natywki, skins/<uuid>.png + .json (skin konta; czyta go też menu gry) — można bezpiecznie usunąć
 ```
 
 ## 2. Manifest wydania (`release-manifest.json`)

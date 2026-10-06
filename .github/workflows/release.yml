@@ -2,7 +2,8 @@ name: Release
 
 # Push a tag "v<VERSION>" (e.g. v0.1.4) to publish a release on GitHub:
 #   - client jars + release-manifest.json with absolute download URLs (the launcher's stable channel)
-#   - launcher installers for Windows, macOS and Linux + latest*.yml (the launcher's self-update feed)
+#   - launcher installers for Windows (MedirianClientSetup.exe), macOS and Linux + latest*.yml
+#     (the launcher's self-update feed)
 # See docs/RELEASING.md for the secrets and variables it uses.
 on:
   push:
@@ -68,6 +69,8 @@ jobs:
           MAIN_VITE_MSA_CLIENT_ID: ${{ vars.MSA_CLIENT_ID }}
           MAIN_VITE_DISCORD_APP_ID: ${{ vars.DISCORD_APP_ID }}
           MAIN_VITE_SERVICES_URL: ${{ vars.SERVICES_URL }}
+          # CurseForge's API needs a key (console.curseforge.com); without it the Mods tab offers Modrinth only
+          MAIN_VITE_CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
       - name: Package
         env:
           CSC_LINK: ${{ secrets.CSC_LINK }}

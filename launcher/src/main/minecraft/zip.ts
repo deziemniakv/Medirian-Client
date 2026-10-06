@@ -61,3 +61,31 @@ function findEndOfCentralDirectory(data: Buffer): number {
   }
   throw new Error('Not a zip archive');
 }
+
+/** One file from a zip archive (e.g. fabric.mod.json from a mod jar), or null when it is absent. */
+export async function readZipEntry(archive: string, entry: string): Promise<Buffer | null> {
+  const data = await readFile(archive);
+  const eocd = findEndOfCentralDirectory(data);
+  const entries = data.readUInt16LE(eocd + 10);
+  let offset = data.readUInt32LE(eocd + 16);
+  for (let i = 0; i < entries; i++) {
+    if (data.readUInt32LE(offset) !== 0x02014b50) {
+      return null;
+    }
+    const method = data.readUInt16LE(offset + 10);
+    const compressedSize = data.readUInt32LE(offset + 20);
+    const nameLength = data.readUInt16LE(offset + 28);
+    const extraLength = data.readUInt16LE(offset + 30);
+    const commentLength = data.readUInt16LE(offset + 32);
+    const localOffset = data.readUInt32LE(offset + 42);
+    const name = data.toString('utf8', offset + 46, offset + 46 + nameLength);
+    offset += 46 + nameLength + extraLength + commentLength;
+    if (name !== entry) {
+      continue;
+    }
+    const start = localOffset + 30 + data.readUInt16LE(localOffset + 26) + data.readUInt16LE(localOffset + 28);
+    const raw = data.subarray(start, start + compressedSize);
+    return method === 0 ? Buffer.from(raw) : method === 8 ? inflateRawSync(raw) : null;
+  }
+  return null;
+}

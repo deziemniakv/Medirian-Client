@@ -1,8 +1,8 @@
 {
   "name": "medirian-launcher",
   "productName": "Medirian Client",
-  "version": "0.2.0",
-  "description": "Medirian Client launcher",
+  "version": "0.3.0",
+  "description": "Medirian Client",
   "private": true,
   "main": "out/main/index.js",
   "author": "Medirian",
@@ -11,7 +11,7 @@
     "build": "npm run typecheck && electron-vite build",
     "preview": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
-    "test": "node --test --experimental-strip-types test/*.test.ts",
+    "test": "node --test --experimental-strip-types --import ./test/ts-resolve.mjs test/*.test.ts",
     "dist": "npm run build && electron-builder"
   },
   "dependencies": {

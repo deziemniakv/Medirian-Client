@@ -1,5 +1,7 @@
 package dev.medirian.ui;
 
+import dev.medirian.account.PlayerIdentity;
+import dev.medirian.account.PlayerSkins;
 import dev.medirian.core.BuildInfo;
 import dev.medirian.core.Medirian;
 import dev.medirian.i18n.I18n;
@@ -45,6 +47,8 @@ public final class TitleMenuScreen extends MedirianScreen {
     private int menuW;
     private int focusIndex = -1;
     private String toast;
+    /** Version of the skin texture uploaded to the GPU (-1 = none yet). */
+    private int skinVersion = -1;
     private long toastUntil;
 
     public TitleMenuScreen() {
@@ -249,17 +253,54 @@ public final class TitleMenuScreen extends MedirianScreen {
         }
     }
 
+    /**
+     * The player as the launcher shows them: their real skin (front, with the outer layer) standing
+     * on a stone slab, their name and the way to the cosmetics.
+     */
     private void renderPlayerCard(Gfx g, Theme t, float mx, float my) {
-        String name = Medirian.get().platform().identity().name();
-        int w = Math.max(110, g.textWidth(name) + 34);
+        Medirian medirian = Medirian.get();
+        PlayerIdentity identity = medirian.platform().identity();
+        PlayerSkins.Skin skin = PlayerSkins.get(medirian.home().root(), identity);
+        if (skin.version != skinVersion) {
+            g.uploadTexture("player_skin", 64, 64, skin.argb);
+            skinVersion = skin.version;
+        }
+        String name = identity.name();
+        int s = height >= 300 ? 3 : 2;
+        int w = Math.max(Math.max(16 * s + 28, g.textWidth(name) + 16), cosmeticsButton != null ? 100 : 0);
+        int figureH = 32 * s;
+        int h = 8 + figureH + 6 + 4 + 12 + (cosmeticsButton != null ? 20 : 0) + 4;
         int x = width - w - 10;
         int y = 10;
-        Pixel.panel(g, x, y, w, cosmeticsButton != null ? 42 : 24);
-        Pixel.icon(g, "cat-player", x + 4, y + 4, 1, 0xFFFFFFFF);
-        g.text(UiDraw.ellipsize(g, name, w - 28), x + 24, y + 8, t.text, false);
+        Pixel.panel(g, x, y, w, h);
+        Pixel.inset(g, x + 4, y + 4, w - 8, figureH + 14, t.panelDark);
+        int fx = x + (w - 16 * s) / 2;
+        figure(g, fx, y + 8, s, skin.slim);
+        // the stone slab the player stands on
+        int slabW = 16 * s + 12;
+        Pixel.frame(g, x + (w - slabW) / 2, y + 8 + figureH - 1, slabW, 6, 0xFF342E3F, 0xFF4A4256, 0xFF211C2A);
+        String label = UiDraw.ellipsize(g, name, w - 12);
+        int ty = y + 8 + figureH + 12;
+        Pixel.text(g, label, x + (w - g.textWidth(label)) / 2f, ty, t.text);
         if (cosmeticsButton != null) {
-            cosmeticsButton.bounds(x + 4, y + 22, w - 8, 16);
+            cosmeticsButton.bounds(x + 4, ty + 12, w - 8, 16);
             cosmeticsButton.render(g, mx, my);
+        }
+    }
+
+    /** The front of a skin: head, body, arms and legs with their outer layers, {@code s} units per pixel. */
+    private static void figure(Gfx g, int x, int y, int s, boolean slim) {
+        int arm = slim ? 3 : 4;
+        int[][] parts = {
+            // {u, v, width, height, x, y} in skin pixels; inner layers first, then the outer ones
+            {8, 8, 8, 8, 4, 0}, {20, 20, 8, 12, 4, 8}, {44, 20, arm, 12, 4 - arm, 8}, {36, 52, arm, 12, 12, 8},
+            {4, 20, 4, 12, 4, 20}, {20, 52, 4, 12, 8, 20},
+            {40, 8, 8, 8, 4, 0}, {20, 36, 8, 12, 4, 8}, {44, 36, arm, 12, 4 - arm, 8}, {52, 52, arm, 12, 12, 8},
+            {4, 36, 4, 12, 4, 20}, {4, 52, 4, 12, 8, 20}
+        };
+        for (int[] p : parts) {
+            g.dynamicTexture("player_skin", x + p[4] * s, y + p[5] * s, p[2] * s, p[3] * s,
+                    p[0] / 64f, p[1] / 64f, (p[0] + p[2]) / 64f, (p[1] + p[3]) / 64f, 0xFFFFFFFF);
         }
     }
 

@@ -41,19 +41,34 @@ class WornCosmeticsTest {
     }
 
     @Test
-    void everyHatModelFitsItsTextureAndSitsOnTheHead() {
+    void everyHatModelFitsItsTextureAndIsSeatedOnTheHead() {
         for (String id : new String[] {"hat_tophat", "hat_crown", "hat_witch", "hat_santa"}) {
             CosmeticMesh mesh = CosmeticModels.model(id);
-            assertTrue(mesh.quads() >= 6, id);
+            assertTrue(mesh.quads() >= 6 && mesh.quads() % 6 == 0, id);
             float[] d = mesh.data();
-            for (int q = 0; q < mesh.quads(); q++) {
-                for (int v = 0; v < 4; v++) {
-                    int i = q * CosmeticMesh.STRIDE + v * 5;
-                    assertTrue(d[i + 3] >= 0 && d[i + 3] <= 1 && d[i + 4] >= 0 && d[i + 4] <= 1, id + " uv in range");
-                    // above the neck (y < 0) and not lower than the top of the head (y = -8) by more than the brim
-                    assertTrue(d[i + 1] <= -7.9f, id + " sits on the head: y=" + d[i + 1]);
+            float lowest = -100;
+            // every six quads are one box
+            for (int box = 0; box < mesh.quads(); box += 6) {
+                float x0 = 100, y0 = 100, z0 = 100, x1 = -100, y1 = -100, z1 = -100;
+                for (int q = box; q < box + 6; q++) {
+                    for (int v = 0; v < 4; v++) {
+                        int i = q * CosmeticMesh.STRIDE + v * 5;
+                        assertTrue(d[i + 3] >= 0 && d[i + 3] <= 1 && d[i + 4] >= 0 && d[i + 4] <= 1, id + " uv in range");
+                        x0 = Math.min(x0, d[i]);
+                        x1 = Math.max(x1, d[i]);
+                        y0 = Math.min(y0, d[i + 1]);
+                        y1 = Math.max(y1, d[i + 1]);
+                        z0 = Math.min(z0, d[i + 2]);
+                        z1 = Math.max(z1, d[i + 2]);
+                    }
                 }
+                lowest = Math.max(lowest, y1);
+                assertTrue(CosmeticModels.fits(x0, y0, z0, x1, y1, z1), id + ": box " + box / 6
+                        + " cuts into the head without wrapping it (x " + x0 + ".." + x1 + ", y " + y0 + ".." + y1 + ", z " + z0 + ".." + z1 + ")");
             }
+            // seated 1.5 to 3.5 pixels down the head (y grows downwards), above the eyes at y = -4
+            float depth = lowest - CosmeticModels.HEAD_TOP;
+            assertTrue(depth >= 1.5f && depth <= 3.5f, id + " sits " + depth + " px into the head");
             assertNotNull(getClass().getResource("/assets/medirian/textures/cosmetics/hats/" + id + ".png"), id + " texture");
             assertNotNull(getClass().getResource("/assets/medirian/textures/cosmetics/icons/" + id + ".png"), id + " icon");
         }

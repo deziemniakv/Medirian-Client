@@ -34,6 +34,8 @@ export interface LauncherSettings {
   discordShowInLauncher: boolean;
   /** Discord application id ('' = the id built into the launcher, if any). */
   discordAppId: string;
+  /** CurseForge API key ('' = the key built into the launcher, if any). */
+  curseforgeApiKey: string;
 }
 
 export interface Resolution {
@@ -55,6 +57,8 @@ export interface LaunchProfile {
   configProfile: string | null;
   createdAt: number;
   lastPlayed: number | null;
+  /** Folder of this profile's game directory in MEDIRIAN_HOME/profiles (chosen once, kept on rename). */
+  directory: string;
 }
 
 // ---------------------------------------------------------------- releases
@@ -181,6 +185,19 @@ export interface Account {
   type: 'microsoft' | 'offline';
 }
 
+/** The signed-in player's Minecraft skin. */
+export interface PlayerSkin {
+  uuid: string | null;
+  name: string | null;
+  /** data: URL of the 64×64 skin; null = Medirian's default skin (not signed in, or no skin set). */
+  texture: string | null;
+  model: 'classic' | 'slim';
+  source: 'mojang' | 'default';
+  updatedAt: number;
+  /** Set when the last refresh failed (the cached skin is still shown). */
+  error?: string;
+}
+
 export interface DeviceCodeInfo {
   userCode: string;
   verificationUri: string;
@@ -221,6 +238,8 @@ export interface SetupCheck {
 }
 
 export interface AppInfo {
+  /** Whether a CurseForge API key is built into this launcher. */
+  curseforgeKeyBuiltIn: boolean;
   version: string;
   electron: string;
   chrome: string;
@@ -234,4 +253,175 @@ export interface AppInfo {
   defaultServicesUrl: string;
 }
 
-export type OpenTarget = 'home' | 'logs' | 'instance' | 'screenshots';
+export type OpenTarget = 'home' | 'logs' | 'instance' | 'mods' | 'screenshots';
+
+// ---------------------------------------------------------------- mods
+
+/** Where a mod comes from. 'local' = a jar the user put into the mods folder. */
+export type ModSource = 'modrinth' | 'curseforge';
+
+export type ModSort = 'relevance' | 'downloads' | 'updated' | 'newest';
+
+export interface ModSourceInfo {
+  id: ModSource;
+  name: string;
+  /** false when the source needs configuration (CurseForge needs an API key). */
+  available: boolean;
+  reason?: string;
+}
+
+export interface ModSearchQuery {
+  source: ModSource;
+  query: string;
+  /** The profile whose Minecraft version and loader the results must match. */
+  profileId: string;
+  category: string | null;
+  sort: ModSort;
+  /** 0-based page. */
+  page: number;
+  pageSize: number;
+}
+
+export interface ModCategory {
+  id: string;
+  name: string;
+}
+
+/** What Medirian needs to install mods into a profile: its Minecraft version and loader. */
+export interface ModTargetInfo {
+  minecraftVersion: string;
+  /** Mod loader of the profile's Medirian target ('fabric' or 'legacy-fabric'). */
+  loader: string;
+  loaderName: string;
+}
+
+export interface ModSummary {
+  source: ModSource;
+  projectId: string;
+  slug: string;
+  name: string;
+  description: string;
+  author: string;
+  iconUrl: string | null;
+  downloads: number;
+  categories: string[];
+  /** Minecraft versions the project supports (newest first, as reported by the source). */
+  gameVersions: string[];
+  loaders: string[];
+  pageUrl: string;
+  updatedAt: string;
+}
+
+export interface ModSearchResult {
+  hits: ModSummary[];
+  total: number;
+  page: number;
+  pageSize: number;
+  target: ModTargetInfo;
+}
+
+export type ModDependencyType = 'required' | 'optional' | 'incompatible' | 'embedded';
+
+export interface ModVersionInfo {
+  id: string;
+  versionNumber: string;
+  name: string;
+  gameVersions: string[];
+  loaders: string[];
+  releaseType: 'release' | 'beta' | 'alpha';
+  publishedAt: string;
+  fileName: string;
+  size: number;
+  /** Matches the profile's Minecraft version and loader. */
+  compatible: boolean;
+  dependencies: { projectId: string; versionId?: string; type: ModDependencyType }[];
+}
+
+export interface ModDetails extends ModSummary {
+  /** Newest first; the compatible ones are what can be installed into the profile. */
+  versions: ModVersionInfo[];
+  target: ModTargetInfo;
+}
+
+/** One file an install adds to the profile. */
+export interface ModInstallStep {
+  source: ModSource;
+  projectId: string;
+  versionId: string;
+  name: string;
+  versionNumber: string;
+  fileName: string;
+  size: number;
+  /** Why it is installed: the mod itself, or a dependency of it. */
+  reason: 'requested' | 'dependency';
+}
+
+/**
+ * Something that blocks an install or is worth knowing about it. A code with its names, so the
+ * launcher shows it in the user's language (renderer i18n "mods.issue.<code>").
+ */
+export type ModIssue =
+  /** No version of the mod runs on the profile's Minecraft version and loader. */
+  | { code: 'incompatible'; name: string }
+  /** The chosen version does not run on the profile's Minecraft version and loader. */
+  | { code: 'versionIncompatible'; name: string; version: string }
+  /** A required dependency has no version for the profile. */
+  | { code: 'dependencyUnavailable'; name: string; parent: string }
+  /** The author only allows downloads from the platform's website (CurseForge). */
+  | { code: 'manualDownload'; name: string; source: string }
+  | { code: 'alreadyInstalled'; name: string; version: string }
+  /** A required dependency is installed but disabled; installing enables it. */
+  | { code: 'dependencyDisabled'; name: string }
+  /** The mod declares itself incompatible with a mod in the profile. */
+  | { code: 'conflict'; name: string; other: string };
+
+/** What installing a mod into a profile will do, computed before anything is downloaded. */
+export interface ModInstallPlan {
+  profileId: string;
+  target: ModTargetInfo;
+  steps: ModInstallStep[];
+  /** Required dependencies already in the profile. */
+  satisfied: string[];
+  /** Blocking problems (incompatible Minecraft version or loader, unavailable dependency). */
+  problems: ModIssue[];
+  /** Non-blocking notes (e.g. an installed mod that declares itself incompatible). */
+  warnings: ModIssue[];
+  /** CurseForge mods whose authors do not allow downloads from other apps: their file page. */
+  manualDownloadUrl?: string;
+}
+
+export interface InstalledMod {
+  /** File name in the profile's mods folder without ".disabled". */
+  file: string;
+  enabled: boolean;
+  name: string;
+  versionNumber: string;
+  source: ModSource | 'local';
+  projectId: string | null;
+  versionId: string | null;
+  iconUrl: string | null;
+  author: string | null;
+  pageUrl: string | null;
+  size: number;
+  /** Required dependencies and whether they are in the profile. */
+  dependencies: { name: string; installed: boolean }[];
+  /** Installed mods that require this one. */
+  requiredBy: string[];
+  installedAt: number;
+  update: { versionId: string; versionNumber: string } | null;
+}
+
+export interface InstalledModsState {
+  profileId: string;
+  target: ModTargetInfo;
+  mods: InstalledMod[];
+  /** When updates were last checked (ms), or null. */
+  checkedAt: number | null;
+}
+
+export interface ModTask {
+  profileId: string;
+  label: string;
+  done: number;
+  total: number;
+}

@@ -5,6 +5,7 @@ import { SetupWizard } from './components/SetupWizard';
 import { TopBar } from './components/TopBar';
 import { Changelog } from './pages/Changelog';
 import { Home } from './pages/Home';
+import { Mods } from './pages/Mods';
 import { Profiles } from './pages/Profiles';
 import { Settings } from './pages/Settings';
 import { useStore, type Page } from './store';
@@ -29,7 +30,10 @@ export function App() {
         navigate: (page: Page) => useStore.getState().navigate(page),
         completeSetup: () => useStore.getState().updateSettings({ setupCompleted: true }),
         reload: () => useStore.getState().init(),
-        account: (open: boolean) => useStore.getState().setAccountDialog(open)
+        account: (open: boolean) => useStore.getState().setAccountDialog(open),
+        // shows the "Update" button as if a launcher update had been downloaded (null hides it)
+        updateReady: (version: string | null) =>
+          useStore.setState({ launcherUpdate: version ? { state: 'ready', version } : { state: 'unsupported' } })
       };
     }
   }, [init]);
@@ -51,6 +55,7 @@ export function App() {
       <TopBar />
       <main className="stage">
         {page === 'home' && <Home />}
+        {page === 'mods' && <Mods />}
         {page === 'profiles' && <Profiles />}
         {page === 'changelog' && <Changelog />}
         {page === 'settings' && <Settings />}

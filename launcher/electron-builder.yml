@@ -1,5 +1,8 @@
 appId: dev.medirian.launcher
 productName: Medirian Client
+# the installed program is "Medirian Client.exe"
+executableName: Medirian Client
+copyright: Copyright © 2026 Medirian Client
 directories:
   output: dist
   buildResources: resources
@@ -19,10 +22,29 @@ extraResources:
 win:
   target: nsis
   icon: resources/icon.png
+# MedirianClientSetup.exe: a classic wizard that installs for the current user without
+# administrator rights (%LOCALAPPDATA%/Programs/Medirian Client; "all users" is offered and
+# elevates), with desktop and Start Menu shortcuts and an "Apps & features" entry. The name has no
+# version so https://github.com/<owner>/<repo>/releases/latest/download/MedirianClientSetup.exe
+# always points at the newest installer; the self-update feed (latest.yml) names it too.
+# Updates install over the same folder; player data lives in MEDIRIAN_HOME (%APPDATA%/.medirian)
+# and is never touched by installing, updating or uninstalling.
 nsis:
   oneClick: false
+  perMachine: false
+  allowElevation: true
   allowToChangeInstallationDirectory: true
-  artifactName: Medirian-Setup-${version}.${ext}
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Medirian Client
+  uninstallDisplayName: Medirian Client
+  runAfterFinish: true
+  deleteAppDataOnUninstall: false
+  installerSidebar: resources/installerSidebar.bmp
+  uninstallerSidebar: resources/uninstallerSidebar.bmp
+  installerHeader: resources/installerHeader.bmp
+  installerLanguages: [en_US, pl_PL, de_DE, es_ES]
+  artifactName: MedirianClientSetup.${ext}
 mac:
   # the zip is what electron-updater installs on macOS; the dmg is for first installs
   target:
@@ -30,9 +52,9 @@ mac:
     - zip
   icon: resources/icon.png
   category: public.app-category.games
-  artifactName: Medirian-${version}-${arch}.${ext}
+  artifactName: MedirianClient-${version}-${arch}.${ext}
 linux:
   target: AppImage
   icon: resources/icon.png
   category: Game
-  artifactName: Medirian-${version}-${arch}.${ext}
+  artifactName: MedirianClient-${version}-${arch}.${ext}

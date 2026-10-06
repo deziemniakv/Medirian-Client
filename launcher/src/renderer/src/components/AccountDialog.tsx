@@ -4,6 +4,7 @@ import { errorMessage, invoke, on } from '../api';
 import { useT } from '../i18n';
 import { useStore } from '../store';
 import { Icon } from './Icon';
+import { Skin3D } from './Skin';
 
 /** Microsoft sign-in (device code flow), account info and the development offline account. */
 export function AccountDialog() {
@@ -71,9 +72,9 @@ export function AccountDialog() {
         </div>
         <div className="dialog__body">
 
+        {!code && <SkinPanel signedIn={!!account} />}
         {account && !code && (
           <div className="account-card">
-            <div className="account-card__avatar pixel">{account.name.slice(0, 1).toUpperCase()}</div>
             <div>
               <div className="account-card__name">{t('account.signedInAs', { name: account.name })}</div>
               <div className="muted">{account.type === 'microsoft' ? t('account.microsoft') : t('account.offline')}</div>
@@ -136,6 +137,51 @@ export function AccountDialog() {
           )}
           {!code && <button className="btn" onClick={close}>{t('account.close')}</button>}
         </div>
+      </div>
+    </div>
+  );
+}
+
+/** The account's skin in 3D, where it comes from, and a refresh. */
+function SkinPanel({ signedIn }: { signedIn: boolean }) {
+  const t = useT();
+  const skin = useStore((s) => s.skin);
+  const [refreshing, setRefreshing] = useState(false);
+  const refresh = async () => {
+    setRefreshing(true);
+    try {
+      await invoke('skin:refresh');
+    } finally {
+      setRefreshing(false);
+    }
+  };
+  return (
+    <div className="skin-panel px-inset">
+      <Skin3D scale={6} />
+      <div className="skin-panel__info">
+        <div className="field__label">{t('skin.title')}</div>
+        {skin?.source === 'mojang' ? (
+          <>
+            <div>{t('skin.model', { model: skin.model === 'slim' ? t('skin.slim') : t('skin.classic') })}</div>
+            <div className="muted">{t('skin.updated', { time: new Date(skin.updatedAt).toLocaleTimeString() })}</div>
+          </>
+        ) : (
+          <div className="muted">{signedIn ? t('skin.none') : t('skin.default')}</div>
+        )}
+        {skin?.error && <div className="skin-panel__error">{skin.error}</div>}
+        <div className="muted skin-panel__hint">{t('skin.drag')}</div>
+        {signedIn && (
+          <div className="row skin-panel__actions">
+            <button className="btn btn--small" disabled={refreshing} onClick={() => void refresh()}>
+              {refreshing ? <span className="spinner" /> : <Icon name="refresh" size={16} />}
+              {t('skin.refresh')}
+            </button>
+            <button className="btn btn--small btn--ghost" onClick={() => void invoke('shell:openExternal', 'https://www.minecraft.net/msaprofile/mygames/editskin')}>
+              <Icon name="external" size={16} />
+              {t('skin.change')}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

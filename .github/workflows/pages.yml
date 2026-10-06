@@ -1,0 +1,38 @@
+name: Download page
+
+# Publishes website/ (the Medirian Client download page) on GitHub Pages. The page links to
+# https://github.com/<this repository>/releases/latest/download/MedirianClientSetup.exe, so it always
+# offers the newest installer. One-time setup: Settings → Pages → Source: GitHub Actions.
+on:
+  push:
+    branches: [main, master]
+    paths: ['website/**', '.github/workflows/pages.yml']
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Point the page at this repository's releases
+        run: sed -i "s#data-repo=\"OWNER/REPO\"#data-repo=\"$GITHUB_REPOSITORY\"#" website/index.html
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: website
+      - id: deployment
+        uses: actions/deploy-pages@v4

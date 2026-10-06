@@ -1,6 +1,7 @@
 import { Icon } from '../components/Icon';
 import { LaunchBar } from '../components/LaunchBar';
 import { LogDrawer } from '../components/LogDrawer';
+import { Skin3D } from '../components/Skin';
 import { useT, type MessageKey } from '../i18n';
 import { useStore } from '../store';
 
@@ -34,6 +35,10 @@ export function Home() {
             {t(`home.greeting.${part}` as MessageKey, { name: account?.name ?? t('home.traveller') })}
           </h1>
           <p className="greeting__line">{t('home.tagline')}</p>
+          <button className="player-stage" onClick={() => useStore.getState().setAccountDialog(true)} title={t('skin.title')}>
+            <Skin3D scale={5} />
+            <span className="player-stage__plinth" />
+          </button>
         </div>
 
         {latest && (

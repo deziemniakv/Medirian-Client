@@ -3,9 +3,11 @@ import { invoke } from '../api';
 import { useT, type MessageKey } from '../i18n';
 import { useStore, type Page } from '../store';
 import { Icon, type IconName } from './Icon';
+import { SkinHead } from './Skin';
 
 const NAV: { page: Page; icon: IconName; label: MessageKey }[] = [
   { page: 'home', icon: 'play', label: 'nav.play' },
+  { page: 'mods', icon: 'box', label: 'nav.mods' },
   { page: 'profiles', icon: 'user', label: 'nav.profiles' },
   { page: 'changelog', icon: 'book', label: 'nav.news' },
   { page: 'settings', icon: 'gear', label: 'nav.settings' }
@@ -46,13 +48,14 @@ export function TopBar() {
 
       <div className="topbar__right">
         {update.state === 'ready' && (
-          <button className="btn btn--primary btn--small" onClick={() => void invoke('launcherUpdate:install')}>
+          <button className="btn btn--primary btn--small topbar__update" title={t('launcherUpdate.restart', { version: update.version ?? '' })}
+            onClick={() => void invoke('launcherUpdate:install')}>
             <Icon name="refresh" size={16} />
-            {t('launcherUpdate.restart', { version: update.version ?? '' })}
+            {t('launcherUpdate.button')}
           </button>
         )}
         <button className="account-chip" title={account ? account.name : t('account.notSignedIn')} onClick={() => openAccount(true)}>
-          <span className="account-chip__avatar pixel">{account ? account.name.slice(0, 1).toUpperCase() : <Icon name="user" size={16} />}</span>
+          <span className="account-chip__avatar">{account ? <SkinHead size={24} /> : <Icon name="user" size={16} />}</span>
           <span className="account-chip__name">{account ? account.name : t('account.signIn')}</span>
         </button>
         {platform !== 'darwin' && (

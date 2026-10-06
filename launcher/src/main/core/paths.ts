@@ -64,6 +64,9 @@ export interface MedirianPaths {
   libraries: string;
   assets: string;
   clients: string;
+  /** One folder per launch profile: mods, config, worlds, options (see profileDir). */
+  profiles: string;
+  /** Per-target game folders of launchers before 0.2.0 (moved into profiles on first start). */
   instances: string;
   config: string;
   clientProfiles: string;
@@ -89,6 +92,7 @@ export function medirianPaths(root: string = resolveMedirianHome()): MedirianPat
     libraries: join(game, 'libraries'),
     assets: join(game, 'assets'),
     clients: join(root, 'clients'),
+    profiles: join(root, 'profiles'),
     instances: join(root, 'instances'),
     config,
     clientProfiles: join(config, 'profiles'),
@@ -97,7 +101,10 @@ export function medirianPaths(root: string = resolveMedirianHome()): MedirianPat
   };
 }
 
-/** Game directory of a target (separate per target: mods, options.txt and worlds differ). */
-export function instanceDir(paths: MedirianPaths, targetId: string): string {
-  return join(paths.instances, targetId);
+/**
+ * Game directory of a launch profile: its own mods, mod configuration, options and worlds, so
+ * two profiles never share a mods folder (MEDIRIAN_HOME/profiles/<folder>/mods).
+ */
+export function profileDir(paths: MedirianPaths, profile: { directory: string }): string {
+  return join(paths.profiles, profile.directory);
 }

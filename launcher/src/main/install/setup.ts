@@ -55,7 +55,7 @@ export class SetupService {
   async fix(id: SetupCheck['id']): Promise<SetupCheck[]> {
     if (id === 'directory') {
       await mkdir(this.paths.root, { recursive: true });
-      for (const dir of [this.paths.launcher, this.paths.config, this.paths.clientProfiles, this.paths.game, this.paths.instances, this.paths.cache]) {
+      for (const dir of [this.paths.launcher, this.paths.config, this.paths.clientProfiles, this.paths.game, this.paths.profiles, this.paths.cache]) {
         await mkdir(dir, { recursive: true });
       }
     }
