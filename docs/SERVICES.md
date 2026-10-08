@@ -1,7 +1,8 @@
 # Usługi Medirian (`backend/`)
 
-Mały serwer HTTP/JSON (Node 22+, bez zależności): konta Medirian, kosmetyki widoczne dla innych
-graczy i profile konfiguracji w chmurze. Bez skonfigurowanego adresu usług klient działa w pełni
+Mały serwer HTTP/JSON (Node 22.9+, bez zależności): konta Medirian, kosmetyki widoczne dla innych
+graczy, profile konfiguracji w chmurze i kody profili (`MDN-XXXX-XXXX-XXXX`). Wdrożenie produkcyjne pod HTTPS
+(domena, Caddy, Docker, kopie zapasowe): [OWNER_SETUP.md](OWNER_SETUP.md), sekcje 5 i 6. Bez skonfigurowanego adresu usług klient działa w pełni
 lokalnie (peleryna widoczna tylko dla gracza, brak chmury) i mówi o tym w UI.
 
 ## Logowanie bez hasła i bez wysyłania tokenu do Medirian
@@ -41,6 +42,18 @@ Wszystkie odpowiedzi to JSON; błędy: `{ "error": "…" }` z kodem 4xx/5xx.
 | GET 🔒 | `/v1/profiles/<nazwa>` | `{ name, updatedAt, data }` |
 | PUT 🔒 | `/v1/profiles/<nazwa>` | `{ data: {…} }` (≤ 64 KiB, ≤ 20 profili) |
 | DELETE 🔒 | `/v1/profiles/<nazwa>` | usuwa profil |
+| POST | `/v1/shares` | `{ profile: { format: "medirian-profile", name, … } }` (≤ 64 KiB, limit 6/min na IP) → `{ code, expiresAt, deleteKey }` |
+| GET | `/v1/shares/<kod>` | `{ code, profile, createdAt, expiresAt }`; 404 — nie ma takiego kodu, 410 — wygasł |
+| DELETE | `/v1/shares/<kod>` | `{ deleteKey }` — usuwa kod (klucz zna tylko twórca) |
+
+**Kody profili** nie wymagają konta: każdy może zamienić profil w kod (z limitem) i każdy, kto zna kod, może go
+odczytać przez 90 dni. Serwer przyjmuje tylko dokument `format: "medirian-profile"` i dodatkowo usuwa z niego każdy klucz,
+który wygląda na prywatny (`token`, `password`, `secret`, `session`, `auth`, `apikey`…), zanim go zapisze — launcher
+i tak wysyła tylko ustawienia gry, konfigurację Medirian i bezpieczne ustawienia klienta (nigdy konta, ścieżek Javy
+ani argumentów JVM). Kod ma 12 znaków z alfabetu bez mylących liter (`0/O`, `1/I/L`), launcher normalizuje wpisany tekst.
+
+**Za reverse proxy** (`MEDIRIAN_SERVICES_TRUST_PROXY=1`, ustawione w `backend/deploy`): adres gracza do limitów pochodzi
+z `X-Forwarded-For`, żądania bez `X-Forwarded-Proto: https` dostają 403, odpowiedzi mają nagłówek HSTS.
 
 Klient pobiera loadouty innych graczy leniwie: pierwsza klatka, w której gracz jest renderowany,
 dodaje jego UUID do kolejki; kolejka jest wysyłana jednym zapytaniem (do 100 graczy, opóźnienie
@@ -60,29 +73,33 @@ czapek, skrzydeł i ikony podglądu robi `node scripts/generate-cosmetics.mjs`.
 ```bash
 cd backend
 npm test                                   # testy (Mojang zastąpiony atrapą)
-PORT=8080 DATA_DIR=/var/lib/medirian node src/index.mjs
+npm start                                  # czyta ../.env: MEDIRIAN_SERVICES_PORT / _HOST / _DATA_DIR / _TRUST_PROXY
 ```
 
-Docker: `docker build -t medirian-services backend && docker run -p 8080:8080 -v medirian-data:/data medirian-services`.
-Dane to pliki JSON (`users/<uuid>.json`, `grants.json`), zapisywane atomowo. Przed serwerem
-powinien stać reverse proxy z HTTPS (np. Caddy/nginx).
+Produkcja: `cd backend/deploy && docker compose up -d --build` — usługa za Caddy, który sam uzyskuje certyfikat
+HTTPS dla `MEDIRIAN_SERVICES_DOMAIN` (szczegóły: [OWNER_SETUP.md](OWNER_SETUP.md#6-backend--medirian-services)).
+Dane to pliki JSON (`users/<uuid>.json`, `shares/`, `grants.json`), zapisywane atomowo w `MEDIRIAN_SERVICES_DATA_DIR`.
+Usługa bez `MEDIRIAN_SERVICES_TRUST_PROXY=1`, słuchająca na innym interfejsie niż `127.0.0.1`, ostrzega w logu, że jest
+dostępna bez HTTPS.
 
-Kosmetyki przyznawane (`"access": "grant"`, np. Founder): `DATA_DIR/grants.json`
+Kosmetyki przyznawane (`"access": "grant"`, np. Founder): `<MEDIRIAN_SERVICES_DATA_DIR>/grants.json`
 `{ "cape_founder": ["<uuid>", …] }` — odczytywane przy każdym zapytaniu, bez restartu.
 
 ## Klient i launcher
 
-* Klient czyta adres z `-Dmedirian.api` (launcher dodaje go sam) albo `MEDIRIAN_API_URL`.
-* Launcher: *Ustawienia → Deweloperskie → Adres usług Medirian*, domyślnie wbudowany przy buildzie
-  (`MAIN_VITE_SERVICES_URL`, w workflow wydania zmienna repozytorium `SERVICES_URL`) albo `MEDIRIAN_SERVICES_URL`.
+* Adres usług to jedna wartość: `MEDIRIAN_SERVICES_URL` (`.env` / zmienna repozytorium), wbudowana w launcher przy buildzie.
+  Launcher przekazuje ją grze jako `-Dmedirian.services=…`; klient uruchomiony bez launchera (`./gradlew runClient`) czyta
+  zmienną środowiska `MEDIRIAN_SERVICES_URL`.
+* Adres musi być HTTPS; `http://` jest akceptowane tylko dla `localhost` / `127.0.0.1` (testy). Klient odrzuca inny adres
+  i działa wtedy lokalnie.
 
 ## Test end-to-end z kontem offline
 
 ```bash
 node backend/dev/fake-session-server.mjs 18091
-PORT=18080 MOJANG_SESSION_URL=http://127.0.0.1:18091/session/minecraft node backend/src/index.mjs
+MEDIRIAN_SERVICES_PORT=18080 MEDIRIAN_SESSION_SERVER=http://127.0.0.1:18091/session/minecraft node backend/src/index.mjs
 cd client/targets/mc-1.8.9
-MEDIRIAN_API_URL=http://127.0.0.1:18080 MEDIRIAN_SESSION_SERVER=http://127.0.0.1:18091/session/minecraft ./gradlew runClient -Pselftest
+MEDIRIAN_SERVICES_URL=http://127.0.0.1:18080 MEDIRIAN_SESSION_SERVER=http://127.0.0.1:18091/session/minecraft ./gradlew runClient -Pselftest
 ```
 
 Self-test loguje wtedy `Self-test: services OK (cloud profile round trip, own cape visible to others…)`.

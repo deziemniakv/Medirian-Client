@@ -189,6 +189,11 @@ public final class SelfTest {
             case 9:
                 verifyHealthTag(client);
                 verifyChat(client);
+                if (LegacyBackdrop.prepared > 0) {
+                    Log.info("Self-test: Liquid Glass blur OK ({} frames)", LegacyBackdrop.prepared);
+                } else {
+                    Log.error("Self-test FAILED: the Liquid Glass blur behind HUD widgets was not made");
+                }
                 shot(client, "4-hud");
                 client.player.sendChatMessage("/gamemode 1");
                 client.player.sendChatMessage("/setblock ~ ~ ~ air");
@@ -323,6 +328,28 @@ public final class SelfTest {
             case 23:
                 shot(client, "9c-font");
                 medirian.settings().font.set(dev.medirian.render.font.UiFont.MINECRAFT);
+                medirian.platform().openScreen(null);
+                next(10);
+                return;
+            case 24:
+                // Settings → Advanced: Minecraft's own options really change, in English for the baselines
+                dev.medirian.i18n.I18n.setLanguage(dev.medirian.i18n.I18n.Language.EN_US);
+                dev.medirian.ui.AdvancedSelfTest.verifyVanillaOptions(medirian);
+                medirian.platform().openScreen(new SettingsScreen(null).show(SettingsScreen.Tab.ADVANCED, "graphics"));
+                next(20);
+                return;
+            case 25:
+                shot(client, "3d-advanced");
+                medirian.platform().openScreen(new SettingsScreen(null).show(SettingsScreen.Tab.ADVANCED, "visibility"));
+                next(20);
+                return;
+            case 26:
+                shot(client, "3e-advanced-visibility");
+                medirian.platform().openScreen(new SettingsScreen(null).show(SettingsScreen.Tab.HUD, null));
+                next(20);
+                return;
+            case 27:
+                shot(client, "3f-hud-settings");
                 medirian.platform().openScreen(null);
                 next(10);
                 return;

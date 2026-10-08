@@ -33,7 +33,12 @@ public final class LegacyCapes {
     /** The Medirian cape texture of {@code player}, or null to keep the vanilla one. */
     public static Identifier texture(AbstractClientPlayerEntity player) {
         MinecraftClient client = MinecraftClient.getInstance();
-        String asset = Hooks.capeTexture(player.getUuid(), player == client.player);
+        boolean local = player == client.player;
+        // far away players' capes are not drawn (Settings → Advanced → Visibility)
+        if (!local && client.getCameraEntity() != null && !Hooks.cosmeticsVisible(player.squaredDistanceTo(client.getCameraEntity()))) {
+            return null;
+        }
+        String asset = Hooks.capeTexture(player.getUuid(), local);
         if (asset == null) {
             return null;
         }

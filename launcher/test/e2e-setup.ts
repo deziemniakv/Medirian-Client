@@ -6,7 +6,6 @@
 import { join } from 'node:path';
 import { ModService } from '../src/main/mods/mods.ts';
 import { ModrinthProvider } from '../src/main/mods/modrinth.ts';
-import type { ModProvider } from '../src/main/mods/provider.ts';
 import { setUserAgent } from '../src/main/net/http.ts';
 import { ProfileStore } from '../src/main/profiles/profiles.ts';
 
@@ -14,7 +13,7 @@ const home = process.env.MEDIRIAN_HOME;
 if (!home) {
   throw new Error('MEDIRIAN_HOME is required');
 }
-setUserAgent('0.3.0');
+setUserAgent('0.4.0', 'e2e test');
 const store = new ProfileStore(join(home, 'launcher', 'profiles.json'), join(home, 'profiles'), join(home, 'instances'));
 await store.load();
 const find = async (name: string) => store.list().find((p) => p.name === name) ?? store.create({ name, targetId: '1.21.8' });
@@ -22,19 +21,17 @@ const withMods = await find('E2E Mods 1.21.8');
 const clean = await find('E2E Clean 1.21.8');
 
 const modrinth = new ModrinthProvider();
-const unavailable = { unavailableReason: () => 'not used here' } as unknown as ModProvider;
 const mods = new ModService({
   profiles: store,
   target: () => ({ minecraftVersion: '1.21.8', loader: 'fabric', loaderName: 'Fabric' }),
   isRunning: () => false,
-  providers: { modrinth, curseforge: unavailable },
-  modrinth,
+  catalog: modrinth,
   concurrency: () => 4,
   emitTask: (task) => task && console.log(`  ${task.label} ${task.done}/${task.total}`)
 });
 
-const plan = await mods.plan(withMods.id, 'modrinth', 'modmenu');
+const plan = await mods.plan(withMods.id, 'modmenu');
 console.log('plan:', plan.steps.map((s) => `${s.name} ${s.versionNumber} (${s.reason})`).join(', '), plan.problems);
-const state = await mods.install(withMods.id, 'modrinth', 'modmenu');
+const state = await mods.install(withMods.id, 'modmenu');
 console.log(`"${withMods.name}" (${store.directoryOf(withMods)}):`, state.mods.map((m) => `${m.file} [${m.enabled ? 'on' : 'off'}]`).join(', '));
 console.log(`"${clean.name}" (${store.directoryOf(clean)}):`, (await mods.installed(clean.id)).mods.length, 'mods');

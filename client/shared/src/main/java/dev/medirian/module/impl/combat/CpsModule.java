@@ -2,6 +2,7 @@ package dev.medirian.module.impl.combat;
 
 import dev.medirian.core.Medirian;
 import dev.medirian.event.Events;
+import dev.medirian.hud.HudSurface;
 import dev.medirian.hud.Anchor;
 import dev.medirian.hud.TextHudElement;
 import dev.medirian.input.InputStats;
@@ -44,7 +45,7 @@ public final class CpsModule extends Module {
 
         on(Events.Tick.class, e -> sampleHistory());
 
-        hud(new TextHudElement(this, Anchor.TOP_LEFT, 4, 40) {
+        hud(new TextHudElement(this, Anchor.TOP_LEFT, 4, 38) {
             @Override
             protected void collect(Lines out, boolean editor) {
                 InputStats stats = Medirian.get().inputStats();
@@ -77,7 +78,7 @@ public final class CpsModule extends Module {
                 if (clickFlash.on()) {
                     long since = System.currentTimeMillis() - Medirian.get().inputStats().left().lastClickMs();
                     if (since < 180) {
-                        UiDraw.roundRect(g, 0, 0, width, textHeight(), 2.5f, Colors.fade(0x559B55D6, 1f - since / 180f));
+                        UiDraw.roundRect(g, 0, 0, width, textHeight(), HudSurface.radius(), Colors.fade(0x559B55D6, 1f - since / 180f));
                     }
                 }
             }
@@ -106,7 +107,7 @@ public final class CpsModule extends Module {
 
     private void drawHistory(Gfx g, int y, int width) {
         int graphHeight = 18;
-        UiDraw.roundRect(g, 0, y, width, graphHeight, 2.5f, 0x8C0B0A10);
+        HudSurface.panel(g, 0, y, width, graphHeight, 0x8C0B0A10);
         float max = 10;
         for (float v : leftHistory) {
             max = Math.max(max, v);

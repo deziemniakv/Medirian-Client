@@ -18,13 +18,14 @@ export interface RequestOptions {
 }
 
 /**
- * Identifies Medirian to the services it talks to (Modrinth requires a unique User-Agent with the
- * application, its version and a contact). Set once at startup with the launcher version.
+ * Identifies Medirian to the services it talks to (Modrinth asks for a unique User-Agent with the
+ * application, its version and a contact: MEDIRIAN_CONTACT from the owner's .env). Set once at
+ * startup.
  */
-export let USER_AGENT = 'medirian-client/launcher/dev (+https://github.com/medirian-client)';
+export let USER_AGENT = 'medirian-client/launcher/dev';
 
-export function setUserAgent(version: string): void {
-  USER_AGENT = `medirian-client/launcher/${version} (+https://github.com/medirian-client)`;
+export function setUserAgent(version: string, contact = ''): void {
+  USER_AGENT = `medirian-client/launcher/${version}${contact ? ` (${contact})` : ''}`;
 }
 
 export async function request(url: string, { timeoutMs = 20_000, retries = 2, init }: RequestOptions = {}): Promise<Response> {

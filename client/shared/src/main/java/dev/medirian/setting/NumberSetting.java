@@ -12,6 +12,11 @@ public final class NumberSetting extends Setting<Double> {
     private final double max;
     private final double step;
     private String unit = "";
+    /** Shown instead of the number at the ends of the range (e.g. "No limit"), translated with I18n. */
+    private String minLabelKey;
+    private String minLabel;
+    private String maxLabelKey;
+    private String maxLabel;
 
     public NumberSetting(String id, String name, double defaultValue, double min, double max, double step) {
         super(id, name, defaultValue);
@@ -24,6 +29,25 @@ public final class NumberSetting extends Setting<Double> {
     public NumberSetting unit(String unit) {
         this.unit = unit;
         return this;
+    }
+
+    /** Shows {@code label} instead of the maximum (translation key {@code key}). */
+    public NumberSetting maxLabel(String key, String label) {
+        this.maxLabelKey = key;
+        this.maxLabel = label;
+        return this;
+    }
+
+    /** Shows {@code label} instead of the minimum (translation key {@code key}). */
+    public NumberSetting minLabel(String key, String label) {
+        this.minLabelKey = key;
+        this.minLabel = label;
+        return this;
+    }
+
+    /** Whether the value sits at the maximum (for "no limit" style settings). */
+    public boolean atMax() {
+        return value >= max;
     }
 
     public double min() {
@@ -64,6 +88,12 @@ public final class NumberSetting extends Setting<Double> {
     }
 
     public String formatted() {
+        if (maxLabel != null && value >= max) {
+            return dev.medirian.i18n.I18n.tr(maxLabelKey, maxLabel);
+        }
+        if (minLabel != null && value <= min) {
+            return dev.medirian.i18n.I18n.tr(minLabelKey, minLabel);
+        }
         int decimals = step >= 1 ? 0 : step >= 0.1 ? 1 : 2;
         String number = decimals == 0
                 ? String.valueOf(Math.round(value))

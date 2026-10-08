@@ -30,3 +30,19 @@ Thumbs.db
 # Medirian services data (local runs)
 backend/data/
 distribution.tmp/
+
+# The owner's configuration and secrets (template: .env.example, guide: docs/OWNER_SETUP.md)
+.env
+.env.*
+!.env.example
+# Signing certificates and keys never belong in the repository
+*.pfx
+*.p12
+*.pem
+*.key
+*.cer
+*.crt
+*.spc
+*.mobileprovision
+# Medirian Services data and deployment state
+backend/deploy/data/

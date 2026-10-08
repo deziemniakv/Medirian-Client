@@ -5,7 +5,7 @@ import { ArtIcon, Icon, type IconName } from '../components/Icon';
 import { useT, type MessageKey } from '../i18n';
 import { useStore } from '../store';
 
-type Section = 'general' | 'updates' | 'installation' | 'mods' | 'java' | 'account' | 'discord' | 'developer' | 'about';
+type Section = 'general' | 'updates' | 'installation' | 'mods' | 'java' | 'account' | 'discord' | 'about';
 
 const SECTIONS: { id: Section; label: MessageKey; icon: IconName }[] = [
   { id: 'general', label: 'settings.general', icon: 'gear' },
@@ -15,7 +15,6 @@ const SECTIONS: { id: Section; label: MessageKey; icon: IconName }[] = [
   { id: 'java', label: 'settings.java', icon: 'cpu' },
   { id: 'account', label: 'settings.account', icon: 'user' },
   { id: 'discord', label: 'settings.discord', icon: 'globe' },
-  { id: 'developer', label: 'settings.developer', icon: 'terminal' },
   { id: 'about', label: 'settings.about', icon: 'info' }
 ];
 
@@ -49,7 +48,6 @@ export function Settings() {
   const [section, setSection] = useState<Section>('general');
   const settings = useStore((s) => s.settings)!;
   const update = useStore((s) => s.updateSettings);
-  const app = useStore((s) => s.app);
   const set = (patch: Partial<LauncherSettings>) => void update(patch);
 
   const current = SECTIONS.find((s) => s.id === section)!;
@@ -101,20 +99,6 @@ export function Settings() {
           {section === 'java' && <JavaSection />}
           {section === 'account' && <AccountSection />}
           {section === 'discord' && <DiscordSection />}
-          {section === 'developer' && (
-            <>
-              <Row label={t('settings.msaClientId')} hint="MEDIRIAN_MSA_CLIENT_ID">
-                <input className="input mono settings__wide-input" value={settings.msaClientId}
-                  placeholder="00000000-0000-0000-0000-000000000000"
-                  onChange={(e) => set({ msaClientId: e.target.value.trim() })} />
-              </Row>
-              <Row label={t('settings.servicesUrl')} hint="MEDIRIAN_SERVICES_URL">
-                <input className="input mono settings__wide-input" value={settings.servicesUrl}
-                  placeholder={app?.defaultServicesUrl || 'https://…'}
-                  onChange={(e) => set({ servicesUrl: e.target.value.trim() })} />
-              </Row>
-            </>
-          )}
           {section === 'about' && <AboutSection />}
         </div>
         </div>
@@ -170,23 +154,23 @@ function UpdatesSection() {
 
   return (
     <>
-      <Row label={t('settings.channel')}>
-        <select className="select" value={settings.updateChannel}
-          onChange={(e) => void update({ updateChannel: e.target.value as LauncherSettings['updateChannel'] }).then(() => refresh(true))}>
-          <option value="stable">{t('settings.channelStable')}</option>
-          <option value="local">{t('settings.channelLocal')}</option>
-        </select>
-      </Row>
-      {settings.updateChannel === 'stable' ? (
-        <Row label={t('settings.manifestUrl')}>
-          <input className="input mono settings__wide-input" value={settings.manifestUrl} placeholder={app?.defaultManifestUrl || 'https://…/release-manifest.json'}
-            onChange={(e) => void update({ manifestUrl: e.target.value.trim() })} />
-        </Row>
-      ) : (
-        <Row label={t('settings.localDir')}>
-          <input className="input mono settings__wide-input" value={settings.localDistributionDir}
-            onChange={(e) => void update({ localDistributionDir: e.target.value.trim() })} />
-        </Row>
+      {/* development builds can also install from a local build of the clients */}
+      {app && !app.packaged && (
+        <>
+          <Row label={t('settings.channel')}>
+            <select className="select" value={settings.updateChannel}
+              onChange={(e) => void update({ updateChannel: e.target.value as LauncherSettings['updateChannel'] }).then(() => refresh(true))}>
+              <option value="stable">{t('settings.channelStable')}</option>
+              <option value="local">{t('settings.channelLocal')}</option>
+            </select>
+          </Row>
+          {settings.updateChannel === 'local' && (
+            <Row label={t('settings.localDir')}>
+              <input className="input mono settings__wide-input" value={settings.localDistributionDir}
+                onChange={(e) => void update({ localDistributionDir: e.target.value.trim() })} />
+            </Row>
+          )}
+        </>
       )}
       <Row label={releases?.manifest ? t('settings.releaseOk', { version: releases.manifest.client.version, count: releases.manifest.targets.length }) : '—'}
         hint={releases?.error ?? undefined}>
@@ -319,17 +303,14 @@ function DiscordSection() {
   const settings = useStore((s) => s.settings)!;
   const update = useStore((s) => s.updateSettings);
   const status = useStore((s) => s.discord);
-  // the id is applied when editing ends, not on every keystroke (each change reconnects)
-  const [appId, setAppId] = useState(settings.discordAppId);
-  const commitAppId = () => {
-    if (appId !== settings.discordAppId) {
-      void update({ discordAppId: appId });
-    }
-  };
+  const available = useStore((s) => s.app?.config.discord ?? false);
   const toggle = (key: 'discordPresence' | 'discordShowServer' | 'discordShowInLauncher', label: string, disabled = false) => (
     <Toggle on={settings[key]} label={label} disabled={disabled} onChange={() => void update({ [key]: !settings[key] })} />
   );
   const off = !settings.discordPresence;
+  if (!available) {
+    return <p className="muted settings__intro">{t('discord.unavailable')}</p>;
+  }
   return (
     <>
       <Row label={t('discord.enable')} hint={t('discord.enableHint')}>{toggle('discordPresence', t('discord.enable'))}</Row>
@@ -340,20 +321,6 @@ function DiscordSection() {
           {t(`discord.state.${status.state}` as MessageKey, { user: status.user ?? '' })}
         </span>
       </Row>
-      <Row label={t('discord.appId')} hint={t('discord.appIdHint')}>
-        <input className="input mono settings__wide-input" value={appId} placeholder="123456789012345678" inputMode="numeric"
-          onChange={(e) => setAppId(e.target.value.replace(/D/g, ''))} onBlur={commitAppId}
-          onKeyDown={(e) => e.key === 'Enter' && commitAppId()} />
-      </Row>
-      {status.state === 'unconfigured' && (
-        <div className="alert discord-setup">
-          <span>{t('discord.setup')}</span>
-          <button className="btn" onClick={() => void invoke('shell:openExternal', 'https://discord.com/developers/applications')}>
-            <Icon name="external" size={16} />
-            {t('discord.openPortal')}
-          </button>
-        </div>
-      )}
     </>
   );
 }
@@ -379,34 +346,31 @@ function AboutSection() {
           {t('settings.open')}
         </button>
       </Row>
+      <h3 className="settings__subheading pixel">{t('settings.build')}</h3>
+      <Row label={t('settings.buildLogin')}><BuildState on={app.config.microsoftLogin} /></Row>
+      <Row label={t('settings.buildServices')} hint={app.config.servicesHost ?? undefined}><BuildState on={!!app.config.servicesHost} /></Row>
+      <Row label={t('settings.buildReleases')} hint={app.config.manifestHost ?? undefined}><BuildState on={!!app.config.manifestHost} /></Row>
+      <Row label={t('settings.buildDiscord')}><BuildState on={app.config.discord} /></Row>
+      {app.config.problems.map((problem) => <div key={problem} className="alert alert--warn">{problem}</div>)}
     </>
   );
 }
 
+/** Whether a feature the owner configures (docs/OWNER_SETUP.md) is part of this build. */
+function BuildState({ on }: { on: boolean }) {
+  const t = useT();
+  return <span className={`chip ${on ? 'chip--pumpkin' : 'chip--muted'}`}>{on ? t('settings.buildOn') : t('settings.buildOff')}</span>;
+}
+
 function ModsSection() {
   const t = useT();
-  const settings = useStore((s) => s.settings)!;
-  const update = useStore((s) => s.updateSettings);
-  const app = useStore((s) => s.app);
-  // the key is saved when editing ends (it is sent to CurseForge with every request)
-  const [key, setKey] = useState(settings.curseforgeApiKey);
-  const commit = () => {
-    if (key.trim() !== settings.curseforgeApiKey) {
-      void update({ curseforgeApiKey: key.trim() });
-    }
-  };
   return (
     <>
       <Row label="Modrinth" hint={t('settings.modrinthHint')}>
         <span className="chip chip--pumpkin">{t('settings.ready')}</span>
-      </Row>
-      <Row label={t('settings.curseforgeKey')} hint={app?.curseforgeKeyBuiltIn ? t('settings.curseforgeKeyBuiltIn') : t('settings.curseforgeKeyHint')}>
-        <input className="input mono settings__wide-input" type="password" value={key} placeholder={app?.curseforgeKeyBuiltIn ? '••••••••' : '$2a$10$…'}
-          autoComplete="off" spellCheck={false} onChange={(e) => setKey(e.target.value)} onBlur={commit}
-          onKeyDown={(e) => e.key === 'Enter' && commit()} />
-        <button className="btn btn--ghost btn--small" onClick={() => void invoke('shell:openExternal', 'https://console.curseforge.com/')}>
+        <button className="btn btn--ghost btn--small" onClick={() => void invoke('shell:openExternal', 'https://modrinth.com/mods')}>
           <Icon name="external" size={16} />
-          {t('settings.curseforgeOpen')}
+          modrinth.com
         </button>
       </Row>
       <p className="muted settings__intro">{t('settings.modsFolders')}</p>

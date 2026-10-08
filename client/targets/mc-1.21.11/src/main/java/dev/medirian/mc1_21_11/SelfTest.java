@@ -177,6 +177,11 @@ final class SelfTest {
                 return;
             case 9:
                 verifyChat(minecraft);
+                if (dev.medirian.mc1_21_11.ModernBackdrop.prepared > 0) {
+                    Log.info("Self-test: Liquid Glass blur OK ({} frames)", dev.medirian.mc1_21_11.ModernBackdrop.prepared);
+                } else {
+                    Log.error("Self-test FAILED: the Liquid Glass blur behind HUD widgets was not made");
+                }
                 shot(minecraft, "4-hud");
                 minecraft.player.connection.sendCommand("gamemode creative");
                 minecraft.player.connection.sendCommand("setblock ~ ~ ~ air");
@@ -302,6 +307,28 @@ final class SelfTest {
             case 22:
                 shot(minecraft, "9c-font");
                 medirian.settings().font.set(dev.medirian.render.font.UiFont.MINECRAFT);
+                medirian.platform().openScreen(null);
+                next(10);
+                return;
+            case 23:
+                // Settings → Advanced: Minecraft's own options really change, in English for the baselines
+                dev.medirian.i18n.I18n.setLanguage(dev.medirian.i18n.I18n.Language.EN_US);
+                dev.medirian.ui.AdvancedSelfTest.verifyVanillaOptions(medirian);
+                medirian.platform().openScreen(new SettingsScreen(null).show(SettingsScreen.Tab.ADVANCED, "graphics"));
+                next(20);
+                return;
+            case 24:
+                shot(minecraft, "3d-advanced");
+                medirian.platform().openScreen(new SettingsScreen(null).show(SettingsScreen.Tab.ADVANCED, "visibility"));
+                next(20);
+                return;
+            case 25:
+                shot(minecraft, "3e-advanced-visibility");
+                medirian.platform().openScreen(new SettingsScreen(null).show(SettingsScreen.Tab.HUD, null));
+                next(20);
+                return;
+            case 26:
+                shot(minecraft, "3f-hud-settings");
                 medirian.platform().openScreen(null);
                 next(10);
                 return;

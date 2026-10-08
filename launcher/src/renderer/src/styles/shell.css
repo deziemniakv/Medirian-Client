@@ -10,8 +10,6 @@
 /* ------------------------------------------------------------------ scene */
 
 .scene {
-  --mx: 0;
-  --my: 0;
   position: absolute;
   inset: 0;
   z-index: 0;
@@ -27,11 +25,6 @@
   width: var(--sw);
   height: var(--sh);
   margin-left: calc(var(--sw) / -2);
-}
-
-/* Home lifts the night above the launch bar; the ground continues below it. */
-.scene--home {
-  --lift: 70px;
 }
 
 .scene__underground {
@@ -50,8 +43,6 @@
   background-size: 100% 100%;
   background-repeat: no-repeat;
   image-rendering: pixelated;
-  transform: translate(calc(var(--mx) * var(--depth) * -3px), calc(var(--my) * var(--depth) * -1.5px));
-  transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .scene__fog {
@@ -81,46 +72,23 @@
   100% { opacity: 1; }
 }
 
-/* A bat crossing the sky every 22 s. */
-.scene__bat {
-  position: absolute;
-  left: 0;
-  top: calc(var(--s) * 48px);
-  width: calc(var(--s) * 11px);
-  height: calc(var(--s) * 5px);
-  animation: bat-fly 22s linear infinite;
-  animation-delay: 6s;
-  transform: translateX(calc(var(--sw) + 40px));
-}
-
-.scene__bat-wings {
-  width: 100%;
-  height: 100%;
-  background-size: 100% 100%;
-  image-rendering: pixelated;
-  animation: bat-flap 0.24s steps(2) infinite;
-}
-
-@keyframes bat-fly {
-  0% { transform: translate(calc(var(--sw) + 40px), 0); }
-  10% { transform: translate(calc(var(--sw) * 0.82), calc(var(--s) * -6px)); }
-  20% { transform: translate(calc(var(--sw) * 0.64), calc(var(--s) * 3px)); }
-  30% { transform: translate(calc(var(--sw) * 0.46), calc(var(--s) * -4px)); }
-  40% { transform: translate(calc(var(--sw) * 0.28), calc(var(--s) * 5px)); }
-  50% { transform: translate(-60px, 0); }
-  100% { transform: translate(-60px, 0); }
-}
-
-@keyframes bat-flap {
-  from { transform: scaleY(1); }
-  to { transform: scaleY(0.55); }
-}
-
 .scene__veil {
   position: absolute;
   inset: 0;
   background: linear-gradient(rgba(12, 8, 20, 0.55), rgba(12, 8, 20, 0.15) 22%, transparent 40%);
   transition: background var(--normal);
+}
+
+/* Home: the night stays a backdrop — darker at the edges, so the player and the launch card read clearly. */
+.scene--home .scene__veil {
+  background:
+    linear-gradient(rgba(12, 8, 20, 0.6), rgba(12, 8, 20, 0.1) 26%, transparent 45%),
+    linear-gradient(90deg, rgba(12, 8, 20, 0.35), transparent 30%, transparent 55%, rgba(12, 8, 20, 0.55));
+}
+
+.scene--still .scene__fog,
+.scene--still .scene__glow {
+  animation: none;
 }
 
 .scene--dim .scene__veil {
@@ -485,7 +453,7 @@
   position: absolute;
   left: 22px;
   right: 22px;
-  bottom: 116px;
+  bottom: 56px;
   z-index: 6;
   height: min(300px, 45vh);
   display: flex;

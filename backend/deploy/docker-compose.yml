@@ -1,0 +1,46 @@
+# Medirian Services in production: the Node service behind Caddy, which gets and renews the HTTPS
+# certificate for MEDIRIAN_SERVICES_DOMAIN by itself (Let's Encrypt) and redirects HTTP to HTTPS.
+#
+#   cd backend/deploy
+#   docker compose up -d --build
+#
+# Configuration: the "Medirian Services (server)" section of the .env next to the repository root
+# (or the file in MEDIRIAN_ENV_FILE). Put only that section on the server — the launcher's signing
+# secrets do not belong there. Step by step: docs/OWNER_SETUP.md, "Backend and HTTPS".
+services:
+  medirian-services:
+    build: ..
+    restart: unless-stopped
+    env_file: ${MEDIRIAN_ENV_FILE:-../../.env}
+    environment:
+      # inside the compose network, reachable only through Caddy
+      MEDIRIAN_SERVICES_HOST: 0.0.0.0
+      MEDIRIAN_SERVICES_PORT: "8080"
+      MEDIRIAN_SERVICES_DATA_DIR: /data
+      MEDIRIAN_SERVICES_TRUST_PROXY: "1"
+    volumes:
+      - medirian-data:/data
+    expose:
+      - "8080"
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    env_file: ${MEDIRIAN_ENV_FILE:-../../.env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - medirian-services
+
+volumes:
+  # players' documents and share codes: back this volume up
+  medirian-data:
+  # Caddy's certificates
+  caddy-data:
+  caddy-config:

@@ -1,6 +1,7 @@
 package dev.medirian.module.impl.player;
 
 import dev.medirian.core.Medirian;
+import dev.medirian.hud.HudSurface;
 import dev.medirian.hud.Anchor;
 import dev.medirian.hud.HudElement;
 import dev.medirian.hud.HudStyle;
@@ -91,7 +92,7 @@ public final class ArmorStatusModule extends Module {
                 String empty = I18n.tr("hud.armorstatus.empty", "No armor");
                 width = g.textWidth(empty) + 10;
                 height = 16;
-                g.fill(0, 0, width, height, HudStyle.DEFAULT_BACKGROUND);
+                HudSurface.panel(g, 0, 0, width, height, HudStyle.DEFAULT_BACKGROUND);
                 g.text(empty, 5, 4, HudStyle.DEFAULT_TEXT, true);
                 return;
             }

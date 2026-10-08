@@ -5,7 +5,6 @@
 import { join } from 'node:path';
 import { ModService } from '../src/main/mods/mods.ts';
 import { ModrinthProvider } from '../src/main/mods/modrinth.ts';
-import type { ModProvider } from '../src/main/mods/provider.ts';
 import { setUserAgent } from '../src/main/net/http.ts';
 import { ProfileStore } from '../src/main/profiles/profiles.ts';
 
@@ -13,7 +12,7 @@ const home = process.env.MEDIRIAN_HOME;
 if (!home) {
   throw new Error('MEDIRIAN_HOME is required');
 }
-setUserAgent('0.3.0');
+setUserAgent('0.4.0', 'e2e test');
 const store = new ProfileStore(join(home, 'launcher', 'profiles.json'), join(home, 'profiles'), join(home, 'instances'));
 await store.load();
 const profile = store.list().find((p) => p.name === 'E2E Mods 1.21.8');
@@ -25,8 +24,7 @@ const mods = new ModService({
   profiles: store,
   target: () => ({ minecraftVersion: '1.21.8', loader: 'fabric', loaderName: 'Fabric' }),
   isRunning: () => false,
-  providers: { modrinth, curseforge: { unavailableReason: () => 'not used here' } as unknown as ModProvider },
-  modrinth,
+  catalog: modrinth,
   concurrency: () => 4,
   emitTask: () => undefined
 });

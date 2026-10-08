@@ -37,7 +37,7 @@ public final class ReachModule extends Module {
         });
         on(Events.WorldLeave.class, e -> lastReach = -1);
 
-        hud(new TextHudElement(this, Anchor.TOP_LEFT, 4, 58) {
+        hud(new TextHudElement(this, Anchor.TOP_LEFT, 4, 55) {
             @Override
             protected void collect(Lines out, boolean editor) {
                 String value = visible()

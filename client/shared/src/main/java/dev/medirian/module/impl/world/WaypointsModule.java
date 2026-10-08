@@ -128,7 +128,9 @@ public final class WaypointsModule extends Module {
         }
         String dimension = player.dimensionId();
         for (Waypoint waypoint : store().of(world)) {
-            if (waypoint.visible && waypoint.dimension.equals(dimension)) {
+            // Settings → Advanced → Visibility → Waypoint distance
+            if (waypoint.visible && waypoint.dimension.equals(dimension)
+                    && dev.medirian.render.Visibility.waypoint(waypoint.distanceSq(player.x(), player.y(), player.z()))) {
                 beams.add(waypoint);
             }
         }
@@ -154,7 +156,11 @@ public final class WaypointsModule extends Module {
             if (!waypoint.visible || !waypoint.dimension.equals(dimension)) {
                 continue;
             }
-            double distance = Math.sqrt(waypoint.distanceSq(player.x(), player.y(), player.z()));
+            double distanceSq = waypoint.distanceSq(player.x(), player.y(), player.z());
+            if (!dev.medirian.render.Visibility.waypoint(distanceSq)) {
+                continue;
+            }
+            double distance = Math.sqrt(distanceSq);
             double x = waypoint.x + 0.5;
             double y = waypoint.y + 1.0;
             double z = waypoint.z + 0.5;

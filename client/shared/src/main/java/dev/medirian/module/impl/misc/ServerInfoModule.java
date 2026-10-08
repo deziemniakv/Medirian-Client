@@ -19,7 +19,7 @@ public final class ServerInfoModule extends Module {
         super("serverinfo", "Server Info", Category.MISC, "Shows the server address and player count.");
         showPlayers = add(new BooleanSetting("showPlayers", "Show player count", true));
         showPing = add(new BooleanSetting("showPing", "Show ping", false));
-        hud(new TextHudElement(this, Anchor.TOP_LEFT, 4, 147) {
+        hud(new TextHudElement(this, Anchor.TOP_LEFT, 4, 160) {
             @Override
             protected void collect(Lines out, boolean editor) {
                 GameView game = Medirian.get().game();

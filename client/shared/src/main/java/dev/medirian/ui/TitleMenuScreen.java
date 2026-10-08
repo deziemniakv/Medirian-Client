@@ -20,7 +20,8 @@ import java.util.List;
 
 /**
  * Medirian's main menu, shown instead of Minecraft's title screen: a cozy Halloween night (the
- * same pixel-art scene as the launcher), the Medirian Client logo and the menu.
+ * same pixel-art scene as the launcher), the Medirian Client logo, the menu and the player — their
+ * real skin, large, standing on the path in front of the cabin with their name above them.
  *
  * <p>The scene is drawn at a whole number of real pixels per art pixel whenever that covers the
  * window closely, so the art stays crisp. Fog drifts, lantern and pumpkin light flickers, the
@@ -49,6 +50,18 @@ public final class TitleMenuScreen extends MedirianScreen {
     private String toast;
     /** Version of the skin texture uploaded to the GPU (-1 = none yet). */
     private int skinVersion = -1;
+    /** The scene as drawn this frame: its origin, units per art pixel and parallax offset of the ground. */
+    private int sceneX;
+    private int sceneY;
+    private float sceneUnits = 1f;
+    private float groundDx;
+    private float groundDy;
+    /** Where the player was drawn (for clicks). */
+    private int playerX;
+    private int playerY;
+    private int playerW;
+    private int playerH;
+    private final Anim playerHover = new Anim(0f, 14f);
     private long toastUntil;
 
     public TitleMenuScreen() {
@@ -142,8 +155,12 @@ public final class TitleMenuScreen extends MedirianScreen {
         }
         float appear = intro.target(1f).get();
         renderLogo(g, t, appear);
+        renderPlayer(g, t, mx, my, appear);
         renderMenu(g, t, mx, my, appear);
-        renderPlayerCard(g, t, mx, my);
+        if (cosmeticsButton != null) {
+            cosmeticsButton.bounds(width - 108, 8, 100, 18);
+            cosmeticsButton.render(g, mx, my);
+        }
         renderFooter(g, t);
         if (toast != null && System.currentTimeMillis() < toastUntil) {
             int w = g.textWidth(toast) + 12;
@@ -180,6 +197,11 @@ public final class TitleMenuScreen extends MedirianScreen {
         g.texture("gui/scene/fog.png", x0 - drift, fogY, sw, fogH, 0xFFFFFFFF);
         g.texture("gui/scene/fog.png", x0 - drift + sw, fogY, sw, fogH, 0xFFFFFFFF);
         layer(g, "ground", x0, y0, sw, sh, px * -9, py * -4, 0xFFFFFFFF);
+        sceneX = x0;
+        sceneY = y0;
+        sceneUnits = unitsPerPixel;
+        groundDx = px * -9;
+        groundDy = py * -4;
         // lantern and pumpkin light flickers gently
         float flicker = (float) (0.86 + 0.08 * Math.sin(seconds * 3.1) + 0.06 * Math.sin(seconds * 7.3 + 1.2));
         layer(g, "glow", x0, y0, sw, sh, px * -9, py * -4, Colors.withAlpha(0xFFFFFF, Math.round(255 * Math.min(1f, flicker))));
@@ -254,10 +276,11 @@ public final class TitleMenuScreen extends MedirianScreen {
     }
 
     /**
-     * The player as the launcher shows them: their real skin (front, with the outer layer) standing
-     * on a stone slab, their name and the way to the cosmetics.
+     * The player as the launcher shows them, large: their real skin (front, with the outer layer)
+     * standing on the path of the scene, about 40% of the screen tall, with a soft shadow at their
+     * feet and their name on a tag above their head. Clicking them opens the cosmetics.
      */
-    private void renderPlayerCard(Gfx g, Theme t, float mx, float my) {
+    private void renderPlayer(Gfx g, Theme t, float mx, float my, float appear) {
         Medirian medirian = Medirian.get();
         PlayerIdentity identity = medirian.platform().identity();
         PlayerSkins.Skin skin = PlayerSkins.get(medirian.home().root(), identity);
@@ -265,27 +288,33 @@ public final class TitleMenuScreen extends MedirianScreen {
             g.uploadTexture("player_skin", 64, 64, skin.argb);
             skinVersion = skin.version;
         }
-        String name = identity.name();
-        int s = height >= 300 ? 3 : 2;
-        int w = Math.max(Math.max(16 * s + 28, g.textWidth(name) + 16), cosmeticsButton != null ? 100 : 0);
+        // whole units per skin pixel keep the skin crisp; at least 3, about 40% of the height
+        int s = Math.max(3, (int) Math.floor(height * 0.4f / 32f));
+        int figureW = 16 * s;
         int figureH = 32 * s;
-        int h = 8 + figureH + 6 + 4 + 12 + (cosmeticsButton != null ? 20 : 0) + 4;
-        int x = width - w - 10;
-        int y = 10;
-        Pixel.panel(g, x, y, w, h);
-        Pixel.inset(g, x + 4, y + 4, w - 8, figureH + 14, t.panelDark);
-        int fx = x + (w - 16 * s) / 2;
-        figure(g, fx, y + 8, s, skin.slim);
-        // the stone slab the player stands on
-        int slabW = 16 * s + 12;
-        Pixel.frame(g, x + (w - slabW) / 2, y + 8 + figureH - 1, slabW, 6, 0xFF342E3F, 0xFF4A4256, 0xFF211C2A);
-        String label = UiDraw.ellipsize(g, name, w - 12);
-        int ty = y + 8 + figureH + 12;
-        Pixel.text(g, label, x + (w - g.textWidth(label)) / 2f, ty, t.text);
-        if (cosmeticsButton != null) {
-            cosmeticsButton.bounds(x + 4, ty + 12, w - 8, 16);
-            cosmeticsButton.render(g, mx, my);
-        }
+        // the path in front of the cabin: right of the menu, on the ground line of the scene
+        int menuRight = menuX + menuW;
+        int centre = Math.round(Math.max(menuRight + figureW * 0.75f, width * 0.62f) + groundDx);
+        int feet = Math.round(sceneY + 237 * sceneUnits + groundDy);
+        feet = Math.min(feet, height - 18);
+        int x = centre - figureW / 2;
+        int y = feet - figureH - Math.round((1f - appear) * 8);
+        playerX = x;
+        playerY = y;
+        playerW = figureW;
+        playerH = figureH;
+        boolean hovered = cosmeticsButton != null && mx >= x && mx < x + figureW && my >= y && my < y + figureH;
+        float h = playerHover.target(hovered ? 1f : 0f).get();
+        // a soft shadow on the ground
+        UiDraw.roundRect(g, centre - figureW * 0.55f, feet - s * 0.6f, figureW * 1.1f, s * 1.4f, s * 0.7f, 0x55000000);
+        figure(g, x, y, s, skin.slim);
+        // the name tag, as Minecraft draws it above players
+        String name = UiDraw.ellipsize(g, identity.name(), Math.max(60, figureW * 2));
+        int tagW = g.textWidth(name) + 8;
+        int tagX = centre - tagW / 2;
+        int tagY = y - 16;
+        g.fill(tagX, tagY, tagX + tagW, tagY + 12, Colors.lerp(0x66000000, 0x88000000, h));
+        g.text(name, tagX + 4, tagY + 2, Colors.lerp(t.text, t.pumpkinLight, h), false);
     }
 
     /** The front of a skin: head, body, arms and legs with their outer layers, {@code s} units per pixel. */
@@ -328,6 +357,11 @@ public final class TitleMenuScreen extends MedirianScreen {
             return false;
         }
         if (cosmeticsButton != null && cosmeticsButton.mouseClicked(mx, my, button)) {
+            return true;
+        }
+        // the player opens their cosmetics, like a wardrobe
+        if (cosmeticsButton != null && mx >= playerX && mx < playerX + playerW && my >= playerY && my < playerY + playerH) {
+            Medirian.get().platform().openScreen(new CosmeticsScreen(this));
             return true;
         }
         for (Item item : items) {

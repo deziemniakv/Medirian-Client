@@ -13,7 +13,6 @@ import type {
   ModSearchQuery,
   ModSearchResult,
   ModSource,
-  ModSourceInfo,
   ModTargetInfo,
   ModTask
 } from '../../common/types';
@@ -21,8 +20,7 @@ import { readJson, writeJson } from '../core/json';
 import { log } from '../core/log';
 import { readZipEntry } from '../minecraft/zip';
 import { downloadAll, sha1File } from '../net/downloader';
-import { bestVersion, type ModProvider, type ProviderVersion } from './provider';
-import type { ModrinthProvider } from './modrinth';
+import { bestVersion, type ModCatalog, type ProviderVersion } from './provider';
 
 /** Medirian's own jar in every profile's mods folder; managed by the installer, never listed. */
 export const MEDIRIAN_JAR = 'medirian-client.jar';
@@ -30,7 +28,7 @@ const INDEX = 'medirian-mods.json';
 const DISABLED = '.disabled';
 
 interface IndexEntry {
-  source: ModSource | 'local';
+  source: ModSource;
   projectId: string | null;
   versionId: string | null;
   name: string;
@@ -76,8 +74,6 @@ export function describeIssue(issue: ModIssue, target: ModTargetInfo): string {
       return `${issue.name} ${issue.version} is not compatible with ${where}.`;
     case 'dependencyUnavailable':
       return `${issue.name} (required by ${issue.parent}) has no version for ${where}.`;
-    case 'manualDownload':
-      return `The author of ${issue.name} only allows downloading it from the ${issue.source} website.`;
     case 'alreadyInstalled':
       return `${issue.name} ${issue.version} is already installed in this profile.`;
     case 'dependencyDisabled':
@@ -107,14 +103,14 @@ export interface ModServiceDeps {
   target(targetId: string): ModTargetInfo;
   /** Whether Minecraft is running with this profile (files are in use). */
   isRunning(profileId: string): boolean;
-  providers: Record<ModSource, ModProvider>;
-  modrinth: ModrinthProvider;
+  /** Modrinth. */
+  catalog: ModCatalog;
   concurrency(): number;
   emitTask(task: ModTask | null): void;
 }
 
 /**
- * Mods per launch profile: search on Modrinth and CurseForge, compatibility with the profile's
+ * Mods per launch profile: search on Modrinth, compatibility with the profile's
  * Minecraft version and loader, dependency resolution, and install / remove / enable / disable /
  * update in the profile's own mods folder. A small index (medirian-mods.json next to the mods
  * folder) remembers where each jar came from; jars added by hand are recognised by their SHA-1 on
@@ -128,13 +124,6 @@ export class ModService {
     this.deps = deps;
   }
 
-  sources(): ModSourceInfo[] {
-    return Object.values(this.deps.providers).map((p) => {
-      const reason = p.unavailableReason();
-      return { id: p.id, name: p.name, available: reason === null, reason: reason ?? undefined };
-    });
-  }
-
   private profile(profileId: string): LaunchProfile {
     const profile = this.deps.profiles.get(profileId);
     if (!profile) {
@@ -145,15 +134,6 @@ export class ModService {
 
   targetOf(profileId: string): ModTargetInfo {
     return this.deps.target(this.profile(profileId).targetId);
-  }
-
-  private provider(source: ModSource): ModProvider {
-    const provider = this.deps.providers[source];
-    const reason = provider.unavailableReason();
-    if (reason) {
-      throw new Error(reason);
-    }
-    return provider;
   }
 
   private modsDir(profile: LaunchProfile): string {
@@ -182,22 +162,28 @@ export class ModService {
 
   async search(query: ModSearchQuery): Promise<ModSearchResult> {
     const target = this.targetOf(query.profileId);
-    const { hits, total } = await this.provider(query.source).search(query, target);
+    const { hits, total } = await this.deps.catalog.search(query, target);
     return { hits, total, page: query.page, pageSize: query.pageSize, target };
   }
 
-  categories(source: ModSource): Promise<ModCategory[]> {
-    return this.provider(source).categories();
+  categories(): Promise<ModCategory[]> {
+    return this.deps.catalog.categories();
   }
 
-  async details(source: ModSource, projectId: string, profileId: string): Promise<ModDetails> {
+  async details(projectId: string, profileId: string): Promise<ModDetails> {
     const target = this.targetOf(profileId);
-    const provider = this.provider(source);
-    const [summary, versions] = await Promise.all([provider.project(projectId), provider.versions(projectId, target, false)]);
+    const catalog = this.deps.catalog;
+    const [summary, versions] = await Promise.all([catalog.project(projectId), catalog.versions(projectId, target, false)]);
     return { ...summary, versions: versions.slice(0, 60), target };
   }
 
   // ------------------------------------------------------------------ installed mods
+
+  /** Enabled mods in the profile's folder (without Medirian itself); no network. */
+  async count(profileId: string): Promise<number> {
+    const files = await readdir(this.modsDir(this.profile(profileId))).catch(() => [] as string[]);
+    return files.filter((name) => name.toLowerCase().endsWith('.jar') && name !== MEDIRIAN_JAR).length;
+  }
 
   async installed(profileId: string): Promise<InstalledModsState> {
     return this.exclusive(profileId, () => this.scan(this.profile(profileId)));
@@ -208,8 +194,7 @@ export class ModService {
     const target = this.deps.target(profile.targetId);
     const dir = this.modsDir(profile);
     await mkdir(dir, { recursive: true });
-    const index = await readJson<IndexFile>(this.indexFile(profile), { version: 1, mods: {}, updates: {}, checkedAt: null });
-    index.updates ??= {};
+    const index = await this.readIndex(profile);
     let changed = false;
 
     const files = (await readdir(dir)).filter((name) => {
@@ -244,12 +229,12 @@ export class ModService {
       changed = true;
       let identified = new Map<string, ProviderVersion>();
       try {
-        identified = await this.deps.modrinth.identify(unknown.map((u) => u.sha1), target);
+        identified = await this.deps.catalog.identify(unknown.map((u) => u.sha1), target);
       } catch (error) {
         log.warn('Could not look mods up on Modrinth', error);
       }
       const projectIds = [...new Set([...identified.values()].flatMap((v) => [v.projectId, ...this.requiredIds(v)]))];
-      const projects = await this.deps.modrinth.projects(projectIds).catch(() => []);
+      const projects = await this.deps.catalog.projects(projectIds).catch(() => []);
       const names = new Map(projects.map((p) => [p.projectId, p]));
       for (const file of unknown) {
         const fabric = await readFabricMod(file.path);
@@ -278,6 +263,22 @@ export class ModService {
       await writeJson(this.indexFile(profile), index);
     }
     return { profileId: profile.id, target, mods: this.view(index, present), checkedAt: index.checkedAt };
+  }
+
+  /**
+   * The profile's index. Mods recorded by 0.3.0 as coming from CurseForge (no longer supported)
+   * are kept as local files.
+   */
+  private async readIndex(profile: LaunchProfile): Promise<IndexFile> {
+    const index = await readJson<IndexFile>(this.indexFile(profile), { version: 1, mods: {}, updates: {}, checkedAt: null });
+    index.updates ??= {};
+    for (const [file, entry] of Object.entries(index.mods)) {
+      if (entry.source !== 'modrinth' && entry.source !== 'local') {
+        index.mods[file] = { ...entry, source: 'local', projectId: null, versionId: null, pageUrl: null, dependencies: [] };
+        delete index.updates[file];
+      }
+    }
+    return index;
   }
 
   private requiredIds(version: ProviderVersion): string[] {
@@ -372,18 +373,17 @@ export class ModService {
    * What installing a project (a given version, or the best one for the profile) does: the file,
    * every required dependency that is not in the profile yet, and anything that blocks it.
    */
-  async plan(profileId: string, source: ModSource, projectId: string, versionId?: string): Promise<ModInstallPlan> {
+  async plan(profileId: string, projectId: string, versionId?: string): Promise<ModInstallPlan> {
     const profile = this.profile(profileId);
     const state = await this.installed(profileId);
-    return this.buildPlan(profile, state, source, projectId, versionId);
+    return this.buildPlan(profile, state, projectId, versionId);
   }
 
-  private async buildPlan(profile: LaunchProfile, state: InstalledModsState, source: ModSource, projectId: string,
-                          versionId?: string): Promise<ModInstallPlan> {
+  private async buildPlan(profile: LaunchProfile, state: InstalledModsState, projectId: string, versionId?: string): Promise<ModInstallPlan> {
     const target = state.target;
-    const provider = this.provider(source);
+    const provider = this.deps.catalog;
     const plan: ModInstallPlan = { profileId: profile.id, target, steps: [], satisfied: [], problems: [], warnings: [] };
-    const installedProject = (id: string) => state.mods.find((m) => m.source === source && m.projectId === id);
+    const installedProject = (id: string) => state.mods.find((m) => m.source === 'modrinth' && m.projectId === id);
     const queue: { projectId: string; versionId?: string; reason: ModInstallStep['reason']; parent?: string }[] = [
       { projectId, versionId, reason: 'requested' }
     ];
@@ -434,17 +434,11 @@ export class ModService {
           : { code: 'dependencyUnavailable', name, parent: item.parent ?? '' });
         continue;
       }
-      if (!version.url) {
-        plan.problems.push({ code: 'manualDownload', name, source: provider.name });
-        plan.manualDownloadUrl ??= version.pageUrl;
-        continue;
-      }
       if (item.reason === 'requested' && already && already.versionId === version.id) {
         plan.problems.push({ code: 'alreadyInstalled', name, version: version.versionNumber });
         continue;
       }
       plan.steps.push({
-        source,
         projectId: item.projectId,
         versionId: version.id,
         name,
@@ -465,12 +459,12 @@ export class ModService {
   }
 
   /** Plans and installs a project with its missing dependencies into the profile. */
-  async install(profileId: string, source: ModSource, projectId: string, versionId?: string): Promise<InstalledModsState> {
+  async install(profileId: string, projectId: string, versionId?: string): Promise<InstalledModsState> {
     return this.exclusive(profileId, async () => {
       this.assertNotRunning(profileId);
       const profile = this.profile(profileId);
       const state = await this.scan(profile);
-      const plan = await this.buildPlan(profile, state, source, projectId, versionId);
+      const plan = await this.buildPlan(profile, state, projectId, versionId);
       if (plan.problems.length > 0) {
         throw new Error(plan.problems.map((p) => describeIssue(p, plan.target)).join(' '));
       }
@@ -481,7 +475,7 @@ export class ModService {
 
   private async execute(profile: LaunchProfile, state: InstalledModsState, plan: ModInstallPlan): Promise<void> {
     const dir = this.modsDir(profile);
-    const provider = this.provider(plan.steps[0]?.source ?? 'modrinth');
+    const provider = this.deps.catalog;
     const target = state.target;
     const versions: ProviderVersion[] = [];
     for (const step of plan.steps) {
@@ -491,7 +485,7 @@ export class ModService {
     this.deps.emitTask({ profileId: profile.id, label: `Downloading ${plan.steps[0]?.name ?? 'mods'}`, done: 0, total });
     try {
       await downloadAll(
-        versions.map((v) => ({ url: v.url!, path: join(dir, v.fileName), sha1: v.sha1 ?? undefined, size: v.size || undefined })),
+        versions.map((v) => ({ url: v.url, path: join(dir, v.fileName), sha1: v.sha1 ?? undefined, size: v.size || undefined })),
         {
           concurrency: Math.min(4, this.deps.concurrency()),
           verify: 'full',
@@ -502,8 +496,7 @@ export class ModService {
       this.deps.emitTask(null);
     }
 
-    const index = await readJson<IndexFile>(this.indexFile(profile), { version: 1, mods: {}, updates: {}, checkedAt: null });
-    index.updates ??= {};
+    const index = await this.readIndex(profile);
     const depIds = [...new Set(versions.flatMap((v) => this.requiredIds(v)))];
     const projects = await provider.projects([...new Set([...plan.steps.map((s) => s.projectId), ...depIds])]).catch(() => []);
     const info = new Map(projects.map((p) => [p.projectId, p]));
@@ -511,7 +504,7 @@ export class ModService {
       const version = versions[i];
       const step = plan.steps[i];
       // an update replaces the older file of the same project
-      const old = state.mods.find((m) => m.source === step.source && m.projectId === step.projectId && m.file !== version.fileName);
+      const old = state.mods.find((m) => m.source === 'modrinth' && m.projectId === step.projectId && m.file !== version.fileName);
       if (old) {
         await rm(join(dir, old.file), { force: true });
         await rm(join(dir, old.file + DISABLED), { force: true });
@@ -522,7 +515,7 @@ export class ModService {
       const fabric = await readFabricMod(path);
       const project = info.get(step.projectId);
       index.mods[version.fileName] = {
-        source: step.source,
+        source: 'modrinth',
         projectId: step.projectId,
         versionId: version.id,
         name: project?.name ?? step.name,
@@ -557,23 +550,14 @@ export class ModService {
       const profile = this.profile(profileId);
       const state = await this.scan(profile);
       const target = state.target;
-      const index = await readJson<IndexFile>(this.indexFile(profile), { version: 1, mods: {}, updates: {}, checkedAt: null });
+      const index = await this.readIndex(profile);
       index.updates = {};
       const fromModrinth = Object.entries(index.mods).filter(([, e]) => e.source === 'modrinth');
-      const latest = await this.deps.modrinth.latestFor(fromModrinth.map(([, e]) => e.sha1), target);
+      const latest = await this.deps.catalog.latestFor(fromModrinth.map(([, e]) => e.sha1), target);
       for (const [file, entry] of fromModrinth) {
         const newer = latest.get(entry.sha1);
         if (newer && newer.compatible && newer.id !== entry.versionId && newer.projectId === entry.projectId) {
           index.updates[file] = { versionId: newer.id, versionNumber: newer.versionNumber };
-        }
-      }
-      const curseforge = this.deps.providers.curseforge;
-      if (curseforge.unavailableReason() === null) {
-        for (const [file, entry] of Object.entries(index.mods).filter(([, e]) => e.source === 'curseforge' && e.projectId)) {
-          const newest = bestVersion(await curseforge.versions(entry.projectId!, target, true).catch(() => []));
-          if (newest && newest.id !== entry.versionId) {
-            index.updates[file] = { versionId: newest.id, versionNumber: newest.versionNumber };
-          }
         }
       }
       index.checkedAt = Date.now();
@@ -586,12 +570,12 @@ export class ModService {
   async update(profileId: string, file: string): Promise<InstalledModsState> {
     const state = await this.installed(profileId);
     const mod = state.mods.find((m) => m.file === file);
-    if (!mod || mod.source === 'local' || !mod.projectId) {
-      throw new Error('Only mods from Modrinth or CurseForge can be updated here.');
+    if (!mod || mod.source !== 'modrinth' || !mod.projectId) {
+      throw new Error('Only mods from Modrinth can be updated here.');
     }
     if (!mod.update) {
       throw new Error(`${mod.name} is up to date.`);
     }
-    return this.install(profileId, mod.source, mod.projectId, mod.update.versionId);
+    return this.install(profileId, mod.projectId, mod.update.versionId);
   }
 }

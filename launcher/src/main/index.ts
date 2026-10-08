@@ -8,8 +8,9 @@ import { AccountService } from './auth/accounts';
 import { CHANGELOG } from './changelog';
 import { runDevAutomation } from './devAutomation';
 import { initLog, log } from './core/log';
+import { ownerConfig } from './core/config';
 import { medirianPaths } from './core/paths';
-import { defaultManifestUrl, defaultServicesUrl, defaultSettings, SettingsStore } from './core/settings';
+import { defaultSettings, SettingsStore } from './core/settings';
 import { buildActivity, DiscordPresenceService } from './discord/presence';
 import { Installer } from './install/installer';
 import { SetupService, systemInfo } from './install/setup';
@@ -19,18 +20,17 @@ import { JavaRuntimeService } from './java/runtime';
 import { GameService } from './launch/game';
 import { LoaderService } from './minecraft/loader';
 import { MojangService } from './minecraft/mojang';
-import { CurseForgeProvider } from './mods/curseforge';
 import { ModrinthProvider } from './mods/modrinth';
 import { ModService } from './mods/mods';
 import { setUserAgent } from './net/http';
 import { SkinService } from './skins/skins';
 import { listClientConfigProfiles, ProfileStore } from './profiles/profiles';
+import { ProfileShareService } from './profiles/share';
 import { LauncherUpdateService, type Updater } from './updates/launcherUpdate';
 import { UpdateService } from './updates/updates';
 
 const EXTERNAL_ALLOWED = [/^https:\/\/(www\.)?microsoft\.com\//, /^https:\/\/(www\.)?minecraft\.net\//, /^https:\/\/login\.live\.com\//,
-  /^https:\/\/discord\.com\/developers\//, /^https:\/\/modrinth\.com\//, /^https:\/\/(www\.)?curseforge\.com\//,
-  /^https:\/\/console\.curseforge\.com\//];
+  /^https:\/\/modrinth\.com\//];
 
 let window: BrowserWindow | null = null;
 let skinService: SkinService | null = null;
@@ -64,22 +64,25 @@ async function loadUpdater(): Promise<Updater | null> {
 }
 
 async function bootstrap(): Promise<Services> {
-  setUserAgent(app.getVersion());
+  const config = ownerConfig(app.isPackaged);
+  setUserAgent(app.getVersion(), config.contact);
   const paths = medirianPaths();
   await mkdir(paths.launcher, { recursive: true });
   await initLog(paths.logs);
   log.info(`Medirian Launcher ${app.getVersion()} starting (home: ${paths.root})`);
+  for (const problem of config.problems) {
+    log.warn(`Configuration: ${problem} — ignored (docs/OWNER_SETUP.md)`);
+  }
 
   // In development the local channel points at the repository's distribution folder.
   const devDistribution = app.isPackaged ? '' : resolve(app.getAppPath(), '..', 'distribution');
-  const settings = await SettingsStore.load(paths.settingsFile, defaultSettings(devDistribution));
+  const settings = await SettingsStore.load(paths.settingsFile, defaultSettings(devDistribution), app.isPackaged);
   const profiles = new ProfileStore(paths.profilesFile, paths.profiles, paths.instances);
   await profiles.load();
 
-  const msaClientId = () => settings.get().msaClientId || import.meta.env.MAIN_VITE_MSA_CLIENT_ID || process.env.MEDIRIAN_MSA_CLIENT_ID || '';
   const accounts = new AccountService(
     paths.accountsFile,
-    msaClientId,
+    () => config.msaClientId,
     !app.isPackaged,
     (account) => {
       emit('account:changed', account);
@@ -97,12 +100,12 @@ async function bootstrap(): Promise<Services> {
   const mojang = new MojangService(paths);
   const loader = new LoaderService(paths);
   const runtimes = new JavaRuntimeService(paths);
-  const updates = new UpdateService(paths, () => settings.get());
+  const updates = new UpdateService(paths, () => settings.get(), config.manifestUrl);
   const installer = new Installer(paths, mojang, loader, runtimes, updates,
     () => settings.get().concurrentDownloads, () => settings.get().reuseMinecraftAssets);
   const discord = new DiscordPresenceService({
     enabled: () => settings.get().discordPresence,
-    applicationId: () => settings.get().discordAppId || import.meta.env.MAIN_VITE_DISCORD_APP_ID || process.env.MEDIRIAN_DISCORD_APP_ID || '',
+    applicationId: () => config.discordAppId,
     activity: () => buildActivity({
       game: game.current(),
       targetName: (targetId) => updates.target(targetId)?.displayName ?? null,
@@ -130,10 +133,8 @@ async function bootstrap(): Promise<Services> {
         window?.minimize();
       }
     },
-    () => settings.get().servicesUrl || defaultServicesUrl());
+    () => config.servicesUrl);
   const setup = new SetupService(paths, updates);
-  const curseforgeKey = () => settings.get().curseforgeApiKey || import.meta.env.MAIN_VITE_CURSEFORGE_API_KEY
-    || process.env.MEDIRIAN_CURSEFORGE_API_KEY || '';
   const modrinth = new ModrinthProvider();
   const mods = new ModService({
     profiles,
@@ -150,8 +151,7 @@ async function bootstrap(): Promise<Services> {
       const state = game.current();
       return (state.state === 'running' || state.state === 'preparing') && state.profileId === profileId;
     },
-    providers: { modrinth, curseforge: new CurseForgeProvider(curseforgeKey) },
-    modrinth,
+    catalog: modrinth,
     concurrency: () => settings.get().concurrentDownloads,
     emitTask: (task) => emit('mods:task', task)
   });
@@ -164,9 +164,13 @@ async function bootstrap(): Promise<Services> {
     packaged: app.isPackaged,
     home: paths.root,
     platform: process.platform,
-    defaultManifestUrl: defaultManifestUrl(),
-    curseforgeKeyBuiltIn: !!(import.meta.env.MAIN_VITE_CURSEFORGE_API_KEY || process.env.MEDIRIAN_CURSEFORGE_API_KEY),
-    defaultServicesUrl: defaultServicesUrl()
+    config: {
+      microsoftLogin: !!config.msaClientId,
+      discord: !!config.discordAppId,
+      servicesHost: config.servicesUrl ? new URL(config.servicesUrl).host : null,
+      manifestHost: config.manifestUrl ? new URL(config.manifestUrl).host : null,
+      problems: config.problems
+    }
   }));
   handle('window:minimize', () => window?.minimize());
   handle('window:close', () => window?.close());
@@ -184,6 +188,22 @@ async function bootstrap(): Promise<Services> {
   handle('profiles:delete', (id) => profiles.remove(id));
   handle('profiles:duplicate', (id, name) => profiles.duplicate(id, name));
   handle('client:configProfiles', () => listClientConfigProfiles(paths.clientProfiles));
+
+  const shares = new ProfileShareService({
+    servicesUrl: config.servicesUrl,
+    configDir: paths.clientProfiles,
+    clientFile: join(paths.config, 'client.json'),
+    sharesFile: join(paths.launcher, 'shares.json'),
+    profiles,
+    isRunning: (profileId) => {
+      const state = game.current();
+      return (state.state === 'running' || state.state === 'preparing') && state.profileId === profileId;
+    }
+  });
+  handle('share:export', (profileId) => shares.export(profileId));
+  handle('share:delete', (code) => shares.delete(code));
+  handle('share:preview', (code) => shares.preview(code));
+  handle('share:apply', (code, mode, targetProfileId, withClientSettings) => shares.apply(code, mode, targetProfileId, withClientSettings));
 
   handle('releases:get', (refresh) => updates.refresh(refresh));
   handle('targets:status', async () => {
@@ -232,19 +252,19 @@ async function bootstrap(): Promise<Services> {
   handle('setup:run', () => setup.run());
   handle('setup:fix', (id) => setup.fix(id));
 
-  handle('mods:sources', () => mods.sources());
   handle('mods:search', async (query) => {
     await updates.refresh(false);
     return mods.search(query);
   });
-  handle('mods:categories', (source) => mods.categories(source));
-  handle('mods:details', (source, projectId, profileId) => mods.details(source, projectId, profileId));
-  handle('mods:plan', (profileId, source, projectId, versionId) => mods.plan(profileId, source, projectId, versionId));
-  handle('mods:install', (profileId, source, projectId, versionId) => mods.install(profileId, source, projectId, versionId));
+  handle('mods:categories', () => mods.categories());
+  handle('mods:details', (projectId, profileId) => mods.details(projectId, profileId));
+  handle('mods:plan', (profileId, projectId, versionId) => mods.plan(profileId, projectId, versionId));
+  handle('mods:install', (profileId, projectId, versionId) => mods.install(profileId, projectId, versionId));
   handle('mods:installed', async (profileId) => {
     await updates.refresh(false);
     return mods.installed(profileId);
   });
+  handle('mods:count', (profileId) => mods.count(profileId));
   handle('mods:setEnabled', (profileId, file, enabled) => mods.setEnabled(profileId, file, enabled));
   handle('mods:remove', (profileId, file) => mods.remove(profileId, file));
   handle('mods:checkUpdates', (profileId) => mods.checkUpdates(profileId));

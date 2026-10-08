@@ -10,6 +10,7 @@ import dev.medirian.platform.InputView;
 import dev.medirian.platform.Platform;
 import dev.medirian.platform.PlayerView;
 import dev.medirian.platform.SidebarView;
+import dev.medirian.platform.VanillaOptions;
 import dev.medirian.platform.WorldKeys;
 import dev.medirian.ui.MedirianScreen;
 import net.minecraft.block.Block;
@@ -68,6 +69,7 @@ public final class LegacyPlatform implements Platform, GameView, InputView, Clie
     private int onlinePlayers = -1;
     private Views.Sidebar sidebar;
     private boolean optionsDirty;
+    private LegacyVanillaOptions vanillaOptions;
 
     private LegacyPlatform(MinecraftClient client) {
         this.client = client;
@@ -484,6 +486,14 @@ public final class LegacyPlatform implements Platform, GameView, InputView, Clie
     @Override
     public int unlimitedFps() {
         return 260;
+    }
+
+    @Override
+    public VanillaOptions vanillaOptions() {
+        if (vanillaOptions == null) {
+            vanillaOptions = new LegacyVanillaOptions(client, () -> optionsDirty = true);
+        }
+        return vanillaOptions;
     }
 
     @Override

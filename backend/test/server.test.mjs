@@ -186,3 +186,81 @@ test('emotes are shared for ten seconds', async () => {
   clock += LIMITS.emoteMs;
   assert.deepEqual((await call('POST', '/v1/emotes/active', { body: { players: [ALEX.id] } })).body.emotes, {});
 });
+
+// ---------------------------------------------------------------- profile share codes
+
+const SHARED = {
+  format: 'medirian-profile', version: 1, name: 'My PvP',
+  profile: { name: 'PvP', settings: { hudScale: 0.8 }, modules: { cps: { enabled: true, settings: { color: '#FF9B55D6' } } } },
+  launch: { targetId: '1.8.9', memoryMb: 3072 },
+  // nothing like this may survive, at any depth
+  accessToken: 'leak', extra: { sessionId: 'leak', apiKey: 'leak', keep: 1 }
+};
+
+test('a profile becomes a code that anyone can import, without anything private', async () => {
+  const created = await call('POST', '/v1/shares', { body: { profile: SHARED } });
+  assert.equal(created.status, 200, JSON.stringify(created.body));
+  assert.match(created.body.code, /^MDN-[2-9A-HJKMNP-Z]{4}-[2-9A-HJKMNP-Z]{4}-[2-9A-HJKMNP-Z]{4}$/);
+  assert.equal(typeof created.body.deleteKey, 'string');
+  // typed sloppily: lower case, spaces, no prefix
+  const typed = created.body.code.slice(4).toLowerCase().replace(/-/g, ' ');
+  const read = await call('GET', `/v1/shares/${encodeURIComponent(typed)}`);
+  assert.equal(read.status, 200);
+  assert.equal(read.body.code, created.body.code);
+  assert.deepEqual(read.body.profile.profile, SHARED.profile);
+  assert.equal(read.body.profile.accessToken, undefined);
+  assert.deepEqual(read.body.profile.extra, { keep: 1 });
+  assert.equal(JSON.stringify(read.body).includes('leak'), false);
+  assert.equal(read.body.deleteKey, undefined, 'the delete key stays with the creator');
+});
+
+test('invalid, unknown, expired and deleted codes are told apart', async () => {
+  assert.equal((await call('GET', '/v1/shares/hello')).status, 400);
+  assert.equal((await call('GET', '/v1/shares/MDN-2222-3333-4444')).status, 404);
+  const created = (await call('POST', '/v1/shares', { body: { profile: SHARED } })).body;
+  assert.equal((await call('DELETE', `/v1/shares/${created.code}`, { body: { deleteKey: 'wrong' } })).status, 403);
+  assert.equal((await call('DELETE', `/v1/shares/${created.code}`, { body: { deleteKey: created.deleteKey } })).status, 200);
+  assert.equal((await call('GET', `/v1/shares/${created.code}`)).status, 404);
+  const old = (await call('POST', '/v1/shares', { body: { profile: SHARED } })).body;
+  clock += LIMITS.shareMs + 1;
+  const expired = await call('GET', `/v1/shares/${old.code}`);
+  assert.equal(expired.status, 410);
+  assert.match(expired.body.error, /expired/);
+});
+
+test('only Medirian profiles can be shared, and not too often', async () => {
+  assert.equal((await call('POST', '/v1/shares', { body: { profile: { name: 'x' } } })).status, 400);
+  assert.equal((await call('POST', '/v1/shares', { body: { profile: { format: 'medirian-profile', name: 'x', blob: 'a'.repeat(70000) } } })).status, 413);
+  clock += 60_000;
+  let status = 200;
+  for (let i = 0; i <= LIMITS.sharesPerMinute && status === 200; i++) {
+    status = (await call('POST', '/v1/shares', { body: { profile: SHARED } })).status;
+  }
+  assert.equal(status, 429);
+});
+
+// ---------------------------------------------------------------- production behind the HTTPS proxy
+
+test('behind the proxy only HTTPS requests are answered, with HSTS and per-client limits', async () => {
+  const proxied = createServer({ dataDir: dir, fetch: fakeMojang, now: () => clock, trustProxy: true });
+  await new Promise((resolve) => proxied.listen(0, '127.0.0.1', resolve));
+  const url = `http://127.0.0.1:${proxied.address().port}/v1/status`;
+  try {
+    const plain = await fetch(url, { headers: { 'X-Forwarded-Proto': 'http', 'X-Forwarded-For': '203.0.113.7' } });
+    assert.equal(plain.status, 403);
+    const secure = await fetch(url, { headers: { 'X-Forwarded-Proto': 'https', 'X-Forwarded-For': '203.0.113.7' } });
+    assert.equal(secure.status, 200);
+    assert.match(secure.headers.get('strict-transport-security'), /max-age=31536000/);
+    // the limit counts the real client from X-Forwarded-For, not the proxy
+    clock += 60_000;
+    let status = 200;
+    for (let i = 0; i < LIMITS.requestsPerMinute && status === 200; i++) {
+      status = (await fetch(url, { headers: { 'X-Forwarded-Proto': 'https', 'X-Forwarded-For': '203.0.113.8' } })).status;
+    }
+    assert.equal(status, 200);
+    assert.equal((await fetch(url, { headers: { 'X-Forwarded-Proto': 'https', 'X-Forwarded-For': '203.0.113.8' } })).status, 429);
+    assert.equal((await fetch(url, { headers: { 'X-Forwarded-Proto': 'https', 'X-Forwarded-For': '203.0.113.9' } })).status, 200);
+  } finally {
+    proxied.close();
+  }
+});

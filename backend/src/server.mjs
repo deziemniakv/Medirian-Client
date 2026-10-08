@@ -1,9 +1,10 @@
-// Medirian services: accounts (Mojang session handshake), cosmetics and cloud profiles.
+// Medirian services: accounts (Mojang session handshake), cosmetics, cloud profiles and profile
+// share codes.
 //
 // Sign-in never sees a Minecraft access token: the client asks for a challenge, "joins" it at
 // Mojang's session server with its own token (exactly like joining a Minecraft server) and the
 // backend asks Mojang whether that player joined (hasJoined). See docs/SERVICES.md.
-import { randomBytes } from 'node:crypto';
+import { randomBytes, randomInt } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { createServer as createHttpServer } from 'node:http';
 import { Store } from './store.mjs';
@@ -14,6 +15,11 @@ const COSMETIC_TYPES = ['CAPE', 'WINGS', 'HAT', 'EMOTE', 'TRAIL'];
 const PROFILE_NAME = /^[\p{L}\p{N} _-]{1,24}$/u;
 const UUID = /^[0-9a-f]{32}$/;
 const PLAYER_NAME = /^[A-Za-z0-9_]{1,16}$/;
+/** Share codes: MDN- and 12 characters without look-alikes (no 0/O, 1/I/L), about 60 bits. */
+const CODE_ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+const SHARE_CODE = /^MDN-[2-9A-HJKMNP-Z]{4}-[2-9A-HJKMNP-Z]{4}-[2-9A-HJKMNP-Z]{4}$/;
+/** Keys that never belong in a shared profile, wherever they appear (defence in depth). */
+const PRIVATE_KEY = /token|password|secret|credential|session|cookie|auth|private|apikey|api_key/i;
 
 export const LIMITS = {
   bodyBytes: 256 * 1024,
@@ -24,7 +30,9 @@ export const LIMITS = {
   emoteMs: 10 * 1000,
   sessionMs: 24 * 60 * 60 * 1000,
   requestsPerMinute: 240,
-  signInsPerMinute: 12
+  signInsPerMinute: 12,
+  sharesPerMinute: 6,
+  shareMs: 90 * 24 * 60 * 60 * 1000
 };
 
 class HttpError extends Error {
@@ -32,6 +40,66 @@ class HttpError extends Error {
     super(message);
     this.status = status;
   }
+}
+
+/** A share code in its canonical form (MDN-XXXX-XXXX-XXXX) from what a player typed, or null. */
+export function normalizeShareCode(value) {
+  if (typeof value !== 'string') {
+    return null;
+  }
+  const raw = value.toUpperCase().replace(/[\s-]/g, '').replace(/^MDN/, '');
+  if (raw.length !== 12) {
+    return null;
+  }
+  const code = `MDN-${raw.slice(0, 4)}-${raw.slice(4, 8)}-${raw.slice(8)}`;
+  return SHARE_CODE.test(code) ? code : null;
+}
+
+function newShareCode() {
+  let raw = '';
+  for (let i = 0; i < 12; i++) {
+    raw += CODE_ALPHABET[randomInt(CODE_ALPHABET.length)];
+  }
+  return `MDN-${raw.slice(0, 4)}-${raw.slice(4, 8)}-${raw.slice(8)}`;
+}
+
+/**
+ * A copy of a shared profile without anything private: keys that look like credentials are
+ * dropped at every level. Throws on a malformed profile.
+ */
+export function cleanShare(body) {
+  const profile = body?.profile;
+  if (!profile || typeof profile !== 'object' || Array.isArray(profile) || profile.format !== 'medirian-profile') {
+    throw new HttpError(400, 'profile must be a Medirian profile (format "medirian-profile")');
+  }
+  const scrub = (value, depth) => {
+    if (depth > 12) {
+      throw new HttpError(400, 'Profile nested too deeply');
+    }
+    if (Array.isArray(value)) {
+      return value.map((v) => scrub(v, depth + 1));
+    }
+    if (value && typeof value === 'object') {
+      const out = {};
+      for (const [key, v] of Object.entries(value)) {
+        if (!PRIVATE_KEY.test(key)) {
+          out[key] = scrub(v, depth + 1);
+        }
+      }
+      return out;
+    }
+    return value;
+  };
+  const clean = scrub(profile, 0);
+  const name = typeof clean.name === 'string' ? clean.name.trim().slice(0, 40) : '';
+  if (!name) {
+    throw new HttpError(400, 'profile.name is required');
+  }
+  clean.name = name;
+  if (JSON.stringify(clean).length > LIMITS.profileBytes) {
+    throw new HttpError(413, 'Profile too large');
+  }
+  return clean;
 }
 
 /** Strips dashes and lowercases a UUID; null when it is not one. */
@@ -46,14 +114,27 @@ export function normalizeUuid(value) {
  * @param {string} [options.sessionServer] Mojang's session server (overridable for tests)
  * @param {typeof fetch} [options.fetch]
  * @param {() => number} [options.now]
+ * @param {boolean} [options.trustProxy] behind the HTTPS reverse proxy: client addresses from
+ *   X-Forwarded-For, plain-HTTP requests refused, HSTS on every answer
  */
-export function createServer({ dataDir, sessionServer = 'https://sessionserver.mojang.com/session/minecraft', fetch: fetchImpl = fetch, now = Date.now }) {
+export function createServer({ dataDir, sessionServer = 'https://sessionserver.mojang.com/session/minecraft', fetch: fetchImpl = fetch, now = Date.now, trustProxy = false }) {
   const store = new Store(dataDir);
   const challenges = new Map();
   const sessions = new Map();
   /** uuid → { emote, startedAt } of emotes being played (kept in memory: they last seconds). */
   const emotes = new Map();
   const rate = new Map();
+
+  /** The client's address: the proxy's X-Forwarded-For entry when behind the proxy. */
+  function clientIp(req) {
+    if (trustProxy) {
+      const forwarded = String(req.headers['x-forwarded-for'] ?? '').split(',').map((s) => s.trim()).filter(Boolean);
+      if (forwarded.length > 0) {
+        return forwarded[forwarded.length - 1];
+      }
+    }
+    return req.socket.remoteAddress ?? 'unknown';
+  }
 
   function limit(key, perMinute) {
     const minute = Math.floor(now() / 60000);
@@ -118,7 +199,7 @@ export function createServer({ dataDir, sessionServer = 'https://sessionserver.m
     ['GET', /^\/v1\/status$/, () => ({ name: 'medirian-services', version: VERSION })],
 
     ['POST', /^\/v1\/auth\/challenge$/, (req) => {
-      limit(`signin:${req.socket.remoteAddress}`, LIMITS.signInsPerMinute);
+      limit(`signin:${clientIp(req)}`, LIMITS.signInsPerMinute);
       prune();
       const serverId = randomBytes(20).toString('hex');
       challenges.set(serverId, { expiresAt: now() + LIMITS.challengeMs });
@@ -126,7 +207,7 @@ export function createServer({ dataDir, sessionServer = 'https://sessionserver.m
     }],
 
     ['POST', /^\/v1\/auth\/session$/, async (req, body) => {
-      limit(`signin:${req.socket.remoteAddress}`, LIMITS.signInsPerMinute);
+      limit(`signin:${clientIp(req)}`, LIMITS.signInsPerMinute);
       const { name, serverId } = body ?? {};
       if (typeof name !== 'string' || !PLAYER_NAME.test(name) || typeof serverId !== 'string') {
         throw new HttpError(400, 'name and serverId are required');
@@ -279,6 +360,53 @@ export function createServer({ dataDir, sessionServer = 'https://sessionserver.m
       return { name, updatedAt };
     }],
 
+    // ---------------------------------------------------------------- share codes
+    // Anyone can turn a profile into a code (no account needed, rate limited) and anyone with the
+    // code can read it for 90 days. The creator gets a delete key to withdraw it earlier.
+
+    ['POST', /^\/v1\/shares$/, (req, body) => {
+      limit(`share:${clientIp(req)}`, LIMITS.sharesPerMinute);
+      const profile = cleanShare(body);
+      let code = newShareCode();
+      while (store.share(code)) {
+        code = newShareCode();
+      }
+      const createdAt = now();
+      const expiresAt = createdAt + LIMITS.shareMs;
+      const deleteKey = randomBytes(18).toString('base64url');
+      store.saveShare({ code, profile, createdAt, expiresAt, deleteKey });
+      return { code, expiresAt, deleteKey };
+    }],
+
+    ['GET', /^\/v1\/shares\/([^/]+)$/, (req, _body, [raw]) => {
+      const code = normalizeShareCode(raw);
+      if (!code) {
+        throw new HttpError(400, 'Not a Medirian profile code');
+      }
+      const share = store.share(code);
+      if (!share) {
+        throw new HttpError(404, 'No profile with this code (it was deleted or never existed)');
+      }
+      if (share.expiresAt < now()) {
+        store.deleteShare(code);
+        throw new HttpError(410, 'This profile code has expired');
+      }
+      return { code, profile: share.profile, createdAt: share.createdAt, expiresAt: share.expiresAt };
+    }],
+
+    ['DELETE', /^\/v1\/shares\/([^/]+)$/, (req, body, [raw]) => {
+      const code = normalizeShareCode(raw);
+      const share = code ? store.share(code) : null;
+      if (!share) {
+        throw new HttpError(404, 'No profile with this code');
+      }
+      if (typeof body?.deleteKey !== 'string' || body.deleteKey !== share.deleteKey) {
+        throw new HttpError(403, 'Only the creator can delete this code');
+      }
+      store.deleteShare(code);
+      return { deleted: code };
+    }],
+
     ['DELETE', /^\/v1\/profiles\/([^/]+)$/, (req, _body, [name]) => {
       const user = store.user(authenticate(req).uuid);
       if (!user.profiles[name]) {
@@ -313,8 +441,16 @@ export function createServer({ dataDir, sessionServer = 'https://sessionserver.m
   return createHttpServer(async (req, res) => {
     let status = 200;
     let payload;
+    const headers = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' };
+    if (trustProxy) {
+      headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains';
+    }
     try {
-      limit(`ip:${req.socket.remoteAddress}`, LIMITS.requestsPerMinute);
+      // production runs behind the HTTPS proxy only: nothing is answered over plain HTTP
+      if (trustProxy && String(req.headers['x-forwarded-proto'] ?? '').split(',')[0].trim() !== 'https') {
+        throw new HttpError(403, 'HTTPS required');
+      }
+      limit(`ip:${clientIp(req)}`, LIMITS.requestsPerMinute);
       const path = new URL(req.url, 'http://localhost').pathname;
       const route = routes.find(([method, pattern]) => method === req.method && pattern.test(path));
       if (!route) {
@@ -331,7 +467,7 @@ export function createServer({ dataDir, sessionServer = 'https://sessionserver.m
       }
     }
     const text = JSON.stringify(payload);
-    res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'Content-Length': Buffer.byteLength(text) });
+    res.writeHead(status, { ...headers, 'Content-Length': Buffer.byteLength(text) });
     res.end(text);
   });
 }

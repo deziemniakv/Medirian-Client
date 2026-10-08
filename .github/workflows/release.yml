@@ -4,7 +4,8 @@ name: Release
 #   - client jars + release-manifest.json with absolute download URLs (the launcher's stable channel)
 #   - launcher installers for Windows (MedirianClientSetup.exe), macOS and Linux + latest*.yml
 #     (the launcher's self-update feed)
-# See docs/RELEASING.md for the secrets and variables it uses.
+# Before anything is built, the owner configuration is checked (scripts/check-env.mjs --release).
+# The Variables and Secrets it uses, step by step: docs/OWNER_SETUP.md.
 on:
   push:
     tags: ['v*']
@@ -13,8 +14,36 @@ permissions:
   contents: write
 
 jobs:
+  config:
+    name: Owner configuration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      # Microsoft login, Medirian Services, the Modrinth contact and Windows signing must be set up.
+      # It prints which values are set, never a secret.
+      - run: node scripts/check-env.mjs --release
+        env:
+          MEDIRIAN_MSA_CLIENT_ID: ${{ vars.MEDIRIAN_MSA_CLIENT_ID }}
+          MEDIRIAN_DISCORD_APP_ID: ${{ vars.MEDIRIAN_DISCORD_APP_ID }}
+          MEDIRIAN_SERVICES_URL: ${{ vars.MEDIRIAN_SERVICES_URL }}
+          MEDIRIAN_CONTACT: ${{ vars.MEDIRIAN_CONTACT }}
+          MEDIRIAN_ALLOW_UNSIGNED: ${{ vars.MEDIRIAN_ALLOW_UNSIGNED }}
+          AZURE_SIGNING_ENDPOINT: ${{ vars.AZURE_SIGNING_ENDPOINT }}
+          AZURE_SIGNING_ACCOUNT: ${{ vars.AZURE_SIGNING_ACCOUNT }}
+          AZURE_SIGNING_PROFILE: ${{ vars.AZURE_SIGNING_PROFILE }}
+          AZURE_SIGNING_PUBLISHER: ${{ vars.AZURE_SIGNING_PUBLISHER }}
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+
   clients:
     name: Client jars and manifest
+    needs: config
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -37,6 +66,7 @@ jobs:
 
   launcher:
     name: Launcher ${{ matrix.platform }}
+    needs: config
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -63,25 +93,44 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          # the stable channel: the manifest of the newest release
-          MAIN_VITE_MANIFEST_URL: https://github.com/${{ github.repository }}/releases/latest/download/release-manifest.json
-          # owner-provided ids (repository variables); empty until registered
-          MAIN_VITE_MSA_CLIENT_ID: ${{ vars.MSA_CLIENT_ID }}
-          MAIN_VITE_DISCORD_APP_ID: ${{ vars.DISCORD_APP_ID }}
-          MAIN_VITE_SERVICES_URL: ${{ vars.SERVICES_URL }}
-          # CurseForge's API needs a key (console.curseforge.com); without it the Mods tab offers Modrinth only
-          MAIN_VITE_CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
+          # The owner's PUBLIC configuration, same names as in .env (.env.example, docs/OWNER_SETUP.md):
+          # repository Variables, not Secrets — they are built into the launcher and readable by anyone.
+          MEDIRIAN_MSA_CLIENT_ID: ${{ vars.MEDIRIAN_MSA_CLIENT_ID }}
+          MEDIRIAN_DISCORD_APP_ID: ${{ vars.MEDIRIAN_DISCORD_APP_ID }}
+          MEDIRIAN_SERVICES_URL: ${{ vars.MEDIRIAN_SERVICES_URL }}
+          MEDIRIAN_CONTACT: ${{ vars.MEDIRIAN_CONTACT }}
+          # the stable channel: the manifest of the newest release of this repository
+          MEDIRIAN_MANIFEST_URL: https://github.com/${{ github.repository }}/releases/latest/download/release-manifest.json
       - name: Package
         env:
-          CSC_LINK: ${{ secrets.CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          # Windows: an Authenticode certificate file (WIN_CSC_*) or Azure Artifact Signing (AZURE_*)
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+          AZURE_SIGNING_ENDPOINT: ${{ vars.AZURE_SIGNING_ENDPOINT }}
+          AZURE_SIGNING_ACCOUNT: ${{ vars.AZURE_SIGNING_ACCOUNT }}
+          AZURE_SIGNING_PROFILE: ${{ vars.AZURE_SIGNING_PROFILE }}
+          AZURE_SIGNING_PUBLISHER: ${{ vars.AZURE_SIGNING_PUBLISHER }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          # macOS: the Developer ID Application certificate (CSC_*) and notarization (APPLE_*)
+          CSC_LINK: ${{ matrix.platform == 'mac' && secrets.CSC_LINK || '' }}
+          CSC_KEY_PASSWORD: ${{ matrix.platform == 'mac' && secrets.CSC_KEY_PASSWORD || '' }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
+          signing=()
+          if [ "${{ matrix.platform }}" = win ] && [ -z "$WIN_CSC_LINK" ] && [ -n "$AZURE_SIGNING_ENDPOINT" ]; then
+            # Azure Artifact Signing: the key never leaves Azure, electron-builder signs through it
+            signing=(-c.win.azureSignOptions.endpoint="$AZURE_SIGNING_ENDPOINT"
+              -c.win.azureSignOptions.codeSigningAccountName="$AZURE_SIGNING_ACCOUNT"
+              -c.win.azureSignOptions.certificateProfileName="$AZURE_SIGNING_PROFILE"
+              -c.win.azureSignOptions.publisherName="$AZURE_SIGNING_PUBLISHER")
+          fi
           # without a certificate the build is unsigned (Windows SmartScreen / macOS Gatekeeper will warn)
           if [ -z "$CSC_LINK" ]; then export CSC_IDENTITY_AUTO_DISCOVERY=false; fi
-          npx electron-builder --${{ matrix.platform }} --publish never \
+          npx electron-builder --${{ matrix.platform }} --publish never "${signing[@]}" \
             -c.publish.provider=github \
             -c.publish.owner=${{ github.repository_owner }} \
             -c.publish.repo=${{ github.event.repository.name }}
@@ -115,7 +164,12 @@ jobs:
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
+          # 1 = create the release as a draft, e.g. to replace the Windows files with ones signed locally
+          # on a hardware token before publishing (docs/OWNER_SETUP.md, "Code signing", variant C)
+          DRAFT: ${{ vars.MEDIRIAN_RELEASE_DRAFT }}
         run: |
-          gh release create "$GITHUB_REF_NAME" release/* \
+          draft=()
+          if [ "$DRAFT" = 1 ]; then draft=(--draft); fi
+          gh release create "$GITHUB_REF_NAME" release/* "${draft[@]}" \
             --title "Medirian $(cat VERSION)" \
             --notes-file release-notes.md

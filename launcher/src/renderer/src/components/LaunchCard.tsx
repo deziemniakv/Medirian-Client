@@ -18,6 +18,8 @@ function formatBytes(bytes: number): string {
   return `${Math.round(bytes / 1024 ** 2)} MB`;
 }
 
+const gigabytes = (mb: number) => `${(mb / 1024).toFixed(1).replace(/\.0$/, '')} GB`;
+
 /** The icon of a profile's version: a sword for PvP, the moon for the newest, a grass block otherwise. */
 export function targetIcon(target: ReleaseTarget | undefined): string {
   if (target?.tags?.includes('pvp')) {
@@ -29,8 +31,11 @@ export function targetIcon(target: ReleaseTarget | undefined): string {
   return 'cat-world';
 }
 
-/** The launch bar at the bottom of the home screen: profile, status and the PLAY button. */
-export function LaunchBar() {
+/**
+ * The one place to start the game: which profile, what it is, whether it is ready, and Play.
+ * Everything else on the home screen is secondary to this card.
+ */
+export function LaunchCard() {
   const t = useT();
   const state = useStore();
   const profile = selectedProfile(state);
@@ -39,6 +44,14 @@ export function LaunchBar() {
   const game = state.game;
   const busy = game.state === 'preparing' || game.state === 'running';
   const preparing = game.state === 'preparing' ? game.progress : null;
+  const [mods, setMods] = useState<number | null>(null);
+
+  useEffect(() => {
+    setMods(null);
+    if (profile) {
+      void invoke('mods:count', profile.id).then(setMods).catch(() => setMods(null));
+    }
+  }, [profile?.id, game.state]);
 
   let headline: string;
   if (game.state === 'running') {
@@ -81,46 +94,61 @@ export function LaunchBar() {
   } else if (!target && state.releases?.error) {
     detail = { text: state.releases.error, error: true };
   } else if (target) {
-    detail = { text: `${target.displayName} · Medirian ${state.releases?.manifest?.client.version ?? ''}` };
+    detail = { text: `Medirian Client ${state.releases?.manifest?.client.version ?? ''}` };
   }
 
   return (
-    <div className="launchbar-wrap px-shadow">
-      <section className="launchbar px-frame">
-        <ProfilePicker profile={profile} disabled={busy} />
+    <section className="launch-card px-frame" aria-label={t('home.play')}>
+      <ProfilePicker profile={profile} disabled={busy} />
 
-        <div className="launchbar__status">
-          <div className="launchbar__headline pixel pixel-shadow">
-            {game.state === 'running' && <span className="live-dot" />}
-            {headline}
-            <LiveStatus />
+      {profile && (
+        <ul className="launch-card__facts">
+          <li><span className="muted">{t('home.factVersion')}</span><b>{target?.displayName ?? profile.targetId}</b></li>
+          <li><span className="muted">{t('home.factLoader')}</span><b>{target ? (target.loader.type === 'legacy-fabric' ? 'Legacy Fabric' : 'Fabric') : '—'}</b></li>
+          <li><span className="muted">{t('home.factMemory')}</span><b>{gigabytes(profile.memoryMb)}</b></li>
+          <li><span className="muted">{t('home.factMods')}</span><b>{mods ?? '—'}</b></li>
+        </ul>
+      )}
+
+      <div className="launch-card__status" aria-live="polite">
+        <div className="launch-card__headline pixel">
+          {game.state === 'running' && <span className="live-dot" />}
+          {headline}
+          <LiveStatus />
+        </div>
+        {preparing && (
+          <div className="xpbar px-inset">
+            <div className="xpbar__fill" style={{ width: `${progressValue}%` }} />
           </div>
-          {preparing && (
-            <div className="xpbar px-inset">
-              <div className="xpbar__fill" style={{ width: `${progressValue}%` }} />
-            </div>
-          )}
-          {detail && <div className={`launchbar__detail${detail.error ? ' launchbar__detail--error' : ''}`}>{detail.text}</div>}
-        </div>
+        )}
+        {detail && detail.text && <div className={`launch-card__detail${detail.error ? ' launch-card__detail--error' : ''}`}>{detail.text}</div>}
+      </div>
 
-        <div className="launchbar__actions">
-          <button className={`btn btn--icon${state.logOpen ? ' btn--pressed' : ''}`} onClick={() => state.setLogOpen(!state.logOpen)} title={t('home.log')}>
-            <Icon name="terminal" size={16} />
+      {game.state === 'running' ? (
+        <button className="btn btn--danger play" onClick={() => void invoke('game:kill')}>
+          <Icon name="stop" size={24} />
+          {t('home.stop')}
+        </button>
+      ) : (
+        <button className="btn btn--primary play" disabled={busy || !target || !profile} onClick={onPlay}>
+          {preparing ? <span className="spinner" /> : <Icon name="play" size={24} />}
+          {state.account || busy ? t('home.play') : t('home.signIn')}
+        </button>
+      )}
+
+      <div className="launch-card__tools">
+        <button className={`btn btn--ghost btn--small${state.logOpen ? ' btn--pressed' : ''}`} onClick={() => state.setLogOpen(!state.logOpen)}>
+          <Icon name="terminal" size={16} />
+          {t('home.log')}
+        </button>
+        {profile && (
+          <button className="btn btn--ghost btn--small" onClick={() => void invoke('shell:open', 'instance', profile.id)}>
+            <Icon name="folder" size={16} />
+            {t('home.folder')}
           </button>
-          {game.state === 'running' ? (
-            <button className="btn btn--danger play" onClick={() => void invoke('game:kill')}>
-              <Icon name="stop" size={24} />
-              {t('home.stop')}
-            </button>
-          ) : (
-            <button className="btn btn--primary play" disabled={busy || !target || !profile} onClick={onPlay}>
-              {preparing ? <span className="spinner" /> : <Icon name="play" size={24} />}
-              {state.account || busy ? t('home.play') : t('home.signIn')}
-            </button>
-          )}
-        </div>
-      </section>
-    </div>
+        )}
+      </div>
+    </section>
   );
 }
 
@@ -143,7 +171,7 @@ function LiveStatus() {
   return text ? <span className="chip chip--muted live-chip">{text}</span> : null;
 }
 
-/** The selected profile; opens a list of all profiles above the bar. */
+/** The selected profile, large; opens the list of all profiles below it. */
 function ProfilePicker({ profile, disabled }: { profile: LaunchProfile | undefined; disabled: boolean }) {
   const t = useT();
   const profiles = useStore((s) => s.profiles);
@@ -162,17 +190,30 @@ function ProfilePicker({ profile, disabled }: { profile: LaunchProfile | undefin
         setOpen(false);
       }
     };
+    const escape = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
     window.addEventListener('mousedown', close);
-    return () => window.removeEventListener('mousedown', close);
+    window.addEventListener('keydown', escape);
+    return () => {
+      window.removeEventListener('mousedown', close);
+      window.removeEventListener('keydown', escape);
+    };
   }, [open]);
 
   const describe = (p: LaunchProfile) => {
     const target = targets.find((x) => x.id === p.targetId);
-    return `Minecraft ${target?.minecraftVersion ?? p.targetId} · ${(p.memoryMb / 1024).toFixed(1).replace(/\.0$/, '')} GB`;
+    return `Minecraft ${target?.minecraftVersion ?? p.targetId} · ${gigabytes(p.memoryMb)}`;
   };
 
   return (
     <div className="picker" ref={ref}>
+      <span className="picker__label">{t('status.profile')}</span>
+      <button className="picker__current" disabled={disabled} aria-expanded={open} onClick={() => setOpen(!open)}>
+        <span className="slot slot--big px-inset">
+          <ArtIcon name={targetIcon(targets.find((x) => x.id === profile?.targetId))} scale={2} />
+        </span>
+        <span className="picker__name pixel">{profile?.name ?? t('home.noProfile')}</span>
+        <Icon name="chevron" size={16} className={open ? 'picker__chevron picker__chevron--open' : 'picker__chevron'} />
+      </button>
       {open && (
         <div className="picker__menu px-frame">
           {profiles.map((p) => (
@@ -183,7 +224,7 @@ function ProfilePicker({ profile, disabled }: { profile: LaunchProfile | undefin
               }}>
               <span className="slot px-inset"><ArtIcon name={targetIcon(targets.find((x) => x.id === p.targetId))} scale={1} /></span>
               <span className="picker__text">
-                <span className="picker__name pixel">{p.name}</span>
+                <span className="picker__option-name pixel">{p.name}</span>
                 <span className="picker__meta">{describe(p)}</span>
               </span>
             </button>
@@ -194,17 +235,6 @@ function ProfilePicker({ profile, disabled }: { profile: LaunchProfile | undefin
           </button>
         </div>
       )}
-      <button className="picker__current" disabled={disabled} onClick={() => setOpen(!open)}>
-        <span className="slot slot--big px-inset">
-          <ArtIcon name={targetIcon(targets.find((x) => x.id === profile?.targetId))} scale={2} />
-        </span>
-        <span className="picker__text">
-          <span className="picker__label">{t('status.profile')}</span>
-          <span className="picker__name pixel pixel-shadow">{profile?.name ?? t('home.noProfile')}</span>
-          <span className="picker__meta">{profile ? describe(profile) : ''}</span>
-        </span>
-        <Icon name="chevron" size={16} className={open ? 'picker__chevron picker__chevron--open' : 'picker__chevron'} />
-      </button>
     </div>
   );
 }

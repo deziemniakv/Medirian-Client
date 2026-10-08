@@ -24,7 +24,7 @@ public final class MemoryModule extends Module {
         super("memory", "Memory Monitor", Category.PERFORMANCE, "Shows Java memory usage and CPU load.");
         display = add(new ModeSetting<Display>("display", "Display", Display.BOTH));
         showCpu = add(new BooleanSetting("showCpu", "Show CPU load", false));
-        hud(new TextHudElement(this, Anchor.TOP_LEFT, 4, 94) {
+        hud(new TextHudElement(this, Anchor.TOP_LEFT, 4, 106) {
             @Override
             protected void collect(Lines out, boolean editor) {
                 SystemStats stats = Medirian.get().performance().system();

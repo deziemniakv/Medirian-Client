@@ -35,15 +35,19 @@ public final class HudStyle {
         shadow = module.add(new BooleanSetting("shadow", "Text shadow", true).group(GROUP));
     }
 
-    /** Draws the element background box if enabled. */
+    /** Draws the element's surface (Liquid Glass or its Classic colour) if the background is on. */
     public void drawBackground(Gfx g, int width, int height) {
-        if (!background.on() || Colors.alpha(backgroundColor.argb()) == 0) {
+        if (!background.on()) {
             return;
         }
-        if (rounded.on()) {
-            UiDraw.roundRect(g, 0, 0, width, height, 2.5f, backgroundColor.argb());
-        } else {
-            g.fill(0, 0, width, height, backgroundColor.argb());
+        if (HudSurface.glass()) {
+            HudSurface.panel(g, 0, 0, width, height, backgroundColor.argb());
+        } else if (Colors.alpha(backgroundColor.argb()) != 0) {
+            if (rounded.on()) {
+                UiDraw.roundRect(g, 0, 0, width, height, HudSurface.radius(), backgroundColor.argb());
+            } else {
+                g.fill(0, 0, width, height, backgroundColor.argb());
+            }
         }
     }
 }

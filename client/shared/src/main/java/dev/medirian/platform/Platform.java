@@ -37,4 +37,9 @@ public interface Platform {
 
     /** The Medirian screen currently shown, or null. */
     MedirianScreen currentScreen();
+
+    /** Minecraft's own options for Settings → Advanced, or null when the adapter has none. */
+    default VanillaOptions vanillaOptions() {
+        return null;
+    }
 }

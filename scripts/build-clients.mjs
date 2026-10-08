@@ -17,6 +17,11 @@ const args = process.argv.slice(2);
 const skipBuild = args.includes('--skip-build');
 const baseUrlIndex = args.indexOf('--base-url');
 const baseUrl = baseUrlIndex >= 0 ? args[baseUrlIndex + 1].replace(/\/?$/, '/') : null;
+// the stable channel is downloaded by every player: HTTPS only
+if (baseUrl && !/^https:\/\//.test(baseUrl)) {
+  console.error(`--base-url must use HTTPS (got ${baseUrl})`);
+  process.exit(2);
+}
 
 /** Every client target. Adding a Minecraft version = adding an entry here (see docs/ARCHITECTURE.md §12). */
 const TARGETS = [

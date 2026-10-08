@@ -1,6 +1,7 @@
 package dev.medirian.module.impl.player;
 
 import dev.medirian.core.Medirian;
+import dev.medirian.hud.HudSurface;
 import dev.medirian.hud.Anchor;
 import dev.medirian.hud.HudElement;
 import dev.medirian.hud.HudStyle;
@@ -77,7 +78,7 @@ public final class PotionEffectsModule extends Module {
                 String empty = I18n.tr("hud.potioneffects.empty", "No active effects");
                 width = g.textWidth(empty) + 10;
                 height = 16;
-                UiDraw.roundRect(g, 0, 0, width, height, 2.5f, HudStyle.DEFAULT_BACKGROUND);
+                HudSurface.panel(g, 0, 0, width, height, HudStyle.DEFAULT_BACKGROUND);
                 g.text(empty, 5, 4, HudStyle.DEFAULT_TEXT, true);
                 return;
             }
@@ -89,7 +90,7 @@ public final class PotionEffectsModule extends Module {
             width = textX + maxWidth + 5;
             height = effects.size() * rowHeight + 4;
             if (background.on()) {
-                UiDraw.roundRect(g, 0, 0, width, height, 2.5f, HudStyle.DEFAULT_BACKGROUND);
+                HudSurface.panel(g, 0, 0, width, height, HudStyle.DEFAULT_BACKGROUND);
             }
             boolean blinkOff = blink.on() && (System.currentTimeMillis() / 400) % 2 == 0;
             int y = 2;

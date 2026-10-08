@@ -1,6 +1,7 @@
 package dev.medirian.module.impl.render;
 
 import dev.medirian.core.Medirian;
+import dev.medirian.hud.HudSurface;
 import dev.medirian.hud.Anchor;
 import dev.medirian.hud.HudElement;
 import dev.medirian.hud.HudStyle;
@@ -51,7 +52,7 @@ public final class ScoreboardModule extends Module {
                 String text = I18n.tr("hud.scoreboard.none", "Scoreboard (no sidebar on this server)");
                 width = g.textWidth(text) + 8;
                 height = lineHeight + 6;
-                UiDraw.roundRect(g, 0, 0, width, height, 2f, background.argb());
+                HudSurface.panel(g, 0, 0, width, height, background.argb());
                 g.text(text, 4, 3, HudStyle.DEFAULT_TEXT, false);
                 return;
             }
@@ -67,8 +68,14 @@ public final class ScoreboardModule extends Module {
             }
             width = maxWidth + 6;
             height = (lines + 1) * lineHeight + 2;
-            g.fill(0, 0, width, lineHeight + 1, titleBackground.argb());
-            g.fill(0, lineHeight + 1, width, height, background.argb());
+            if (HudSurface.glass()) {
+                HudSurface.panel(g, 0, 0, width, height, background.argb());
+                // the title sits on a slightly deeper band of the same glass
+                g.fill(1, 1, width - 1, lineHeight + 1, 0x26000000);
+            } else {
+                g.fill(0, 0, width, lineHeight + 1, titleBackground.argb());
+                g.fill(0, lineHeight + 1, width, height, background.argb());
+            }
             Object title = sidebar.title();
             g.richText(title, (width - g.richTextWidth(title)) / 2f, 1, 0xFFFFFFFF, shadow.on());
             for (int i = 0; i < lines; i++) {

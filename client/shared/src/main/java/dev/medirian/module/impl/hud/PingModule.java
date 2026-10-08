@@ -11,7 +11,7 @@ public final class PingModule extends Module {
 
     public PingModule() {
         super("ping", "Ping", Category.HUD, "Shows your latency to the server.");
-        hud(new TextHudElement(this, Anchor.TOP_LEFT, 4, 22) {
+        hud(new TextHudElement(this, Anchor.TOP_LEFT, 4, 21) {
             @Override
             protected void collect(Lines out, boolean editor) {
                 int ping = Medirian.get().game().ping();

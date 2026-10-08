@@ -32,16 +32,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Global Medirian settings: General, HUD, Game, Performance, Profiles and Account. */
+/** Medirian settings: General, HUD, Advanced (five sections), Performance, Profiles and Account. */
 public final class SettingsScreen extends MedirianScreen {
 
     /** Settings pages. */
-    public enum Tab { GENERAL, HUD, GAME, PERFORMANCE, PROFILES, ACCOUNT }
+    public enum Tab { GENERAL, HUD, ADVANCED, PERFORMANCE, PROFILES, ACCOUNT }
 
     private static final float NAV_W = 124;
     private static Tab lastTab = Tab.GENERAL;
+    private static AdvancedSettings.Section lastSection = AdvancedSettings.Section.GRAPHICS;
+    /** Height of the section bar of the Advanced tab. */
+    private static final float SECTION_BAR = 20;
 
     private Tab tab = lastTab;
+    private AdvancedSettings.Section section = lastSection;
     private float px;
     private float py;
     private float pw;
@@ -66,6 +70,15 @@ public final class SettingsScreen extends MedirianScreen {
         super(parent);
     }
 
+    /** Opens on {@code tab}; for Advanced also on {@code section} (e.g. "visibility"), or the last one when null. */
+    public SettingsScreen show(Tab tab, String section) {
+        this.tab = tab;
+        if (section != null) {
+            this.section = AdvancedSettings.Section.valueOf(section.toUpperCase(java.util.Locale.ROOT));
+        }
+        return this;
+    }
+
     @Override
     protected void init() {
         pw = Math.min(600, width - 32);
@@ -81,7 +94,7 @@ public final class SettingsScreen extends MedirianScreen {
         switch (t) {
             case GENERAL: return "settings";
             case HUD: return "cat-hud";
-            case GAME: return "singleplayer";
+            case ADVANCED: return "cat-render";
             case PERFORMANCE: return "cat-performance";
             case PROFILES: return "profiles";
             default: return "cat-player";
@@ -92,7 +105,7 @@ public final class SettingsScreen extends MedirianScreen {
         switch (t) {
             case GENERAL: return I18n.tr("settings.tab.general", "General");
             case HUD: return I18n.tr("settings.tab.hud", "HUD");
-            case GAME: return I18n.tr("settings.tab.game", "Game");
+            case ADVANCED: return I18n.tr("settings.tab.advanced", "Advanced");
             case PERFORMANCE: return I18n.tr("settings.tab.performance", "Performance");
             case PROFILES: return I18n.tr("settings.tab.profiles", "Profiles");
             default: return I18n.tr("settings.tab.account", "Account");
@@ -101,7 +114,8 @@ public final class SettingsScreen extends MedirianScreen {
 
     private void buildTab() {
         list = new SettingsList(this);
-        list.bounds(px + NAV_W + 14, py + 38, pw - NAV_W - 24, ph - 48);
+        float top = tab == Tab.ADVANCED ? SECTION_BAR + 4 : 0;
+        list.bounds(px + NAV_W + 14, py + 38 + top, pw - NAV_W - 24, ph - 48 - top);
         Medirian medirian = Medirian.get();
         GlobalSettings global = medirian.settings();
         switch (tab) {
@@ -114,6 +128,11 @@ public final class SettingsScreen extends MedirianScreen {
             case HUD:
                 list.addSettings(java.util.Arrays.<dev.medirian.setting.Setting<?>>asList(
                         medirian.profileSettings().hudScale, global.hideHudInDebug));
+                list.add(new SettingsList.HeaderRow(I18n.tr("settings.hud.look", "Look")));
+                list.addSettings(java.util.Arrays.<dev.medirian.setting.Setting<?>>asList(
+                        medirian.profileSettings().hudLook, medirian.profileSettings().glassOpacity, medirian.profileSettings().glassBlur,
+                        medirian.profileSettings().glassBorder, medirian.profileSettings().hudRadius, medirian.profileSettings().hudPadding));
+                list.add(new SettingsList.HeaderRow(I18n.tr("settings.hud.layout", "Layout")));
                 list.add(new SettingsList.ControlRow(I18n.tr("settings.hud.editor", "HUD editor"),
                         I18n.tr("settings.hud.editor.desc", "Move, scale, add and remove HUD elements"),
                         new Button(I18n.tr("ui.open", "Open"), Button.Style.PRIMARY,
@@ -133,8 +152,8 @@ public final class SettingsScreen extends MedirianScreen {
                 list.add(new SettingsList.InfoRow(I18n.tr("settings.hud.cost", "HUD render cost"),
                         () -> Format.decimals(medirian.performance().hudRenderMs(), 3) + " ms / frame"));
                 break;
-            case GAME:
-                buildGameTab(medirian);
+            case ADVANCED:
+                AdvancedSettings.build(list, section, this, medirian);
                 break;
             case PERFORMANCE:
                 buildPerformanceTab(medirian);
@@ -147,44 +166,6 @@ public final class SettingsScreen extends MedirianScreen {
                 break;
         }
     }
-
-    private void buildGameTab(final Medirian medirian) {
-        final ClientActions actions = medirian.platform().actions();
-        list.add(new SettingsList.ControlRow(I18n.tr("settings.game.vanilla", "Minecraft settings"),
-                I18n.tr("settings.game.vanilla.desc", "Video, audio, controls and other vanilla options"),
-                new Button(I18n.tr("ui.open", "Open"), Button.Style.SECONDARY, actions::openVanillaSettings), 72));
-        list.add(new SettingsList.ControlRow(I18n.tr("settings.game.fullscreen", "Fullscreen"), null,
-                new Switch(actions::isFullscreen, on -> actions.toggleFullscreen()), 22));
-        final int unlimited = actions.unlimitedFps();
-        Slider fps = new Slider(new Slider.Model() {
-            @Override
-            public double progress() {
-                return (Math.min(unlimited, actions.maxFps()) - 10) / (double) (unlimited - 10);
-            }
-
-            @Override
-            public void setProgress(double progress) {
-                int value = (int) Math.round((10 + progress * (unlimited - 10)) / 10.0) * 10;
-                actions.setMaxFps(Math.max(10, Math.min(unlimited, value)));
-            }
-
-            @Override
-            public String label() {
-                return actions.maxFps() >= unlimited ? I18n.tr("settings.game.unlimited", "Unlimited") : String.valueOf(actions.maxFps());
-            }
-
-            @Override
-            public void nudge(int steps) {
-                actions.setMaxFps(Math.max(10, Math.min(unlimited, actions.maxFps() + steps * 10)));
-            }
-        });
-        list.add(new SettingsList.ControlRow(I18n.tr("settings.game.fpsLimit", "FPS limit"), null, fps, 150));
-        list.add(new SettingsList.InfoRow(I18n.tr("settings.game.window", "Window size"),
-                () -> lastRealWidth + " × " + lastRealHeight));
-        list.add(new SettingsList.InfoRow(I18n.tr("settings.game.resolutionHint", "Startup resolution"),
-                () -> I18n.tr("settings.game.resolutionHint.value", "set in the launcher profile")));
-    }
-
 
     private void buildPerformanceTab(final Medirian medirian) {
         final PerformanceManager perf = medirian.performance();
@@ -451,7 +432,46 @@ public final class SettingsScreen extends MedirianScreen {
         Pixel.icon(g, tabIcon(tab), px + NAV_W + 12, py + 7, 1, 0xFFFFFFFF);
         Pixel.text(g, tabName(tab), px + NAV_W + 32, py + 11, theme.pumpkinLight);
         Pixel.groove(g, px + NAV_W + 12, py + 28, pw - NAV_W - 20);
+        if (tab == Tab.ADVANCED) {
+            renderSections(g, mx, my, theme);
+        }
         list.render(g, mx, my);
+    }
+
+    /** The Advanced tab's sections as a row of tabs above the list. */
+    private void renderSections(Gfx g, float mx, float my, Theme theme) {
+        float x = px + NAV_W + 14;
+        float y = py + 36;
+        float width = (pw - NAV_W - 24) / AdvancedSettings.Section.values().length;
+        for (AdvancedSettings.Section s : AdvancedSettings.Section.values()) {
+            boolean active = s == section;
+            boolean hovered = mx >= x && mx < x + width - 2 && my >= y && my < y + SECTION_BAR;
+            if (active) {
+                Pixel.frame(g, x, y, width - 2, SECTION_BAR, theme.surfaceLight, 0xFF4C3870, theme.surfaceDark);
+                g.fill(Math.round(x) + 2, Math.round(y + SECTION_BAR) - 3, Math.round(x + width) - 4, Math.round(y + SECTION_BAR) - 1, theme.pumpkin);
+            } else if (hovered) {
+                g.fill(Math.round(x), Math.round(y), Math.round(x + width) - 2, Math.round(y + SECTION_BAR), theme.surface);
+            }
+            String name = UiDraw.ellipsize(g, AdvancedSettings.sectionName(s), (int) width - 8);
+            g.text(name, Math.round(x + (width - 2 - g.textWidth(name)) / 2f), y + 6, active ? theme.text : theme.textDim, false);
+            x += width;
+        }
+    }
+
+    private boolean clickSection(float mx, float my) {
+        if (tab != Tab.ADVANCED) {
+            return false;
+        }
+        float x = px + NAV_W + 14;
+        float y = py + 36;
+        float width = (pw - NAV_W - 24) / AdvancedSettings.Section.values().length;
+        if (my < y || my >= y + SECTION_BAR || mx < x || mx >= x + width * AdvancedSettings.Section.values().length) {
+            return false;
+        }
+        section = AdvancedSettings.Section.values()[(int) ((mx - x) / width)];
+        lastSection = section;
+        buildTab();
+        return true;
     }
 
     // ------------------------------------------------------------------ input
@@ -472,6 +492,9 @@ public final class SettingsScreen extends MedirianScreen {
             }
         }
         if (backButton.mouseClicked(mx, my, button)) {
+            return true;
+        }
+        if (clickSection(mx, my)) {
             return true;
         }
         return list.mouseClicked(mx, my, button);

@@ -82,6 +82,26 @@ public interface Gfx {
     /** Draws part of a texture created with {@link #uploadTexture} (region in fractions, tinted). */
     void dynamicTexture(String id, int x, int y, int width, int height, float u0, float v0, float u1, float v1, int argbTint);
 
+    /**
+     * Captures what has been drawn this frame so far (the world) and blurs it, for
+     * {@link #backdrop}. {@code strength} 1..4: more is softer. Called by the HUD at most once per
+     * frame, only while glass widgets with blur are visible. Adapters without support do nothing.
+     */
+    default void prepareBackdrop(int strength) {
+    }
+
+    /** Whether {@link #prepareBackdrop} produced a blurred image this frame. */
+    default boolean backdropReady() {
+        return false;
+    }
+
+    /**
+     * Draws the blurred world behind the rectangle (current transform space) — the frosted part of
+     * Liquid Glass. Does nothing unless {@link #backdropReady()}.
+     */
+    default void backdrop(int x1, int y1, int x2, int y2) {
+    }
+
     /** Draws native rich text (e.g. scoreboard lines). */
     void richText(Object nativeText, float x, float y, int argb, boolean shadow);
 

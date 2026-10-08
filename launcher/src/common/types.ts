@@ -12,9 +12,8 @@ export interface LauncherSettings {
   /** Snow over the night from December to 6 January. */
   winterSnow: boolean;
   afterLaunch: AfterLaunch;
+  /** stable = MEDIRIAN_MANIFEST_URL of this build; local = a distribution folder (development builds). */
   updateChannel: UpdateChannel;
-  /** URL of the release manifest for the stable channel ('' = not configured yet). */
-  manifestUrl: string;
   /** Directory containing release-manifest.json for the local channel. */
   localDistributionDir: string;
   concurrentDownloads: number;
@@ -22,20 +21,12 @@ export interface LauncherSettings {
   reuseMinecraftAssets: boolean;
   setupCompleted: boolean;
   selectedProfileId: string | null;
-  /** Developer override for the Azure application id used for Microsoft login. */
-  msaClientId: string;
-  /** Medirian services (accounts, cosmetics, cloud profiles); empty = the built-in default. */
-  servicesUrl: string;
   /** Show the running game on the user's Discord profile (Rich Presence). */
   discordPresence: boolean;
   /** Include the server address in the Discord activity. */
   discordShowServer: boolean;
   /** Also show an activity while only the launcher is open. */
   discordShowInLauncher: boolean;
-  /** Discord application id ('' = the id built into the launcher, if any). */
-  discordAppId: string;
-  /** CurseForge API key ('' = the key built into the launcher, if any). */
-  curseforgeApiKey: string;
 }
 
 export interface Resolution {
@@ -238,8 +229,6 @@ export interface SetupCheck {
 }
 
 export interface AppInfo {
-  /** Whether a CurseForge API key is built into this launcher. */
-  curseforgeKeyBuiltIn: boolean;
   version: string;
   electron: string;
   chrome: string;
@@ -247,31 +236,64 @@ export interface AppInfo {
   packaged: boolean;
   home: string;
   platform: string;
-  /** Manifest URL used when the setting is empty (built in or from MEDIRIAN_MANIFEST_URL). */
-  defaultManifestUrl: string;
-  /** Services URL used when the setting is empty (built in or from MEDIRIAN_SERVICES_URL). */
-  defaultServicesUrl: string;
+  /** What the owner configured in this build's .env (no values, only what is available). */
+  config: BuildStatus;
+}
+
+/** Which owner-configured features this launcher build has (docs/OWNER_SETUP.md). */
+export interface BuildStatus {
+  microsoftLogin: boolean;
+  discord: boolean;
+  /** Host of Medirian Services, or null when not configured. */
+  servicesHost: string | null;
+  /** Host serving the release manifest, or null. */
+  manifestHost: string | null;
+  /** Rejected .env values (e.g. an address without HTTPS). */
+  problems: string[];
 }
 
 export type OpenTarget = 'home' | 'logs' | 'instance' | 'mods' | 'screenshots';
 
+// ---------------------------------------------------------------- profile codes
+
+/** Why a profile code action failed (translated in the renderer: "share.error.<code>"). */
+export type ShareError =
+  | 'unconfigured' | 'invalid' | 'notFound' | 'expired' | 'tooMany' | 'forbidden' | 'offline' | 'noSettings' | 'running';
+
+export type ShareResult<T> = { ok: true; value: T } | { ok: false; error: ShareError };
+
+export interface ShareExport {
+  /** MDN-XXXX-XXXX-XXXX */
+  code: string;
+  expiresAt: number;
+  name: string;
+}
+
+/** What importing a code would bring in. */
+export interface SharePreview {
+  code: string;
+  name: string;
+  targetId: string;
+  memoryMb: number;
+  modules: number;
+  enabledModules: number;
+  gameOptions: number;
+  hasClientSettings: boolean;
+  expiresAt: number;
+  /** A launch profile with the same name, which the import could replace. */
+  existingProfileId: string | null;
+}
+
+export type ShareImportMode = 'new' | 'replace';
+
 // ---------------------------------------------------------------- mods
 
-/** Where a mod comes from. 'local' = a jar the user put into the mods folder. */
-export type ModSource = 'modrinth' | 'curseforge';
+/** Where an installed mod comes from: Modrinth, or a jar the user put into the mods folder. */
+export type ModSource = 'modrinth' | 'local';
 
 export type ModSort = 'relevance' | 'downloads' | 'updated' | 'newest';
 
-export interface ModSourceInfo {
-  id: ModSource;
-  name: string;
-  /** false when the source needs configuration (CurseForge needs an API key). */
-  available: boolean;
-  reason?: string;
-}
-
 export interface ModSearchQuery {
-  source: ModSource;
   query: string;
   /** The profile whose Minecraft version and loader the results must match. */
   profileId: string;
@@ -295,8 +317,8 @@ export interface ModTargetInfo {
   loaderName: string;
 }
 
+/** A Modrinth project. */
 export interface ModSummary {
-  source: ModSource;
   projectId: string;
   slug: string;
   name: string;
@@ -345,7 +367,6 @@ export interface ModDetails extends ModSummary {
 
 /** One file an install adds to the profile. */
 export interface ModInstallStep {
-  source: ModSource;
   projectId: string;
   versionId: string;
   name: string;
@@ -367,8 +388,6 @@ export type ModIssue =
   | { code: 'versionIncompatible'; name: string; version: string }
   /** A required dependency has no version for the profile. */
   | { code: 'dependencyUnavailable'; name: string; parent: string }
-  /** The author only allows downloads from the platform's website (CurseForge). */
-  | { code: 'manualDownload'; name: string; source: string }
   | { code: 'alreadyInstalled'; name: string; version: string }
   /** A required dependency is installed but disabled; installing enables it. */
   | { code: 'dependencyDisabled'; name: string }
@@ -386,8 +405,6 @@ export interface ModInstallPlan {
   problems: ModIssue[];
   /** Non-blocking notes (e.g. an installed mod that declares itself incompatible). */
   warnings: ModIssue[];
-  /** CurseForge mods whose authors do not allow downloads from other apps: their file page. */
-  manualDownloadUrl?: string;
 }
 
 export interface InstalledMod {
@@ -396,7 +413,7 @@ export interface InstalledMod {
   enabled: boolean;
   name: string;
   versionNumber: string;
-  source: ModSource | 'local';
+  source: ModSource;
   projectId: string | null;
   versionId: string | null;
   iconUrl: string | null;

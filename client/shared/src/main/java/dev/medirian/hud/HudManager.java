@@ -25,6 +25,7 @@ public final class HudManager {
     public HudManager(ModuleManager modules, ProfileSettings profileSettings) {
         this.modules = modules;
         this.profileSettings = profileSettings;
+        HudSurface.bind(profileSettings);
     }
 
     /** Collects HUD elements from registered modules; call after all modules are registered. */
@@ -69,10 +70,17 @@ public final class HudManager {
         spaceWidth = width;
         spaceHeight = height;
         float globalScale = profileSettings.hudScale.floatValue();
+        boolean prepared = false;
+        int blur = HudSurface.blurStrength();
         for (int i = 0; i < elements.size(); i++) {
             HudElement element = elements.get(i);
             if (!element.module().isEnabled() || (!editor && !element.hasContent())) {
                 continue;
+            }
+            // the frosted backdrop of Liquid Glass: one capture and blur per frame, only when needed
+            if (!prepared && blur > 0) {
+                g.prepareBackdrop(blur);
+                prepared = true;
             }
             draw(g, element, globalScale, editor);
         }

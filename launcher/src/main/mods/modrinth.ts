@@ -1,6 +1,6 @@
 import type { ModCategory, ModDependencyType, ModSearchQuery, ModSummary, ModTargetInfo } from '../../common/types';
 import { fetchJson, request } from '../net/http';
-import type { ModProvider, ProviderVersion } from './provider';
+import type { ModCatalog, ProviderVersion } from './provider';
 
 const API = 'https://api.modrinth.com/v2';
 const LOADERS = new Set(['fabric', 'legacy-fabric', 'forge', 'neoforge', 'quilt', 'liteloader', 'rift', 'modloader', 'babric', 'ornithe', 'bta-babric', 'java-agent', 'nilloader']);
@@ -54,17 +54,11 @@ export function modrinthCompatible(version: { game_versions: string[]; loaders: 
 }
 
 /**
- * Modrinth (https://docs.modrinth.com): public API, no key. Requests carry Medirian's
- * User-Agent, as Modrinth requires.
+ * Modrinth (https://docs.modrinth.com), Medirian's only mod catalogue: a public API that needs no
+ * key for searching and downloading. Every request carries Medirian's User-Agent with a contact
+ * (net/http.ts, MEDIRIAN_CONTACT), as Modrinth's terms ask.
  */
-export class ModrinthProvider implements ModProvider {
-  readonly id = 'modrinth' as const;
-  readonly name = 'Modrinth';
-
-  unavailableReason(): string | null {
-    return null;
-  }
-
+export class ModrinthProvider implements ModCatalog {
   async search(query: ModSearchQuery, target: ModTargetInfo): Promise<{ hits: ModSummary[]; total: number }> {
     const facets: string[][] = [['project_type:mod'], [`categories:${target.loader}`], [`versions:${target.minecraftVersion}`]];
     if (query.category) {
@@ -81,7 +75,6 @@ export class ModrinthProvider implements ModProvider {
     return {
       total: result.total_hits,
       hits: result.hits.map((hit) => ({
-        source: 'modrinth',
         projectId: hit.project_id,
         slug: hit.slug,
         name: hit.title,
@@ -108,7 +101,6 @@ export class ModrinthProvider implements ModProvider {
 
   private summary(project: Project, author: string): ModSummary {
     return {
-      source: 'modrinth',
       projectId: project.id,
       slug: project.slug,
       name: project.title,
@@ -146,6 +138,9 @@ export class ModrinthProvider implements ModProvider {
 
   private toVersion(version: Version, target: ModTargetInfo): ProviderVersion {
     const file = version.files.find((f) => f.primary) ?? version.files[0];
+    if (!file) {
+      throw new Error(`Modrinth version ${version.id} has no file`);
+    }
     return {
       id: version.id,
       projectId: version.project_id,
@@ -155,14 +150,14 @@ export class ModrinthProvider implements ModProvider {
       loaders: version.loaders,
       releaseType: version.version_type,
       publishedAt: version.date_published,
-      fileName: file?.filename ?? `${version.project_id}-${version.version_number}.jar`,
-      size: file?.size ?? 0,
+      fileName: file.filename,
+      size: file.size,
       compatible: modrinthCompatible(version, target),
       dependencies: version.dependencies
         .filter((d) => d.project_id || d.version_id)
         .map((d) => ({ projectId: d.project_id ?? '', versionId: d.version_id ?? undefined, type: d.dependency_type })),
-      url: file?.url ?? null,
-      sha1: file?.hashes.sha1 ?? null
+      url: file.url,
+      sha1: file.hashes.sha1 ?? null
     };
   }
 
@@ -172,6 +167,7 @@ export class ModrinthProvider implements ModProvider {
       : '';
     const versions = await fetchJson<Version[]>(`${API}/project/${encodeURIComponent(projectId)}/version${params}`);
     return versions
+      .filter((v) => v.files.length > 0)
       .map((v) => this.toVersion(v, target))
       .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
   }
@@ -192,7 +188,9 @@ export class ModrinthProvider implements ModProvider {
     });
     const found = (await response.json()) as Record<string, Version>;
     for (const [hash, version] of Object.entries(found)) {
-      out.set(hash, this.toVersion(version, target));
+      if (version.files.length > 0) {
+        out.set(hash, this.toVersion(version, target));
+      }
     }
     return out;
   }
@@ -213,7 +211,9 @@ export class ModrinthProvider implements ModProvider {
     });
     const found = (await response.json()) as Record<string, Version>;
     for (const [hash, version] of Object.entries(found)) {
-      out.set(hash, this.toVersion(version, target));
+      if (version.files.length > 0) {
+        out.set(hash, this.toVersion(version, target));
+      }
     }
     return out;
   }

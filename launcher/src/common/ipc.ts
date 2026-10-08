@@ -8,8 +8,6 @@ import type {
   ModInstallPlan,
   ModSearchQuery,
   ModSearchResult,
-  ModSource,
-  ModSourceInfo,
   ModTask,
   AppInfo,
   ChangelogEntry,
@@ -27,6 +25,10 @@ import type {
   ReleaseState,
   RepairReport,
   SetupCheck,
+  ShareExport,
+  ShareImportMode,
+  SharePreview,
+  ShareResult,
   SystemInfo,
   TargetStatus
 } from './types';
@@ -45,6 +47,10 @@ export interface InvokeApi {
   'profiles:save': (profile: LaunchProfile) => LaunchProfile[];
   'profiles:delete': (id: string) => LaunchProfile[];
   'profiles:duplicate': (id: string, name: string) => LaunchProfile;
+  'share:export': (profileId: string) => ShareResult<ShareExport>;
+  'share:delete': (code: string) => ShareResult<null>;
+  'share:preview': (code: string) => ShareResult<SharePreview>;
+  'share:apply': (code: string, mode: ShareImportMode, targetProfileId: string | null, withClientSettings: boolean) => ShareResult<LaunchProfile>;
   'client:configProfiles': () => string[];
 
   'releases:get': (refresh: boolean) => ReleaseState;
@@ -81,13 +87,13 @@ export interface InvokeApi {
   'launcherUpdate:check': () => LauncherUpdateStatus;
   'launcherUpdate:install': () => void;
 
-  'mods:sources': () => ModSourceInfo[];
   'mods:search': (query: ModSearchQuery) => ModSearchResult;
-  'mods:categories': (source: ModSource) => ModCategory[];
-  'mods:details': (source: ModSource, projectId: string, profileId: string) => ModDetails;
-  'mods:plan': (profileId: string, source: ModSource, projectId: string, versionId?: string) => ModInstallPlan;
-  'mods:install': (profileId: string, source: ModSource, projectId: string, versionId?: string) => InstalledModsState;
+  'mods:categories': () => ModCategory[];
+  'mods:details': (projectId: string, profileId: string) => ModDetails;
+  'mods:plan': (profileId: string, projectId: string, versionId?: string) => ModInstallPlan;
+  'mods:install': (profileId: string, projectId: string, versionId?: string) => InstalledModsState;
   'mods:installed': (profileId: string) => InstalledModsState;
+  'mods:count': (profileId: string) => number;
   'mods:setEnabled': (profileId: string, file: string, enabled: boolean) => InstalledModsState;
   'mods:remove': (profileId: string, file: string) => InstalledModsState;
   'mods:checkUpdates': (profileId: string) => InstalledModsState;
@@ -116,6 +122,7 @@ export const INVOKE_CHANNELS: InvokeChannel[] = [
   'app:info', 'window:minimize', 'window:close',
   'settings:get', 'settings:update',
   'profiles:list', 'profiles:create', 'profiles:save', 'profiles:delete', 'profiles:duplicate', 'client:configProfiles',
+  'share:export', 'share:delete', 'share:preview', 'share:apply',
   'releases:get', 'targets:status', 'changelog:get',
   'game:state', 'game:launch', 'game:kill', 'game:log',
   'install:repair', 'install:clearCache', 'install:diskUsage',
@@ -125,7 +132,7 @@ export const INVOKE_CHANNELS: InvokeChannel[] = [
   'system:info', 'setup:run', 'setup:fix',
   'discord:status',
   'launcherUpdate:status', 'launcherUpdate:check', 'launcherUpdate:install',
-  'mods:sources', 'mods:search', 'mods:categories', 'mods:details', 'mods:plan', 'mods:install', 'mods:installed',
+  'mods:search', 'mods:categories', 'mods:details', 'mods:plan', 'mods:install', 'mods:installed', 'mods:count',
   'mods:setEnabled', 'mods:remove', 'mods:checkUpdates', 'mods:update',
   'shell:open', 'shell:openExternal'
 ];

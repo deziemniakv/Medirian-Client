@@ -66,6 +66,10 @@ public final class LegacyCosmetics {
             }
             MinecraftClient client = MinecraftClient.getInstance();
             boolean local = player == client.player;
+            // far away players' cosmetics are not drawn (Settings → Advanced → Visibility)
+            if (!local && client.getCameraEntity() != null && !Hooks.cosmeticsVisible(player.squaredDistanceTo(client.getCameraEntity()))) {
+                return;
+            }
             Cosmetic hat = Hooks.wornCosmetic(player.getUuid(), local, CosmeticType.HAT);
             Cosmetic wings = Hooks.wornCosmetic(player.getUuid(), local, CosmeticType.WINGS);
             // a helmet, pumpkin or skull covers the head: a hat would cut through it (slot 3 = helmet)

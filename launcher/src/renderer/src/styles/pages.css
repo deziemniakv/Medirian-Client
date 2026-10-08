@@ -480,3 +480,123 @@
 .account-offline .input {
   flex: 1;
 }
+
+/* ------------------------------------------------------------------ profile codes */
+
+.share {
+  width: min(600px, calc(100vw - 48px));
+}
+
+.share__state {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  color: var(--text-dim);
+}
+
+/* The code itself: big, easy to read aloud, click to copy. */
+.share__code {
+  display: block;
+  width: 100%;
+  margin: 12px 0 8px;
+  padding: 16px 12px 18px;
+  font-size: 30px;
+  letter-spacing: 0.06em;
+  text-align: center;
+  color: var(--pumpkin-light);
+  background: var(--inset);
+  border: var(--px) solid var(--ink);
+  box-shadow: inset var(--px) var(--px) 0 rgba(0, 0, 0, 0.4);
+  cursor: copy;
+  user-select: all;
+}
+
+.share__code:hover,
+.share__code:focus-visible {
+  color: var(--ember);
+}
+
+.share__note {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+}
+
+.share__input {
+  margin: 10px 0 4px;
+}
+
+.share__input .input {
+  flex: 1;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.share__preview {
+  margin-top: 10px;
+  padding: 10px 14px;
+}
+
+.share__name {
+  font-size: 20px;
+  color: var(--text);
+}
+
+.share__facts {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.share__modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.share__mode {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: var(--px) solid var(--ink);
+  cursor: pointer;
+}
+
+.share__mode--on {
+  background: var(--surface-light);
+  box-shadow: inset 4px 0 0 var(--pumpkin);
+}
+
+.share__mode > span {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.share__mode input {
+  margin-top: 3px;
+  accent-color: var(--pumpkin);
+}
+
+.share__check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.share__check input {
+  accent-color: var(--pumpkin);
+}

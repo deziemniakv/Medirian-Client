@@ -28,7 +28,7 @@ export interface LaunchContext {
   session: LaunchSession;
   launcherVersion: string;
   bridge: { port: number; token: string } | null;
-  /** Medirian services for the client (-Dmedirian.api); empty = services off. */
+  /** Medirian Services for the client (-Dmedirian.services); empty = services off. */
   servicesUrl?: string;
 }
 
@@ -223,7 +223,7 @@ export class Installer {
       `-Dmedirian.target=${target.id}`,
       ...(profile.configProfile ? [`-Dmedirian.profile=${profile.configProfile}`] : []),
       ...(ctx.bridge ? [`-Dmedirian.launcher.port=${ctx.bridge.port}`, `-Dmedirian.launcher.token=${ctx.bridge.token}`] : []),
-      ...(ctx.servicesUrl ? [`-Dmedirian.api=${ctx.servicesUrl}`] : [])
+      ...(ctx.servicesUrl ? [`-Dmedirian.services=${ctx.servicesUrl}`] : [])
     );
 
     const game: string[] = version.arguments?.game

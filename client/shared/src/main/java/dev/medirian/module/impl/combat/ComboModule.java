@@ -45,7 +45,7 @@ public final class ComboModule extends Module {
         });
         on(Events.Tick.class, e -> tick());
 
-        hud(new TextHudElement(this, Anchor.TOP_LEFT, 4, 76) {
+        hud(new TextHudElement(this, Anchor.TOP_LEFT, 4, 72) {
             @Override
             protected void collect(Lines out, boolean editor) {
                 out.add(I18n.tr("hud.combo", "Combo"), String.valueOf(combo));

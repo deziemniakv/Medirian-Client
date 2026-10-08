@@ -2,9 +2,17 @@ import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import type { JavaInstall, LaunchProfile } from '../../../common/types';
 import { errorMessage, invoke } from '../api';
 import { ArtIcon, Icon } from '../components/Icon';
-import { targetIcon } from '../components/LaunchBar';
-import { useT } from '../i18n';
+import { targetIcon } from '../components/LaunchCard';
+import { ImportDialog, ShareDialog } from '../components/ShareDialogs';
+import { isMessageKey, useT } from '../i18n';
 import { useStore } from '../store';
+
+/** " — " and the version's note in the launcher's language (the manifest's own note for versions it does not know). */
+function targetNote(t: ReturnType<typeof useT>, id: string, description?: string): string {
+  const key = `target.desc.${id}`;
+  const note = isMessageKey(key) ? t(key) : description;
+  return note ? ` — ${note}` : '';
+}
 
 function same(a: LaunchProfile, b: LaunchProfile): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
@@ -27,6 +35,8 @@ export function Profiles() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sharing, setSharing] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   useEffect(() => setDraft(selected), [selected?.id]);
   useEffect(() => {
@@ -105,6 +115,10 @@ export function Profiles() {
             <p className="window__subtitle">{t('profiles.subtitle')}</p>
           </div>
           <div className="window__actions">
+            <button className="btn" onClick={() => setImporting(true)}>
+              <Icon name="download" size={16} />
+              {t('share.import')}
+            </button>
             <button className="btn btn--primary" onClick={() => void create({ name: t('profiles.new'), targetId: targets[0]?.id ?? '1.8.9' })}>
               <Icon name="plus" size={16} />
               {t('profiles.new')}
@@ -148,7 +162,7 @@ export function Profiles() {
                   {targets.length === 0 && <option value={draft.targetId}>{draft.targetId}</option>}
                   {targets.map((target) => (
                     <option key={target.id} value={target.id}>
-                      {target.displayName}{target.description ? ` — ${target.description}` : ''}
+                      {target.displayName}{targetNote(t, target.id, target.description)}
                     </option>
                   ))}
                 </select>
@@ -220,6 +234,10 @@ export function Profiles() {
                 {t('profiles.openFolder')}
               </button>
               <div className="row">
+                <button className="btn" disabled={dirty} title={dirty ? t('share.saveFirst') : undefined} onClick={() => setSharing(true)}>
+                  <Icon name="share" size={16} />
+                  {t('share.share')}
+                </button>
                 <button className="btn" onClick={() => void duplicate()}>
                   <Icon name="copy" size={16} />
                   {t('profiles.duplicate')}
@@ -237,6 +255,17 @@ export function Profiles() {
           </div>
         </div>
       </div>
+      {sharing && <ShareDialog profile={draft} onClose={() => setSharing(false)} />}
+      {importing && (
+        <ImportDialog onClose={() => setImporting(false)} onImported={(profile) => {
+          setImporting(false);
+          void invoke('profiles:list').then((next) => {
+            setProfiles(next);
+            setSelectedId(profile.id);
+            void invoke('client:configProfiles').then(setConfigs);
+          });
+        }} />
+      )}
     </div>
   );
 }

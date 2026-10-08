@@ -55,12 +55,14 @@ public final class ModernCosmetics {
     /** Resolves what {@code player} wears into its render state (client thread, every frame). */
     public static void extract(Avatar player, AvatarRenderState state, float partialTick) {
         boolean local = player == Minecraft.getInstance().player;
-        Cosmetic hat = Hooks.wornCosmetic(player.getUUID(), local, CosmeticType.HAT);
+        // far away players' cosmetics are not drawn (Settings → Advanced → Visibility)
+        boolean near = local || Hooks.cosmeticsVisible(state.distanceToCameraSq);
+        Cosmetic hat = near ? Hooks.wornCosmetic(player.getUUID(), local, CosmeticType.HAT) : null;
         // a helmet, carved pumpkin or skull covers the head: a hat would cut through it
         if (hat != null && !player.getItemBySlot(EquipmentSlot.HEAD).isEmpty()) {
             hat = null;
         }
-        Cosmetic wings = Hooks.wornCosmetic(player.getUUID(), local, CosmeticType.WINGS);
+        Cosmetic wings = near ? Hooks.wornCosmetic(player.getUUID(), local, CosmeticType.WINGS) : null;
         float spread = 0f;
         if (wings != null) {
             boolean fast = player.isSprinting() || player.isFallFlying() || !player.onGround();

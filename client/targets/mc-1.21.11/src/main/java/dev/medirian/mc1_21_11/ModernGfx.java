@@ -32,9 +32,11 @@ public final class ModernGfx implements Gfx {
     private Font font;
     private int depth;
     private float scale = 1f;
+    private final ModernBackdrop backdrop;
 
     public ModernGfx(Minecraft minecraft) {
         this.minecraft = minecraft;
+        this.backdrop = new ModernBackdrop(minecraft);
     }
 
     public ModernGfx begin(GuiGraphics guiGraphics) {
@@ -42,6 +44,7 @@ public final class ModernGfx implements Gfx {
         this.font = minecraft.font;
         this.depth = 0;
         this.scale = 1f;
+        this.backdrop.ready = false;
         return this;
     }
 
@@ -212,6 +215,36 @@ public final class ModernGfx implements Gfx {
         int texHeight = texture.getPixels().getHeight();
         graphics.blit(RenderPipelines.GUI_TEXTURED, dynamicId(id), x, y, u0 * texWidth, v0 * texHeight, width, height,
                 Math.round((u1 - u0) * texWidth), Math.round((v1 - v0) * texHeight), texWidth, texHeight, argbTint);
+    }
+
+    @Override
+    public void prepareBackdrop(int strength) {
+        backdrop.prepare(strength);
+    }
+
+    @Override
+    public boolean backdropReady() {
+        return backdrop.ready;
+    }
+
+    @Override
+    public void backdrop(int x1, int y1, int x2, int y2) {
+        if (!backdrop.ready || x2 <= x1 || y2 <= y1) {
+            return;
+        }
+        // where the rectangle is on screen, in pixels of the frame
+        org.joml.Vector2f a = graphics.pose().transformPosition(x1, y1, new org.joml.Vector2f());
+        org.joml.Vector2f b = graphics.pose().transformPosition(x2, y2, new org.joml.Vector2f());
+        double gui = guiScale();
+        float sx = (float) (a.x * gui);
+        float sy = (float) (a.y * gui);
+        int sw = Math.round((float) (b.x * gui) - sx);
+        int sh = Math.round((float) (b.y * gui) - sy);
+        int fw = backdrop.frameWidth;
+        int fh = backdrop.frameHeight;
+        // the frame is stored bottom-up: flip the region vertically; drawn opaque, the tint goes on top
+        graphics.blit(RenderPipelines.GUI_OPAQUE_TEXTURED_BACKGROUND, ModernBackdrop.ID, x1, y1, sx, fh - sy,
+                x2 - x1, y2 - y1, sw, -sh, fw, fh, 0xFFFFFFFF);
     }
 
     @Override

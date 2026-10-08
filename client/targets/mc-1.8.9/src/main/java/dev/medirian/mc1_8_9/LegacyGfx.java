@@ -53,6 +53,11 @@ public final class LegacyGfx implements Gfx {
     private final BufferBuilder batch = new BufferBuilder(MAX_QUADS * 4 * 4);
     private final BufferRenderer renderer = new BufferRenderer();
     private final MinecraftClient client;
+    /** Liquid Glass: the blurred frame and the quads drawn from it (batched like fills). */
+    private final LegacyBackdrop backdrop;
+    private final BufferBuilder backdropBatch = new BufferBuilder(MAX_BACKDROP_QUADS * 4 * 5);
+    private int backdropPending;
+    private static final int MAX_BACKDROP_QUADS = 512;
     /** Batching switch, only turned off by the self-test to measure the difference. */
     private boolean batching = true;
     /** Quads waiting in {@link #batch}. */
@@ -76,6 +81,7 @@ public final class LegacyGfx implements Gfx {
 
     public LegacyGfx(MinecraftClient client) {
         this.client = client;
+        this.backdrop = new LegacyBackdrop(client);
     }
 
     /** Prepares a frame: GUI size from vanilla's scaled resolution and a clean 2D state. */
@@ -90,6 +96,8 @@ public final class LegacyGfx implements Gfx {
         ty = 0;
         scale = 1f;
         pending = 0;
+        backdropPending = 0;
+        backdrop.ready = false;
         fills = 0;
         fillDraws = 0;
         frameStart = System.nanoTime();
@@ -136,6 +144,7 @@ public final class LegacyGfx implements Gfx {
      * GL matrix is temporarily undone to the frame's base: current = base · T(tx, ty) · S(scale).
      */
     private void flush() {
+        flushBackdrop();
         if (pending == 0) {
             return;
         }
@@ -181,6 +190,9 @@ public final class LegacyGfx implements Gfx {
         int alpha = argb >>> 24;
         if (alpha == 0 || x2 <= x1 || y2 <= y1) {
             return;
+        }
+        if (backdropPending > 0) {
+            flushBackdrop();
         }
         if (pending == 0) {
             batch.begin(GL11.GL_QUADS, VertexFormats.POSITION_COLOR);
@@ -404,6 +416,70 @@ public final class LegacyGfx implements Gfx {
         DrawableHelper.drawTexture(x, y, u0 * texWidth, v0 * texHeight, Math.round((u1 - u0) * texWidth),
                 Math.round((v1 - v0) * texHeight), width, height, texWidth, texHeight);
         GlStateManager.color(1f, 1f, 1f, 1f);
+    }
+
+    @Override
+    public void prepareBackdrop(int strength) {
+        flush();
+        backdrop.prepare(strength);
+    }
+
+    @Override
+    public boolean backdropReady() {
+        return backdrop.ready;
+    }
+
+    @Override
+    public void backdrop(int x1, int y1, int x2, int y2) {
+        if (!backdrop.ready || x2 <= x1 || y2 <= y1) {
+            return;
+        }
+        if (pending > 0) {
+            flush();
+        }
+        if (backdropPending == 0) {
+            backdropBatch.begin(GL11.GL_QUADS, VertexFormats.POSITION_TEXTURE);
+        }
+        double left = tx + x1 * scale;
+        double right = tx + x2 * scale;
+        double top = ty + y1 * scale;
+        double bottom = ty + y2 * scale;
+        // the same place in the frame, which is stored bottom-up
+        double fw = backdrop.frameWidth;
+        double fh = backdrop.frameHeight;
+        double u0 = left * guiScale / fw;
+        double u1 = right * guiScale / fw;
+        double vTop = 1 - top * guiScale / fh;
+        double vBottom = 1 - bottom * guiScale / fh;
+        backdropBatch.vertex(left, bottom, 0).texture(u0, vBottom).next();
+        backdropBatch.vertex(right, bottom, 0).texture(u1, vBottom).next();
+        backdropBatch.vertex(right, top, 0).texture(u1, vTop).next();
+        backdropBatch.vertex(left, top, 0).texture(u0, vTop).next();
+        backdropPending++;
+        if (backdropPending == MAX_BACKDROP_QUADS) {
+            flushBackdrop();
+        }
+    }
+
+    /** Draws the batched backdrop quads, opaque (the tint is drawn over them). */
+    private void flushBackdrop() {
+        if (backdropPending == 0) {
+            return;
+        }
+        backdropPending = 0;
+        backdropBatch.end();
+        GlStateManager.disableBlend();
+        GlStateManager.disableAlphaTest();
+        GlStateManager.enableTexture();
+        GlStateManager.color(1f, 1f, 1f, 1f);
+        GlStateManager.bindTexture(backdrop.texture());
+        GlStateManager.pushMatrix();
+        GlStateManager.scale(1f / scale, 1f / scale, 1f);
+        GlStateManager.translate(-tx, -ty, 0f);
+        renderer.draw(backdropBatch);
+        GlStateManager.popMatrix();
+        GlStateManager.enableBlend();
+        GlStateManager.blendFuncSeparate(770, 771, 1, 0);
     }
 
     @Override

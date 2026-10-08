@@ -1,6 +1,7 @@
 package dev.medirian.module.impl.performance;
 
 import dev.medirian.core.Medirian;
+import dev.medirian.hud.HudSurface;
 import dev.medirian.hud.Anchor;
 import dev.medirian.hud.HudElement;
 import dev.medirian.hud.HudStyle;
@@ -44,7 +45,7 @@ public final class FpsGraphModule extends Module {
             int statsHeight = showStats.on() ? 11 : 0;
             width = count + 6;
             height = graph + 6 + statsHeight;
-            UiDraw.roundRect(g, 0, 0, width, height, 2.5f, HudStyle.DEFAULT_BACKGROUND);
+            HudSurface.panel(g, 0, 0, width, height, HudStyle.DEFAULT_BACKGROUND);
 
             // scale: 2× the average frame time fills the graph, at least 33 ms
             float scaleMs = Math.max(33.3f, stats.averageFrameMs() * 2.5f);

@@ -76,6 +76,75 @@ public final class UiDraw {
         g.fill(x, y, x + 1, y + 1, argb);
     }
 
+    /**
+     * The outline of a rounded rectangle, 1 real pixel wide and anti-aliased in the corners (the
+     * inside stays untouched, so it can sit on translucent fills).
+     */
+    public static void roundOutline(Gfx g, float x, float y, float w, float h, float radius, int argb) {
+        if (Colors.alpha(argb) == 0 || w <= 0 || h <= 0) {
+            return;
+        }
+        double scale = g.pixelScale();
+        int px = (int) Math.round(x * scale);
+        int py = (int) Math.round(y * scale);
+        int pw = (int) Math.round(w * scale);
+        int ph = (int) Math.round(h * scale);
+        int r = (int) Math.min(Math.round(radius * scale), Math.min(pw, ph) / 2);
+        g.push();
+        float inv = (float) (1.0 / scale);
+        g.scale(inv, inv);
+        // straight edges between the corners
+        g.fill(px + r, py, px + pw - r, py + 1, argb);
+        g.fill(px + r, py + ph - 1, px + pw - r, py + ph, argb);
+        g.fill(px, py + r, px + 1, py + ph - r, argb);
+        g.fill(px + pw - 1, py + r, px + pw, py + ph - r, argb);
+        // corners: the ring between the outer arc and the arc one pixel inside it
+        for (int i = 0; i < r; i++) {
+            double dy = r - i - 0.5;
+            for (int j = 0; j < r; j++) {
+                double dx = r - j - 0.5;
+                double ring = coverage(dx, dy, r) - coverage(dx, dy, r - 1);
+                int edge = withCoverage(argb, ring);
+                if (edge != 0) {
+                    pixel(g, px + j, py + i, edge);
+                    pixel(g, px + pw - 1 - j, py + i, edge);
+                    pixel(g, px + j, py + ph - 1 - i, edge);
+                    pixel(g, px + pw - 1 - j, py + ph - 1 - i, edge);
+                }
+            }
+        }
+        g.pop();
+    }
+
+    /**
+     * The blurred backdrop ({@link Gfx#backdrop}) clipped to a rounded rectangle: one strip per
+     * real-pixel row in the corners, one block in between.
+     */
+    public static void roundBackdrop(Gfx g, float x, float y, float w, float h, float radius) {
+        if (w <= 0 || h <= 0) {
+            return;
+        }
+        double scale = g.pixelScale();
+        int px = (int) Math.round(x * scale);
+        int py = (int) Math.round(y * scale);
+        int pw = (int) Math.round(w * scale);
+        int ph = (int) Math.round(h * scale);
+        int r = (int) Math.min(Math.round(radius * scale), Math.min(pw, ph) / 2);
+        g.push();
+        float inv = (float) (1.0 / scale);
+        g.scale(inv, inv);
+        g.backdrop(px, py + r, px + pw, py + ph - r);
+        for (int i = 0; i < r; i++) {
+            double dy = r - i - 0.5;
+            // the row's span: where the corner disc covers at least half of a pixel
+            int inset = (int) Math.ceil(r - Math.sqrt(Math.max(0, r * r - dy * dy)) - 0.5);
+            inset = Math.max(0, Math.min(r, inset));
+            g.backdrop(px + inset, py + i, px + pw - inset, py + i + 1);
+            g.backdrop(px + inset, py + ph - 1 - i, px + pw - inset, py + ph - i);
+        }
+        g.pop();
+    }
+
     /** Rounded rectangle with a 1 real-pixel border. */
     public static void roundRectBordered(Gfx g, float x, float y, float w, float h, float radius, int fill, int border) {
         float px = (float) (1.0 / g.pixelScale());

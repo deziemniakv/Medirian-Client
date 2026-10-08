@@ -5,6 +5,7 @@ import com.mojang.blaze3d.platform.Window;
 import dev.medirian.account.PlayerIdentity;
 import dev.medirian.input.Key;
 import dev.medirian.mc1_21_11.mixin.KeyMappingAccessor;
+import dev.medirian.platform.VanillaOptions;
 import dev.medirian.platform.CameraView;
 import dev.medirian.platform.Capability;
 import dev.medirian.platform.ClientActions;
@@ -78,6 +79,7 @@ public final class ModernPlatform implements Platform, GameView, InputView, Clie
     private int onlinePlayers = -1;
     private Views.Sidebar sidebar;
     private boolean optionsDirty;
+    private ModernVanillaOptions vanillaOptions;
 
     private ModernPlatform(Minecraft minecraft) {
         this.minecraft = minecraft;
@@ -500,6 +502,14 @@ public final class ModernPlatform implements Platform, GameView, InputView, Clie
     @Override
     public int unlimitedFps() {
         return 260;
+    }
+
+    @Override
+    public VanillaOptions vanillaOptions() {
+        if (vanillaOptions == null) {
+            vanillaOptions = new ModernVanillaOptions(minecraft, () -> optionsDirty = true);
+        }
+        return vanillaOptions;
     }
 
     @Override

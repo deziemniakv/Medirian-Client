@@ -17,7 +17,7 @@ public final class SessionInfoModule extends Module {
     public SessionInfoModule() {
         super("sessioninfo", "Session Info", Category.HUD, "Shows how long you have been playing.");
         showTotal = add(new BooleanSetting("showTotal", "Show time since launch", true));
-        hud(new TextHudElement(this, Anchor.TOP_LEFT, 4, 112) {
+        hud(new TextHudElement(this, Anchor.TOP_LEFT, 4, 123) {
             @Override
             protected void collect(Lines out, boolean editor) {
                 Medirian medirian = Medirian.get();

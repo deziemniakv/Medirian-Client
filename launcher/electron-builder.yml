@@ -16,9 +16,10 @@ extraResources:
 # workflow (.github/workflows/release.yml) adds one (-c.publish.*), which makes electron-builder
 # write app-update.yml and the latest*.yml feeds that the launcher's updater reads.
 #
-# Code signing comes from the environment, never from this file: CSC_LINK / CSC_KEY_PASSWORD
-# (Windows Authenticode and macOS Developer ID certificates), APPLE_ID / APPLE_APP_SPECIFIC_PASSWORD /
-# APPLE_TEAM_ID for notarization. See docs/RELEASING.md.
+# Code signing comes from the environment (npm run dist also reads ../.env), never from this file:
+# WIN_CSC_LINK / WIN_CSC_KEY_PASSWORD (Windows Authenticode), CSC_LINK / CSC_KEY_PASSWORD (macOS Developer ID),
+# APPLE_ID / APPLE_APP_SPECIFIC_PASSWORD / APPLE_TEAM_ID for notarization; Azure Artifact Signing is added by
+# the release workflow (win.azureSignOptions). See docs/OWNER_SETUP.md, "Code signing".
 win:
   target: nsis
   icon: resources/icon.png

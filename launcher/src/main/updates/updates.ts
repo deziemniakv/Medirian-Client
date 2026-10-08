@@ -2,8 +2,8 @@ import { existsSync } from 'node:fs';
 import { readdir, rm } from 'node:fs/promises';
 import { dirname, isAbsolute, join } from 'node:path';
 import type { LauncherSettings, ReleaseManifest, ReleaseState, ReleaseTarget, TargetStatus } from '../../common/types';
+import { checkUrl } from '../core/config';
 import { readJson, writeJson } from '../core/json';
-import { defaultManifestUrl } from '../core/settings';
 import { log } from '../core/log';
 import type { MedirianPaths } from '../core/paths';
 import { downloadAll, isValid, type DownloadProgress } from '../net/downloader';
@@ -39,7 +39,12 @@ export function compareVersions(a: string, b: string): number {
 export class UpdateService {
   private state: ReleaseState = { manifest: null, error: null, source: '', checkedAt: 0 };
 
-  constructor(private readonly paths: MedirianPaths, private readonly settings: () => LauncherSettings) {}
+  constructor(
+    private readonly paths: MedirianPaths,
+    private readonly settings: () => LauncherSettings,
+    /** MEDIRIAN_MANIFEST_URL of this build (HTTPS, checked in core/config.ts). */
+    private readonly manifestUrl: string
+  ) {}
 
   private cacheFile(): string {
     return join(this.paths.cache, 'release-manifest.json');
@@ -50,7 +55,7 @@ export class UpdateService {
     if (s.updateChannel === 'local') {
       return { kind: 'file', location: join(s.localDistributionDir, 'release-manifest.json') };
     }
-    return { kind: 'url', location: s.manifestUrl || defaultManifestUrl() };
+    return { kind: 'url', location: this.manifestUrl };
   }
 
   async refresh(force = false): Promise<ReleaseState> {
@@ -60,7 +65,7 @@ export class UpdateService {
     }
     try {
       if (!src.location) {
-        throw new Error('No update server configured. Set the manifest URL in Settings → Updates.');
+        throw new Error('This build has no release channel (MEDIRIAN_MANIFEST_URL, docs/OWNER_SETUP.md).');
       }
       const manifest = src.kind === 'file'
         ? await readJson<ReleaseManifest | null>(src.location, null)
@@ -134,6 +139,13 @@ export class UpdateService {
     const localSource = target.artifact.file
       ? isAbsolute(target.artifact.file) ? target.artifact.file : join(dirname(src.location), target.artifact.file)
       : undefined;
+    if (target.artifact.url) {
+      // the client jar is code that runs on the player's computer: only over HTTPS (or from this computer)
+      const checked = checkUrl(`${target.id} client download`, target.artifact.url);
+      if ('problem' in checked) {
+        throw new Error(checked.problem);
+      }
+    }
     await downloadAll([{
       url: target.artifact.url ?? `file-unavailable:${fileName}`,
       path: destination,

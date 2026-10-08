@@ -13,6 +13,7 @@ import dev.medirian.platform.InputView;
 import dev.medirian.platform.Platform;
 import dev.medirian.platform.PlayerView;
 import dev.medirian.platform.SidebarView;
+import dev.medirian.platform.VanillaOptions;
 import dev.medirian.platform.WorldKeys;
 import dev.medirian.ui.MedirianScreen;
 import net.minecraft.client.CameraType;
@@ -77,6 +78,7 @@ public final class ModernPlatform implements Platform, GameView, InputView, Clie
     private int onlinePlayers = -1;
     private Views.Sidebar sidebar;
     private boolean optionsDirty;
+    private ModernVanillaOptions vanillaOptions;
 
     private ModernPlatform(Minecraft minecraft) {
         this.minecraft = minecraft;
@@ -499,6 +501,14 @@ public final class ModernPlatform implements Platform, GameView, InputView, Clie
     @Override
     public int unlimitedFps() {
         return 260;
+    }
+
+    @Override
+    public VanillaOptions vanillaOptions() {
+        if (vanillaOptions == null) {
+            vanillaOptions = new ModernVanillaOptions(minecraft, () -> optionsDirty = true);
+        }
+        return vanillaOptions;
     }
 
     @Override

@@ -3,8 +3,8 @@
 // NEVER use it in production: it accepts every join without checking the access token.
 //
 //   node backend/dev/fake-session-server.mjs [port]          (default 8091)
-//   MOJANG_SESSION_URL=http://127.0.0.1:8091/session/minecraft node backend/src/index.mjs
-//   ./gradlew runClient -Dmedirian.api=http://127.0.0.1:8080 -Dmedirian.sessionServer=http://127.0.0.1:8091/session/minecraft
+//   MEDIRIAN_SESSION_SERVER=http://127.0.0.1:8091/session/minecraft node backend/src/index.mjs
+//   MEDIRIAN_SERVICES_URL=http://127.0.0.1:8080 MEDIRIAN_SESSION_SERVER=http://127.0.0.1:8091/session/minecraft ./gradlew runClient
 import { createServer } from 'node:http';
 
 const port = Number(process.argv[2] ?? 8091);

@@ -1,6 +1,7 @@
 package dev.medirian.module.impl.world;
 
 import dev.medirian.core.Medirian;
+import dev.medirian.hud.HudSurface;
 import dev.medirian.hud.Anchor;
 import dev.medirian.hud.HudElement;
 import dev.medirian.hud.HudStyle;
@@ -70,7 +71,7 @@ public final class DirectionModule extends Module {
                 String text = I18n.tr("hud.direction." + CARDINALS[i].toLowerCase(), NAMES[i]) + "  " + AXES[i];
                 width = g.textWidth(text) + 10;
                 height = 16;
-                UiDraw.roundRect(g, 0, 0, width, height, 2.5f, HudStyle.DEFAULT_BACKGROUND);
+                HudSurface.panel(g, 0, 0, width, height, HudStyle.DEFAULT_BACKGROUND);
                 g.text(text, 5, 4, HudStyle.DEFAULT_TEXT, true);
                 return;
             }
@@ -80,7 +81,7 @@ public final class DirectionModule extends Module {
         private void drawCompass(Gfx g, float yaw) {
             width = compassWidth.intValue();
             height = 18;
-            UiDraw.roundRect(g, 0, 0, width, height, 2.5f, HudStyle.DEFAULT_BACKGROUND);
+            HudSurface.panel(g, 0, 0, width, height, HudStyle.DEFAULT_BACKGROUND);
             // compass bearing: 0 = north, 90 = east
             float bearing = ((yaw + 180f) % 360f + 360f) % 360f;
             float span = 150f; // degrees visible across the strip

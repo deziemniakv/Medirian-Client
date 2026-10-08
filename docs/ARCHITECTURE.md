@@ -180,9 +180,11 @@ Medirian/
 | Serwis | Plik | Odpowiedzialność |
 |---|---|---|
 | `paths` | `core/paths.ts` | lokalizacja `MEDIRIAN_HOME` i podkatalogów |
-| `SettingsStore` | `core/settings.ts` | ustawienia launchera (JSON, atomowy zapis) |
+| `config` | `core/config.ts` | konfiguracja właściciela wbudowana przy buildzie (tylko `PUBLIC_CONFIG_KEYS` z `.env`), walidacja HTTPS i identyfikatorów, stan „Ten build” |
+| `SettingsStore` | `core/settings.ts` | ustawienia launchera (JSON, atomowy zapis; spakowana aplikacja zawsze na kanale stable) |
 | `ProfileStore` | `profiles/profiles.ts` | profile uruchomieniowe; każdy z własnym folderem gry `profiles/<profil>/` |
-| `ModService` | `mods/mods.ts` (+ `modrinth.ts`, `curseforge.ts`, `provider.ts`) | mody profilu: wyszukiwanie (Modrinth API v2, CurseForge API v1 z kluczem), zgodność z wersją MC i loaderem, plan z zależnościami, instalacja / usuwanie / włączanie / aktualizacje, rozpoznawanie ręcznie dodanych jarów (SHA-1 w Modrinth, `fabric.mod.json`) |
+| `ModService` | `mods/mods.ts` (+ `modrinth.ts`, `provider.ts` — interfejs `ModCatalog`) | mody profilu: wyszukiwanie (Modrinth API v2, bez klucza, User-Agent z `MEDIRIAN_CONTACT`), zgodność z wersją MC i loaderem, plan z zależnościami, instalacja / usuwanie / włączanie / aktualizacje, rozpoznawanie ręcznie dodanych jarów (SHA-1 w Modrinth, `fabric.mod.json`) |
+| `ShareService` | `profiles/share.ts` | kody profili `MDN-XXXX-XXXX-XXXX` przez usługi Medirian: eksport (tylko bezpieczne ustawienia — nigdy konta, Javy, argumentów JVM), podgląd, import jako nowy profil lub nadpisanie, usuwanie |
 | `SkinService` | `skins/skins.ts` | skin konta z serwera sesji Mojang, cache w `cache/skins/` (wspólny z grą), odświeżanie |
 | `Downloader` | `net/downloader.ts` | kolejka pobierania: równoległość, retry z backoffem, SHA-1, atomowe `.part` → rename |
 | `MojangService` | `minecraft/mojang.ts` | manifest wersji, version JSON, biblioteki (reguły OS), assety, natywki |
@@ -197,8 +199,9 @@ Medirian/
 
 * **Preload** — `window.medirian` z metodami `invoke` (request/response) i `on` (zdarzenia postępu).
   Wszystkie kanały i typy są zdefiniowane w `src/common/ipc.ts` — jedno źródło prawdy.
-* **Renderer** — React, bez dostępu do Node. Strony: Home (hero + PLAY), Profiles, Versions,
-  Settings, Account, Changelog, Setup (kreator), Logs.
+* **Renderer** — React, bez dostępu do Node. Strony: Home (wybrany profil + duży PLAY, postać 3D ze skinem, kluczowe
+  informacje — `components/LaunchCard.tsx`), Profiles (z eksportem/importem kodów — `components/ShareDialogs.tsx`), Mods,
+  Versions, Settings, Account, Changelog, Setup (kreator), Logs.
 
 ### 4.2 Pipeline „PLAY”
 
@@ -231,27 +234,34 @@ Shared (`client/shared`, pakiet `dev.medirian`):
 | `event` | **Event System** | `EventBus` (typowane, bez reflection przy dispatchu), zdarzenia gry |
 | `module` | **Module System** | `Module`, `Category`, `ModuleManager`, `Capability` |
 | `setting` | (Module System) | `BooleanSetting`, `NumberSetting`, `ColorSetting`, `EnumSetting`, `KeySetting`, `TextSetting` |
-| `hud` | **HUD System** | `HudElement`, `HudManager`, `HudLayout`, `Anchor`, snapping |
+| `hud` | **HUD System** | `HudElement`, `HudManager`, `HudLayout`, `Anchor`, snapping, `HudSurface` (Liquid Glass / Classic) |
 | `config` | **Config System** | `ConfigManager`, profile, serializacja JSON, migracje |
 | `render` | **Render System** | `Gfx` (backend renderowania — implementuje adapter), `Colors`, `Theme`, `Pixel` (ramki, wnęki, ikony z atlasu), `UiDraw` |
 | `perf` | **Performance System** | `PerformanceManager`, `FrameStats`, `PerformanceProfile` |
-| `ui` | **UI System** | `MedirianScreen`, widgety, `ModMenuScreen`, `HudEditorScreen`, `SettingsScreen` |
+| `ui` | **UI System** | `MedirianScreen`, widgety, `ModMenuScreen`, `HudEditorScreen`, `SettingsScreen` (+ `AdvancedSettings`: Grafika, Renderowanie, Widoczność, Wydajność, Interfejs), `TitleMenuScreen` |
 | `cosmetics` | **Cosmetics System** | `CosmeticType`, `Cosmetic`, `CosmeticsProvider`, `Loadout` |
 | `account` | **Account System** | `PlayerIdentity`, `MedirianAccountService` (interfejs) |
 | `notify` | Notifications | `NotificationManager`, `Toast` |
 | `input` | Input | `Key` (przenośne nazwy klawiszy), `ClickTracker`, `KeybindManager` |
 | `i18n` | Lokalizacja | `I18n`, `lang/en_us.json`, `lang/pl_pl.json` |
 | `ipc` | Bridge | `LauncherBridge` (klient TCP do launchera) |
-| `platform` | **Platform SPI** | interfejsy, które implementuje adapter: `Platform`, `GameView`, `PlayerView`, `EntityView`, `Gfx`… |
+| `platform` | **Platform SPI** | interfejsy, które implementuje adapter: `Platform`, `GameView`, `PlayerView`, `EntityView`, `Gfx`, `VanillaOptions` (opcje Minecrafta z tymi samymi efektami co jego ekrany opcji)… |
 
 Adapter (`client/targets/mc-X`, pakiet `dev.medirian.mc<ver>`):
 
 * `MedirianMod` — entrypoint Fabric (`ClientModInitializer`), tworzy `XPlatform` i wywołuje `Medirian.boot(platform)`.
 * `XPlatform` — implementacja SPI: dane gracza, świata, serwera, klawiszy, opcji wideo.
-* `XGfx` — backend `Gfx` (1.8.9: `Gui`/`FontRenderer`/`GlStateManager`; 1.21.11: `GuiGraphics`).
+* `XGfx` — backend `Gfx` (1.8.9: `Gui`/`FontRenderer`/`GlStateManager`; 1.21.x: `GuiGraphics`; 26.3: `GuiGraphicsExtractor`).
+* `XBackdrop` — rozmyte tło widżetów Liquid Glass: kopia klatki świata zmniejszana kilkukrotnie z filtrem liniowym
+  i powiększana z powrotem (piramida; 1.8.9: `glBlitFramebuffer` między FBO, 1.21.x: potok `TRACY_BLIT`, 26.3: to samo
+  przez renderpearl, liczone tuż przed renderem GUI, bo 26.3 zbiera HUD przed narysowaniem świata). Raz na klatkę i tylko
+  gdy widżet szklany jest widoczny; błąd wyłącza rozmycie do końca sesji.
+* `XVanillaOptions` — `VanillaOptions` danej wersji (1.21.x/26.3: `OptionInstance.set`, 1.8.9: `GameOptions.setValue` /
+  krok „następna wartość” przycisku); opcji, których wersja nie ma, nie zwraca — UI je ukrywa.
 * `ScreenBridge` — ekran Minecrafta, który deleguje do `MedirianScreen` (shared).
-* `mixin/*` — hooki: tick, render HUD, kliknięcia, atak, FOV (zoom), kamera (freelook), cząsteczki,
-  culling encji, limit FPS, crosshair, scoreboard.
+* `mixin/*` — hooki: tick, render HUD, kliknięcia, atak, FOV (zoom), kamera (freelook), cząsteczki (limit i dystans),
+  culling i dystanse encji (gracze / przedmioty / reszta) i bloków-encji, dystans nazw nad głowami, mgła odległości,
+  animacje tekstur atlasu, limit FPS, crosshair, scoreboard.
 
 Cykl życia: `boot` → wczytanie konfiguracji → rejestracja modułów (filtrowanych przez capabilities
 platformy) → zastosowanie profilu → połączenie z launcherem (jeśli uruchomiony przez launcher) →
@@ -290,7 +300,10 @@ public abstract class Module {
 * Pozycja zapisana jako **kotwica + przesunięcie** (`Anchor.TOP_LEFT … BOTTOM_RIGHT`, 9 kotwic) —
   układ przetrwa zmianę rozdzielczości i skali GUI. Kotwica jest wybierana automatycznie z położenia
   elementu (najbliższa tercja ekranu).
-* `HudManager` renderuje elementy w jednym przebiegu; elementy z kosztowną treścią cachują tekst
+* Wygląd widżetów: `HudSurface` — **Liquid Glass** (rozmyte tło z `Gfx.backdrop`, fioletowy odcień o kryciu z ustawień,
+  subtelna jasna krawędź i blask u góry, zaokrąglone rogi) albo **Classic** (płaskie tło). Ustawienia profilu: styl,
+  krycie, rozmycie, obramowanie, promień rogów, odstęp wewnętrzny.
+* `HudManager` renderuje elementy w jednym przebiegu (rozmycie przygotowuje raz, przed pierwszym widocznym widżetem); elementy z kosztowną treścią cachują tekst
   i odświeżają się z ograniczoną częstotliwością (`refreshIntervalMs`). Koszt renderowania HUD jest
   mierzony (`PerformanceManager`) i widoczny w ustawieniach.
 * **HUD Editor** (`HudEditorScreen`): przeciąganie, przyciąganie do krawędzi/środka/innych elementów
@@ -331,6 +344,7 @@ MEDIRIAN_HOME/config/
   (`clients/<target>/<version>/`) → pobiera nowe jary, weryfikuje SHA-1, przełącza atomowo.
   Stare wersje są usuwane przy „Clear cache”.
 * Wersje loaderów są **przypięte w manifeście** (reprodukowalność — nie „latest”).
+* Konfiguracja wydania (URL manifestu, logowanie, usługi) pochodzi z `.env` właściciela — [OWNER_SETUP.md](OWNER_SETUP.md).
 * Aktualizacja samego launchera: `electron-updater` (`updates/launcherUpdate.ts`) z kanałem GitHub Releases
   (`latest.yml`), pobieranie w tle, cicha instalacja przy zamknięciu albo po „Aktualizuj”. Instalator Windows:
   `MedirianClientSetup.exe` (NSIS, per-user) — szczegóły w `docs/RELEASING.md`.

@@ -1,15 +1,37 @@
-// File-backed storage: one JSON document per player (data/users/<uuid>.json) plus grants.json.
+// File-backed storage: one JSON document per player (data/users/<uuid>.json), one per profile share
+// code (data/shares/<code>.json) and grants.json.
 // Small and dependency-free; every write is atomic (temporary file + rename).
-import { mkdirSync, readFileSync, renameSync, writeFileSync, existsSync } from 'node:fs';
+import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 const UUID = /^[0-9a-f]{32}$/;
+const CODE = /^MDN-[2-9A-HJKMNP-Z]{4}-[2-9A-HJKMNP-Z]{4}-[2-9A-HJKMNP-Z]{4}$/;
 
 export class Store {
   constructor(dir) {
     this.dir = dir;
     this.users = new Map();
     mkdirSync(join(dir, 'users'), { recursive: true });
+    mkdirSync(join(dir, 'shares'), { recursive: true });
+  }
+
+  /** A profile share ({ code, profile, createdAt, expiresAt, deleteKey }) or null. */
+  share(code) {
+    const file = CODE.test(code) ? join(this.dir, 'shares', `${code}.json`) : null;
+    return file && existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : null;
+  }
+
+  saveShare(share) {
+    if (!CODE.test(share.code)) {
+      throw new Error(`bad share code ${share.code}`);
+    }
+    atomicWrite(join(this.dir, 'shares', `${share.code}.json`), JSON.stringify(share));
+  }
+
+  deleteShare(code) {
+    if (CODE.test(code)) {
+      rmSync(join(this.dir, 'shares', `${code}.json`), { force: true });
+    }
   }
 
   /** The player's document, created on first use. {@code uuid} is 32 lowercase hex digits. */

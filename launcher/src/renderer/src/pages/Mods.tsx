@@ -8,8 +8,6 @@ import type {
   ModIssue,
   ModSearchResult,
   ModSort,
-  ModSource,
-  ModSourceInfo,
   ModSummary,
   ModTargetInfo
 } from '../../../common/types';
@@ -54,7 +52,7 @@ function ModIcon({ url, size: px = 48 }: { url: string | null; size?: number }) 
 }
 
 /**
- * Mods: browse Modrinth and CurseForge for the chosen profile's Minecraft version and loader,
+ * Mods: browse Modrinth for the chosen profile's Minecraft version and loader,
  * install with dependencies, and manage the profile's installed mods (enable, disable, update,
  * remove). Every action works on that profile's own mods folder.
  */
@@ -67,7 +65,7 @@ export function Mods() {
   const [profileId, setProfileId] = useState(() => selectedProfile(state)?.id ?? profiles[0]?.id ?? '');
   const [tab, setTab] = useState<'browse' | 'installed'>('browse');
   const [installed, setInstalled] = useState<InstalledModsState | null>(null);
-  const [details, setDetails] = useState<{ source: ModSource; projectId: string } | null>(null);
+  const [details, setDetails] = useState<string | null>(null);
   const [plan, setPlan] = useState<{ plan: ModInstallPlan; name: string } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -91,13 +89,13 @@ export function Mods() {
   }, [refreshInstalled]);
 
   /** Shows what an install does; installs right away when it is just the one file. */
-  const requestInstall = async (source: ModSource, projectId: string, name: string, versionId?: string) => {
+  const requestInstall = async (projectId: string, name: string, versionId?: string) => {
     setError(null);
     setBusy(projectId);
     try {
-      const next = await invoke('mods:plan', profile.id, source, projectId, versionId);
+      const next = await invoke('mods:plan', profile.id, projectId, versionId);
       if (next.problems.length === 0 && next.steps.length === 1 && next.warnings.length === 0) {
-        setInstalled(await invoke('mods:install', profile.id, source, projectId, versionId));
+        setInstalled(await invoke('mods:install', profile.id, projectId, versionId));
       } else {
         setPlan({ plan: next, name });
       }
@@ -116,7 +114,7 @@ export function Mods() {
     setBusy(first.projectId);
     setError(null);
     try {
-      setInstalled(await invoke('mods:install', plan.plan.profileId, first.source, first.projectId, first.versionId));
+      setInstalled(await invoke('mods:install', plan.plan.profileId, first.projectId, first.versionId));
       setPlan(null);
     } catch (e) {
       setError(errorMessage(e));
@@ -185,7 +183,7 @@ export function Mods() {
 
         {tab === 'browse'
           ? <Browse profileId={profile.id} installed={installed} busy={busy} locked={running}
-              onInstall={requestInstall} onOpen={(source, projectId) => setDetails({ source, projectId })}
+              onInstall={requestInstall} onOpen={setDetails}
               onUpdate={async (mod) => {
                 setBusy(mod.projectId);
                 try {
@@ -197,13 +195,13 @@ export function Mods() {
                 }
               }} />
           : <Installed state={installed} profileId={profile.id} locked={running} onChange={setInstalled} onError={setError}
-              onOpen={(source, projectId) => setDetails({ source, projectId })} />}
+              onOpen={setDetails} />}
       </div>
 
       {details && (
-        <DetailsDialog source={details.source} projectId={details.projectId} profileId={profile.id} installed={installed}
+        <DetailsDialog projectId={details} profileId={profile.id} installed={installed}
           locked={running} busy={busy} onClose={() => setDetails(null)}
-          onInstall={(name, versionId) => void requestInstall(details.source, details.projectId, name, versionId)} />
+          onInstall={(name, versionId) => void requestInstall(details, name, versionId)} />
       )}
       {plan && <PlanDialog plan={plan.plan} name={plan.name} profileName={profile.name} busy={busy !== null}
         onCancel={() => setPlan(null)} onConfirm={() => void confirmPlan()} />}
@@ -218,14 +216,11 @@ function Browse({ profileId, installed, busy, locked, onInstall, onOpen, onUpdat
   installed: InstalledModsState | null;
   busy: string | null;
   locked: boolean;
-  onInstall: (source: ModSource, projectId: string, name: string) => void;
-  onOpen: (source: ModSource, projectId: string) => void;
+  onInstall: (projectId: string, name: string) => void;
+  onOpen: (projectId: string) => void;
   onUpdate: (mod: InstalledMod) => void;
 }) {
   const t = useT();
-  const navigate = useStore((s) => s.navigate);
-  const [sources, setSources] = useState<ModSourceInfo[]>([]);
-  const [source, setSource] = useState<ModSource>('modrinth');
   const [query, setQuery] = useState('');
   const [debounced, setDebounced] = useState('');
   const [categories, setCategories] = useState<ModCategory[]>([]);
@@ -238,47 +233,40 @@ function Browse({ profileId, installed, busy, locked, onInstall, onOpen, onUpdat
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    void invoke('mods:sources').then(setSources);
-  }, []);
-
-  useEffect(() => {
     const timer = setTimeout(() => setDebounced(query.trim()), 350);
     return () => clearTimeout(timer);
   }, [query]);
 
   useEffect(() => {
-    setCategory(null);
-    setCategories([]);
-    void invoke('mods:categories', source).then(setCategories).catch(() => setCategories([]));
-  }, [source]);
+    void invoke('mods:categories').then(setCategories).catch(() => setCategories([]));
+  }, []);
 
-  useEffect(() => setPage(0), [debounced, source, category, sort, profileId]);
+  useEffect(() => setPage(0), [debounced, category, sort, profileId]);
 
   useEffect(() => {
     let current = true;
     setLoading(true);
     setError(null);
-    invoke('mods:search', { source, query: debounced, profileId, category, sort, page, pageSize: PAGE_SIZE })
+    invoke('mods:search', { query: debounced, profileId, category, sort, page, pageSize: PAGE_SIZE })
       .then((next) => current && setResult(next))
       .catch((e) => current && setError(errorMessage(e)))
       .finally(() => current && setLoading(false));
     return () => {
       current = false;
     };
-  }, [debounced, source, category, sort, page, profileId, attempt]);
+  }, [debounced, category, sort, page, profileId, attempt]);
 
   const byProject = useMemo(() => {
     const map = new Map<string, InstalledMod>();
     for (const mod of installed?.mods ?? []) {
-      if (mod.projectId) {
-        map.set(`${mod.source}:${mod.projectId}`, mod);
+      if (mod.source === 'modrinth' && mod.projectId) {
+        map.set(mod.projectId, mod);
       }
     }
     return map;
   }, [installed]);
 
   const pages = result ? Math.max(1, Math.ceil(result.total / PAGE_SIZE)) : 1;
-  const sourceInfo = sources.find((s) => s.id === source);
 
   return (
     <div className="mods-browse">
@@ -292,14 +280,7 @@ function Browse({ profileId, installed, busy, locked, onInstall, onOpen, onUpdat
             </button>
           )}
         </label>
-        <div className="segmented" role="tablist">
-          {sources.map((s) => (
-            <button key={s.id} role="tab" aria-selected={source === s.id} className={`segmented__item pixel${source === s.id ? ' segmented__item--active' : ''}`}
-              disabled={!s.available} title={s.reason} onClick={() => setSource(s.id)}>
-              {s.name}
-            </button>
-          ))}
-        </div>
+        <span className="mods-source pixel" title="modrinth.com">Modrinth</span>
         <select className="select mods-filter" value={category ?? ''} onChange={(e) => setCategory(e.target.value || null)}>
           <option value="">{t('mods.allCategories')}</option>
           {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -311,14 +292,6 @@ function Browse({ profileId, installed, busy, locked, onInstall, onOpen, onUpdat
           <option value="newest">{t('mods.sort.newest')}</option>
         </select>
       </div>
-      {sources.some((s) => !s.available) && (
-        <div className="mods-hint">
-          <Icon name="info" size={16} />
-          {t('mods.curseforgeKey')}
-          <button className="link-button" onClick={() => navigate('settings')}>{t('mods.openSettings')}</button>
-        </div>
-      )}
-
       <div className="mods-results">
         {error ? (
           <div className="mods-state">
@@ -340,9 +313,9 @@ function Browse({ profileId, installed, busy, locked, onInstall, onOpen, onUpdat
         ) : (
           <div className={`mods-grid${loading ? ' mods-grid--loading' : ''}`}>
             {result?.hits.map((mod) => (
-              <ModCard key={`${mod.source}:${mod.projectId}`} mod={mod} target={result.target} installed={byProject.get(`${mod.source}:${mod.projectId}`)}
-                busy={busy === mod.projectId} locked={locked || !sourceInfo?.available}
-                onInstall={() => onInstall(mod.source, mod.projectId, mod.name)} onOpen={() => onOpen(mod.source, mod.projectId)}
+              <ModCard key={mod.projectId} mod={mod} target={result.target} installed={byProject.get(mod.projectId)}
+                busy={busy === mod.projectId} locked={locked}
+                onInstall={() => onInstall(mod.projectId, mod.name)} onOpen={() => onOpen(mod.projectId)}
                 onUpdate={onUpdate} />
             ))}
           </div>
@@ -420,7 +393,7 @@ function Installed({ state, profileId, locked, onChange, onError, onOpen }: {
   locked: boolean;
   onChange: (state: InstalledModsState) => void;
   onError: (message: string) => void;
-  onOpen: (source: ModSource, projectId: string) => void;
+  onOpen: (projectId: string) => void;
 }) {
   const t = useT();
   const [working, setWorking] = useState<string | null>(null);
@@ -478,7 +451,7 @@ function Installed({ state, profileId, locked, onChange, onError, onOpen }: {
                   <div className="installed__title">
                     <span className="pixel installed__name">{mod.name}</span>
                     <span className="installed__version">{mod.versionNumber}</span>
-                    <span className={`tag tag--${mod.source}`}>{mod.source === 'local' ? t('mods.local') : mod.source === 'modrinth' ? 'Modrinth' : 'CurseForge'}</span>
+                    <span className={`tag tag--${mod.source}`}>{mod.source === 'local' ? t('mods.local') : 'Modrinth'}</span>
                     {mod.update && <span className="tag tag--update">{t('mods.updateTo', { version: mod.update.versionNumber })}</span>}
                   </div>
                   <div className="installed__meta">
@@ -510,13 +483,13 @@ function Installed({ state, profileId, locked, onChange, onError, onOpen }: {
                       {t('mods.update')}
                     </button>
                   )}
-                  {mod.projectId && mod.source !== 'local' && (
+                  {mod.projectId && mod.source === 'modrinth' && (
                     <button className="btn btn--ghost btn--small btn--icon" title={t('mods.details')}
-                      onClick={() => onOpen(mod.source as ModSource, mod.projectId!)}>
+                      onClick={() => onOpen(mod.projectId!)}>
                       <Icon name="info" size={16} />
                     </button>
                   )}
-                  {mod.pageUrl && /^https:\/\/(modrinth\.com|(www\.)?curseforge\.com)\//.test(mod.pageUrl) && (
+                  {mod.pageUrl && /^https:\/\/modrinth\.com\//.test(mod.pageUrl) && (
                     <button className="btn btn--ghost btn--small btn--icon" title={t('mods.openPage')}
                       onClick={() => void invoke('shell:openExternal', mod.pageUrl!)}>
                       <Icon name="external" size={16} />
@@ -550,8 +523,7 @@ function Installed({ state, profileId, locked, onChange, onError, onOpen }: {
 
 // ------------------------------------------------------------------ dialogs
 
-function DetailsDialog({ source, projectId, profileId, installed, locked, busy, onClose, onInstall }: {
-  source: ModSource;
+function DetailsDialog({ projectId, profileId, installed, locked, busy, onClose, onInstall }: {
   projectId: string;
   profileId: string;
   installed: InstalledModsState | null;
@@ -565,9 +537,9 @@ function DetailsDialog({ source, projectId, profileId, installed, locked, busy, 
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     setDetails(null);
-    invoke('mods:details', source, projectId, profileId).then(setDetails).catch((e) => setError(errorMessage(e)));
-  }, [source, projectId, profileId]);
-  const current = installed?.mods.find((m) => m.source === source && m.projectId === projectId);
+    invoke('mods:details', projectId, profileId).then(setDetails).catch((e) => setError(errorMessage(e)));
+  }, [projectId, profileId]);
+  const current = installed?.mods.find((m) => m.source === 'modrinth' && m.projectId === projectId);
   const compatible = details?.versions.filter((v) => v.compatible) ?? [];
 
   return (
@@ -597,7 +569,7 @@ function DetailsDialog({ source, projectId, profileId, installed, locked, busy, 
               </div>
               <p className="mod-details__desc">{details.description}</p>
               <div className="mod-details__facts">
-                <div><span className="field__label">{t('mods.source')}</span><span>{source === 'modrinth' ? 'Modrinth' : 'CurseForge'}</span></div>
+                <div><span className="field__label">{t('mods.source')}</span><span>Modrinth</span></div>
                 <div><span className="field__label">{t('mods.versions')}</span><span>{details.gameVersions.slice(0, 8).join(', ')}{details.gameVersions.length > 8 ? '…' : ''}</span></div>
                 <div><span className="field__label">{t('mods.forProfile')}</span><span>{`Minecraft ${details.target.minecraftVersion} · ${details.target.loaderName}`}</span></div>
               </div>
@@ -684,11 +656,6 @@ function PlanDialog({ plan, name, profileName, busy, onCancel, onConfirm }: {
           {plan.warnings.map((w, i) => <div key={i} className="alert alert--warn">{issueText(t, w, plan.target)}</div>)}
         </div>
         <div className="dialog__actions">
-          {plan.manualDownloadUrl && (
-            <button className="btn btn--ghost" onClick={() => void invoke('shell:openExternal', plan.manualDownloadUrl!)}>
-              <Icon name="external" size={16} />{t('mods.openPage')}
-            </button>
-          )}
           <button className="btn" onClick={onCancel}>{blocked ? t('account.close') : t('mods.cancel')}</button>
           {!blocked && (
             <button className="btn btn--primary" disabled={busy} onClick={onConfirm}>

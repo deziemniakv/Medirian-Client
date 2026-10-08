@@ -18,6 +18,7 @@
     "EntityMixin",
     "EntityRenderDispatcherMixin",
     "EntityRendererMixin",
+    "FogRendererMixin",
     "FramerateLimitTrackerMixin",
     "GameRendererMixin",
     "GuiMixin",
@@ -27,17 +28,19 @@
     "KeyboardHandlerMixin",
     "LevelMixin",
     "LevelRendererMixin",
-    "LivingEntityRendererInvoker",
     "LightTextureMixin",
+    "LivingEntityRendererInvoker",
     "MinecraftMixin",
     "MouseHandlerMixin",
     "MultiPlayerGameModeMixin",
     "OverlayTextureAccessor",
+    "ParticleAccessor",
     "ParticleEngineMixin",
     "PlayerModelMixin",
     "ScreenEffectRendererMixin",
     "ScreenshotMixin",
-    "ServerboundCustomPayloadPacketMixin"
+    "ServerboundCustomPayloadPacketMixin",
+    "TextureAtlasMixin"
   ],
   "injectors": {
     "defaultRequire": 1

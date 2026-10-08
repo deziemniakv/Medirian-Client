@@ -91,6 +91,31 @@ export async function runDevAutomation(
   await wait(600);
   await capture('dialog-account');
   await run('window.__medirianDev.account(false)');
+  // profile codes: share the selected profile, then look the code up in the import dialog
+  await run("window.__medirianDev.navigate('profiles')");
+  await wait(700);
+  await run(`[...document.querySelectorAll('.profile-editor__actions button')].find((b) => b.querySelector('svg') && b.textContent.match(/Share|Udostępnij/))?.click()`);
+  await wait(2500);
+  await capture('dialog-share');
+  const code = await run(`document.querySelector('.share__code')?.textContent ?? ''`);
+  await run(`document.querySelector('.share [aria-label]')?.click()`);
+  await wait(400);
+  await run(`[...document.querySelectorAll('.window__actions button')].find((b) => b.textContent.match(/Import/))?.click()`);
+  await wait(500);
+  if (code) {
+    await run(`(() => {
+      const input = document.querySelector('.share__input input');
+      const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+      set.call(input, ${JSON.stringify(String(code).toLowerCase())});
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    })()`);
+    await wait(2000);
+  }
+  await capture('dialog-import');
+  await run(`document.querySelector('.share [aria-label]')?.click()`);
+  await run("window.__medirianDev.navigate('home')");
+  await wait(400);
   // winter snow without touching the saved settings
   await run("document.documentElement.dataset.snow = 'on'");
   await wait(900);

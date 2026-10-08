@@ -1,7 +1,8 @@
 # Wydawanie Medirian
 
 Wszystko, co da się zautomatyzować, robią workflowy w `.github/workflows/`. Ten dokument opisuje,
-co robią i co musi raz skonfigurować właściciel repozytorium.
+co robią. Konta, klucze, certyfikaty i serwer, które musi raz skonfigurować właściciel, opisuje krok po kroku
+**[OWNER_SETUP.md](OWNER_SETUP.md)**.
 
 ## CI (`ci.yml`) — każdy push i pull request
 
@@ -35,18 +36,23 @@ a nowe wzorce zatwierdzić razem ze zmianą. Różnice zapisują się w `run/vis
 
 ## Wydanie (`release.yml`) — tag `v<wersja>`
 
-1. Podnieś wersję: `VERSION`, `launcher/package.json` (+ `package-lock.json`), sekcja w `CHANGELOG.md`
-   (`## 0.1.5 — data — tytuł`; test w `scripts/test` pilnuje, że istnieje).
-2. `git tag v0.1.5 && git push origin v0.1.5`.
+1. Podnieś wersję: `VERSION`, `launcher/package.json` (+ `package-lock.json`), `backend/package.json`, sekcja w `CHANGELOG.md`
+   (`## 0.4.1 — data — tytuł`; test w `scripts/test` pilnuje, że istnieje).
+2. `git tag v0.4.1 && git push origin v0.4.1`.
 
 Workflow:
+
+- najpierw sprawdza konfigurację właściciela (`node scripts/check-env.mjs --release` na zmiennych i sekretach
+  repozytorium): logowanie Microsoft, usługi Medirian (HTTPS), kontakt dla Modrinth i podpis Windows muszą być ustawione,
+  inaczej wydanie się nie zbuduje (`MEDIRIAN_ALLOW_UNSIGNED=1` pozwala na niepodpisane wydanie testowe),
 
 - buduje jary klientów i `release-manifest.json` z adresami
   `https://github.com/<repo>/releases/download/v0.1.5/…` (`build-clients.mjs --base-url`),
 - buduje launcher na Windows (`MedirianClientSetup.exe`, NSIS), macOS (dmg + zip) i Linux (AppImage) z wbudowanym domyślnym
   manifestem `https://github.com/<repo>/releases/latest/download/release-manifest.json`
-  (`MAIN_VITE_MANIFEST_URL`), kluczem CurseForge z sekretu `CURSEFORGE_API_KEY` i z kanałem aktualizacji launchera
-  na GitHub Releases (`app-update.yml`),
+  (`MEDIRIAN_MANIFEST_URL`), publiczną konfiguracją z Variables (`MEDIRIAN_MSA_CLIENT_ID`, `MEDIRIAN_DISCORD_APP_ID`,
+  `MEDIRIAN_SERVICES_URL`, `MEDIRIAN_CONTACT`), podpisem Windows (`WIN_CSC_*` albo Azure Artifact Signing) i macOS
+  (`CSC_*`, `APPLE_*`) oraz z kanałem aktualizacji launchera na GitHub Releases (`app-update.yml`),
 - publikuje wydanie z notatkami z `CHANGELOG.md` i wszystkimi plikami (jary, manifest, instalatory,
   `latest*.yml` + `.blockmap` dla `electron-updater`).
 
@@ -90,15 +96,18 @@ z API GitHuba wersję i rozmiar najnowszego instalatora oraz pliki dla macOS i L
 
 ## Do zrobienia przez właściciela (jednorazowo)
 
-| Co | Gdzie | Skutek bez tego |
-|---|---|---|
-| Zmienna `MSA_CLIENT_ID` | Settings → Secrets and variables → Actions → Variables | Logowanie Microsoft wyłączone w wydanych buildach (wymaga rejestracji aplikacji Azure + zgody Mojang) |
-| Zmienna `DISCORD_APP_ID` | jw. | Discord Rich Presence wymaga ręcznego wpisania ID w ustawieniach |
-| Zmienna `SERVICES_URL` (+ wdrożony `backend/`, docs/SERVICES.md) | jw. | Peleryny widzi tylko sam gracz, brak profili w chmurze |
-| Sekret `CURSEFORGE_API_KEY` (klucz z [console.curseforge.com](https://console.curseforge.com/) → API keys) | Secrets | Zakładka Mods działa tylko z Modrinth, dopóki użytkownik nie wpisze własnego klucza w *Ustawienia → Mody* |
-| GitHub Pages: *Settings → Pages → Source: GitHub Actions* | ustawienia repozytorium | Strona pobierania `website/` nie jest publikowana |
-| Sekrety `CSC_LINK`, `CSC_KEY_PASSWORD` | Secrets | Instalatory niepodpisane (ostrzeżenie SmartScreen, blokady Smart App Control w Windows 11; na macOS auto-update **wymaga** podpisu) |
-| Sekrety `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID` | Secrets | Brak notaryzacji macOS (Gatekeeper blokuje pierwsze uruchomienie) |
+Wszystkie wartości, skąd je wziąć, gdzie wkleić i jak sprawdzić: **[OWNER_SETUP.md](OWNER_SETUP.md)**
+(tabela w sekcji 1, lista kontrolna na końcu). W skrócie:
 
-`CSC_LINK` to certyfikat `.p12`/`.pfx` zakodowany base64 (Windows: Authenticode, macOS: Developer ID
-Application). Certyfikaty kupuje i przechowuje właściciel — nie trafiają do repozytorium.
+| Co | Gdzie (GitHub) | Skutek bez tego |
+|---|---|---|
+| `MEDIRIAN_MSA_CLIENT_ID` (Azure + zgoda Mojang) | Variables | wydanie zablokowane — bez logowania Microsoft launcher jest bezużyteczny |
+| `MEDIRIAN_SERVICES_URL` (+ wdrożony `backend/` pod HTTPS) | Variables | wydanie zablokowane |
+| `MEDIRIAN_CONTACT` | Variables | wydanie zablokowane (wymóg API Modrinth) |
+| `MEDIRIAN_DISCORD_APP_ID` | Variables | brak Discord Rich Presence |
+| `WIN_CSC_LINK` + `WIN_CSC_KEY_PASSWORD` **albo** `AZURE_SIGNING_*` (Variables) + `AZURE_TENANT_ID` / `AZURE_CLIENT_ID` / `AZURE_CLIENT_SECRET` | Secrets | wydanie zablokowane (Smart App Control blokuje niepodpisane pliki) |
+| `CSC_LINK`, `CSC_KEY_PASSWORD`, `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID` | Secrets | build macOS niepodpisany, bez notaryzacji i auto-aktualizacji |
+| *Settings → Pages → Source: GitHub Actions* | ustawienia repozytorium | strona pobierania `website/` nie jest publikowana |
+| *Settings → Actions → General → Workflow permissions: Read and write* | ustawienia repozytorium | workflow nie utworzy wydania |
+
+Certyfikaty kupuje i przechowuje właściciel — nie trafiają do repozytorium (`*.pfx`, `*.p12`, `*.pem`, `*.key` są w `.gitignore`).

@@ -14,13 +14,16 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** Health Tags: health appended to the name tag of living entities. */
+/** Name tag distance (Settings → Advanced → Visibility) and Health Tags: health appended to name tags. */
 @Mixin(EntityRenderer.class)
 public abstract class EntityRendererMixin {
 
     @Inject(method = "extractRenderState(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/client/renderer/entity/state/EntityRenderState;F)V",
             at = @At("RETURN"))
     private void medirian$healthTag(Entity entity, EntityRenderState state, float partialTick, CallbackInfo ci) {
+        if (state.nameTag != null && !Hooks.nameTagVisible(state.distanceToCameraSq)) {
+            state.nameTag = null;
+        }
         if (state.nameTag == null || !(entity instanceof LivingEntity living)) {
             return;
         }

@@ -68,6 +68,7 @@ public final class Hooks {
     /** Called by {@link Medirian} during boot. */
     public static void bind(Medirian instance) {
         medirian = instance;
+        dev.medirian.render.Visibility.bind(instance.profileSettings());
         zoom = instance.modules().get(ZoomModule.class);
         freelook = instance.modules().get(FreelookModule.class);
         fullbright = instance.modules().get(FullbrightModule.class);
@@ -288,22 +289,72 @@ public final class Hooks {
      * (beacon beams, structure outlines) must not be culled by the adapter.
      */
     public static boolean shouldRenderBlockEntity(CullState state, double camX, double camY, double camZ, int x, int y, int z) {
+        double dx = x + 0.5 - camX;
+        double dy = y + 0.5 - camY;
+        double dz = z + 0.5 - camZ;
+        if (!dev.medirian.render.Visibility.blockEntity(dx * dx + dy * dy + dz * dz)) {
+            return false;
+        }
         return culling == null || culling.shouldRenderBlockEntity(medirian.platform().game(), state, camX, camY, camZ, x, y, z);
     }
 
-    /** Whether a new particle may be spawned given {@code currentCount} live particles. */
-    public static boolean allowParticle(int currentCount) {
+    /**
+     * Whether a new particle at ({@code x}, {@code y}, {@code z}) may be spawned given
+     * {@code currentCount} live particles: particle distance, then Particle Control.
+     */
+    public static boolean allowParticle(int currentCount, double x, double y, double z) {
+        if (medirian != null && medirian.platform().game().inWorld()) {
+            CameraView camera = medirian.platform().game().camera();
+            double dx = x - camera.x();
+            double dy = y - camera.y();
+            double dz = z - camera.z();
+            if (!dev.medirian.render.Visibility.particle(dx * dx + dy * dy + dz * dz)) {
+                return false;
+            }
+        }
         return particles == null || particles.allow(currentCount);
+    }
+
+    /** Whether a name tag {@code distanceSq} blocks² from the camera is shown. */
+    public static boolean nameTagVisible(double distanceSq) {
+        return dev.medirian.render.Visibility.nameTag(distanceSq);
+    }
+
+    /** Whether a player's cape, hat and wings are drawn at {@code distanceSq} blocks² from the camera. */
+    public static boolean cosmeticsVisible(double distanceSq) {
+        return dev.medirian.render.Visibility.cosmetics(distanceSq);
+    }
+
+    /** Distance fog: 0 = Minecraft's, 1 = starts later, 2 = off (environmental fog is never changed). */
+    public static int fogMode() {
+        return medirian == null ? 0 : medirian.profileSettings().fog.get().ordinal();
+    }
+
+    /** How far {@link #fogMode()} pushes the render-distance fog out (1 = vanilla). */
+    public static float fogScale() {
+        int mode = fogMode();
+        return mode == 0 ? 1f : mode == 1 ? 1.6f : 1000f;
+    }
+
+    /** Whether animated textures (water, lava, fire, portals and so on) advance this tick. */
+    public static boolean animateTextures() {
+        return medirian == null || medirian.profileSettings().animatedTextures.on();
     }
 
     /**
      * Whether an entity that passed vanilla's render checks (frustum) should be rendered: distance
      * and occlusion culling. {@code state} is the entity itself (adapters mix {@link CullState} into it).
      */
-    public static boolean shouldRenderEntity(CullState state, boolean isPlayer, double camX, double camY, double camZ,
+    public static boolean shouldRenderEntity(CullState state, int kind, double camX, double camY, double camZ,
                                              double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
-        return culling == null || culling.shouldRender(medirian.platform().game(), state, isPlayer, camX, camY, camZ,
-                minX, minY, minZ, maxX, maxY, maxZ);
+        double dx = (minX + maxX) * 0.5 - camX;
+        double dy = (minY + maxY) * 0.5 - camY;
+        double dz = (minZ + maxZ) * 0.5 - camZ;
+        if (!dev.medirian.render.Visibility.entity(kind, dx * dx + dy * dy + dz * dz)) {
+            return false;
+        }
+        return culling == null || culling.shouldRender(medirian.platform().game(), state, kind == dev.medirian.render.Visibility.PLAYER,
+                camX, camY, camZ, minX, minY, minZ, maxX, maxY, maxZ);
     }
 
     /** Frame limit to apply this frame. */

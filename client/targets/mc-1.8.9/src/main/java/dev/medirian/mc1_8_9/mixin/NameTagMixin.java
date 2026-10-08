@@ -12,8 +12,9 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Health Tags for 1.8.9: {@code method_10256} (MCP renderName) builds the label string once and
- * draws it in both the sneaking and the normal path, so appending to that string covers both.
+ * Name tag distance (Settings → Advanced → Visibility) and Health Tags for 1.8.9:
+ * {@code method_10256} (MCP renderName) builds the label string once and draws it in both the
+ * sneaking and the normal path, so appending to that string covers both.
  */
 @Mixin(LivingEntityRenderer.class)
 public abstract class NameTagMixin {
@@ -21,8 +22,13 @@ public abstract class NameTagMixin {
     /** The entity whose label is being built (rendering is single-threaded). */
     @Unique private LivingEntity medirian$labelEntity;
 
-    @Inject(method = "method_10256", at = @At("HEAD"))
+    @Inject(method = "method_10256", at = @At("HEAD"), cancellable = true)
     private void medirian$labelStart(LivingEntity entity, double x, double y, double z, CallbackInfo ci) {
+        // x, y, z: the entity relative to the camera
+        if (!dev.medirian.platform.Hooks.nameTagVisible(x * x + y * y + z * z)) {
+            ci.cancel();
+            return;
+        }
         medirian$labelEntity = entity;
     }
 

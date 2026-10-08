@@ -1,0 +1,14 @@
+# HTTPS in front of Medirian Services. Caddy obtains the certificate for the domain automatically
+# (the domain's A/AAAA record must point at this server and ports 80 and 443 must be open) and
+# answers plain HTTP only with a redirect to HTTPS.
+{
+	email {$MEDIRIAN_SERVICES_ACME_EMAIL}
+}
+
+{$MEDIRIAN_SERVICES_DOMAIN} {
+	encode zstd gzip
+	# Caddy sets X-Forwarded-For (the player's address, used for rate limits) and
+	# X-Forwarded-Proto: https; the service refuses anything that did not come through here
+	reverse_proxy medirian-services:8080
+	header -Server
+}

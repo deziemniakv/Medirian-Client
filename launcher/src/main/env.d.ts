@@ -3,19 +3,8 @@ declare module '*?raw' {
   export default content;
 }
 
-interface ImportMetaEnv {
-  /** Azure application id for Microsoft login, injected at build time (MAIN_VITE_MSA_CLIENT_ID). */
-  readonly MAIN_VITE_MSA_CLIENT_ID?: string;
-  /** Discord application id for Rich Presence, injected at build time (MAIN_VITE_DISCORD_APP_ID). */
-  readonly MAIN_VITE_DISCORD_APP_ID?: string;
-  /** Default release manifest URL of the stable channel, injected at build time (MAIN_VITE_MANIFEST_URL). */
-  readonly MAIN_VITE_MANIFEST_URL?: string;
-  /** Medirian services URL passed to the client, injected at build time (MAIN_VITE_SERVICES_URL). */
-  readonly MAIN_VITE_SERVICES_URL?: string;
-  /** CurseForge API key (CurseForge for Studios), injected at build time (MAIN_VITE_CURSEFORGE_API_KEY). */
-  readonly MAIN_VITE_CURSEFORGE_API_KEY?: string;
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv;
-}
+/** The owner's public configuration, embedded at build time from `.env` (see core/config.ts). */
+declare const __MEDIRIAN_CONFIG__: Partial<Record<
+  'MEDIRIAN_MSA_CLIENT_ID' | 'MEDIRIAN_DISCORD_APP_ID' | 'MEDIRIAN_SERVICES_URL' | 'MEDIRIAN_MANIFEST_URL' | 'MEDIRIAN_CONTACT',
+  string
+>>;

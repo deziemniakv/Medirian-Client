@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 
-/** Particle Control: drops new particles according to the multiplier and cap. */
+/** Particle Control and Advanced → Visibility: drops new particles by distance, multiplier and cap. */
 @Mixin(ParticleManager.class)
 public abstract class ParticleManagerMixin {
 
@@ -26,7 +26,7 @@ public abstract class ParticleManagerMixin {
                 count += list.size();
             }
         }
-        if (!Hooks.allowParticle(count)) {
+        if (!Hooks.allowParticle(count, particle.x, particle.y, particle.z)) {
             ci.cancel();
         }
     }

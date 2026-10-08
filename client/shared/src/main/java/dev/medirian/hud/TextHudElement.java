@@ -13,9 +13,7 @@ import dev.medirian.setting.BooleanSetting;
  */
 public abstract class TextHudElement extends HudElement {
 
-    private static final int PAD_X = 5;
-    private static final int PAD_Y = 4;
-    private static final int LINE_GAP = 2;
+    private static final int LINE_GAP = 1;
     private static final int MAX_LINES = 8;
 
     /** Reusable line buffer passed to {@link #collect}. */
@@ -95,14 +93,16 @@ public abstract class TextHudElement extends HudElement {
             return;
         }
         style.drawBackground(g, width, textHeight);
+        int padX = HudSurface.padding() + 1;
+        int padY = HudSurface.padding() - 1;
         int fontHeight = g.fontHeight();
         boolean shadow = style.shadow.on();
         int labelColor = style.labelColor.argb();
         int textColor = style.textColor.argb();
         float align = anchor().fx;
         for (int i = 0; i < lines.count; i++) {
-            float x = PAD_X + (width - PAD_X * 2 - lineWidths[i]) * align;
-            float y = PAD_Y + i * (fontHeight + LINE_GAP);
+            float x = padX + (width - padX * 2 - lineWidths[i]) * align;
+            float y = padY + i * (fontHeight + LINE_GAP);
             if (prefixes[i] != null) {
                 g.text(prefixes[i], x, y, labelColor, shadow);
             }
@@ -134,8 +134,10 @@ public abstract class TextHudElement extends HudElement {
             maxWidth = Math.max(maxWidth, lineWidths[i]);
         }
         int fontHeight = g.fontHeight();
-        width = maxWidth + PAD_X * 2;
-        textHeight = lines.count == 0 ? 0 : lines.count * fontHeight + (lines.count - 1) * LINE_GAP + PAD_Y * 2 - 1;
+        int padX = HudSurface.padding() + 1;
+        int padY = HudSurface.padding() - 1;
+        width = maxWidth + padX * 2;
+        textHeight = lines.count == 0 ? 0 : lines.count * fontHeight + (lines.count - 1) * LINE_GAP + padY * 2 - 1;
         int extra = extraHeight();
         height = extra > 0 ? textHeight + 2 + extra : textHeight;
     }

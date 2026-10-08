@@ -1,164 +1,104 @@
-/* Home: greeting, the notice board and the launch bar. */
+/*
+ * Home: the player on the left, the launch card on the right, one line of news at the bottom.
+ * Hierarchy: profile + Play (the card) → the player and their account → everything else.
+ */
 .home {
   position: relative;
   flex: 1;
   min-height: 0;
   display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 400px);
   grid-template-rows: minmax(0, 1fr) auto;
-  gap: 16px;
-  padding: 8px 22px 22px;
+  column-gap: clamp(16px, 4vw, 56px);
+  padding: 8px clamp(18px, 3vw, 40px) 14px;
 }
 
-.home__top {
+/* ------------------------------------------------------------------ the player */
+
+.player {
   min-height: 0;
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 24px;
-}
-
-.greeting {
-  max-width: 520px;
-  padding-top: 18px;
-}
-
-.greeting__title {
-  margin: 0;
-  font-size: 32px;
-  line-height: 38px;
-  font-weight: 400;
-  color: var(--text);
-  text-shadow: var(--px) var(--px) 0 var(--ink), 4px 4px 0 rgba(7, 4, 12, 0.4);
-}
-
-.greeting__line {
-  margin: 10px 0 0;
-  max-width: 420px;
-  font-size: 15px;
-  color: var(--text-dim);
-  text-shadow: 0 1px 2px rgba(7, 4, 12, 0.9);
-}
-
-/* ------------------------------------------------------------------ notice board */
-
-.board {
-  width: 330px;
-  flex: none;
-  margin-top: 6px;
-}
-
-/* A wooden frame around a dark sheet. */
-.board__frame {
-  padding: 8px;
-  background: var(--wood);
-  border: var(--px) solid var(--ink);
-  box-shadow: inset var(--px) var(--px) 0 var(--wood-light), inset calc(-1 * var(--px)) calc(-1 * var(--px)) 0 var(--wood-dark);
-  clip-path: var(--cut);
-}
-
-.board__sheet {
-  position: relative;
-  padding: 14px 16px 10px;
-  background: var(--panel);
-  border: var(--px) solid var(--ink);
-  box-shadow: inset var(--px) var(--px) 0 var(--panel-light);
-}
-
-.board__pin {
-  position: absolute;
-  top: -8px;
-  left: calc(50% - 6px);
-  width: 12px;
-  height: 12px;
-  background: var(--pumpkin);
-  border: var(--px) solid var(--ink);
-  box-shadow: inset var(--px) var(--px) 0 var(--ember);
-}
-
-.board__head {
-  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  justify-content: center;
+  gap: 6px;
 }
 
-.board__label {
-  color: var(--pumpkin-light);
-  text-transform: uppercase;
-}
-
-.board__title {
-  margin: 10px 0 8px;
-  font-size: 16px;
-  line-height: 20px;
-  font-weight: 400;
-  color: var(--text);
-}
-
-.board__list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
+.player__figure {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 7px;
-}
-
-.board__list li {
-  position: relative;
-  padding-left: 14px;
-  font-size: 13px;
-  line-height: 1.4;
-  color: var(--text-dim);
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.board__list li::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 6px;
-  width: 6px;
-  height: 6px;
-  background: var(--pumpkin);
-  box-shadow: inset -2px -2px 0 var(--pumpkin-dark);
-}
-
-.board__more {
-  display: inline-flex;
   align-items: center;
-  gap: 4px;
-  margin-top: 10px;
-  padding: 4px 0;
-  font-family: var(--font-pixel);
-  font-size: 16px;
-  -webkit-font-smoothing: none;
-  color: var(--accent-light);
+  padding: 0;
   background: none;
   border: none;
   cursor: pointer;
 }
 
-.board__more:hover {
-  color: var(--pumpkin-light);
+.player__figure .skin3d {
+  filter: drop-shadow(6px 6px 0 rgba(7, 4, 12, 0.45));
 }
 
-/* ------------------------------------------------------------------ launch bar */
+/* A stone slab the player stands on, lit warm from below by the pumpkins. */
+.player__plinth {
+  width: 190px;
+  height: 22px;
+  margin-top: -22px;
+  background: #342e3f;
+  border: var(--px) solid var(--ink);
+  box-shadow: inset 0 var(--px) 0 #4a4256, inset 0 calc(-1 * var(--px)) 0 #211c2a, 0 10px 28px rgba(224, 122, 47, 0.2);
+  clip-path: var(--cut);
+}
 
-.launchbar-wrap {
+.player__figure:hover .player__plinth,
+.player__figure:focus-visible .player__plinth {
+  background: #3d3549;
+}
+
+.player__plate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+  text-shadow: 0 2px 4px rgba(7, 4, 12, 0.9);
+}
+
+.player__greeting {
+  font-size: 14px;
+  color: var(--text-dim);
+}
+
+.player__name {
+  max-width: 420px;
+  font-size: 30px;
+  line-height: 34px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: var(--px) var(--px) 0 var(--ink), 4px 4px 0 rgba(7, 4, 12, 0.4);
+}
+
+.player__account {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.player__signin {
+  margin-top: 4px;
+}
+
+/* ------------------------------------------------------------------ the launch card */
+
+.launch-card {
+  align-self: center;
   position: relative;
   z-index: 4;
-}
-
-.launchbar {
-  display: grid;
-  grid-template-columns: minmax(250px, 300px) minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 18px;
-  padding: 12px 14px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px 18px 14px;
 }
 
 .slot {
@@ -177,35 +117,9 @@
 .picker {
   position: relative;
   min-width: 0;
-}
-
-.picker__current {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 4px 10px 4px 4px;
-  text-align: left;
-  background: transparent;
-  border: var(--px) solid transparent;
-  cursor: pointer;
-}
-
-.picker__current:hover:not(:disabled) {
-  background: var(--surface);
-  border-color: var(--ink);
-}
-
-.picker__current:disabled {
-  cursor: default;
-}
-
-.picker__text {
-  min-width: 0;
-  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 6px;
 }
 
 .picker__label {
@@ -216,7 +130,48 @@
   color: var(--text-muted);
 }
 
+.picker__current {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 6px 12px 6px 6px;
+  text-align: left;
+  background: var(--inset);
+  border: var(--px) solid var(--ink);
+  box-shadow: inset var(--px) var(--px) 0 rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+
+.picker__current:hover:not(:disabled),
+.picker__current:focus-visible {
+  background: var(--surface);
+}
+
+.picker__current:disabled {
+  cursor: default;
+}
+
 .picker__name {
+  flex: 1;
+  min-width: 0;
+  font-size: 22px;
+  line-height: 26px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+}
+
+.picker__text {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.picker__option-name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -242,10 +197,11 @@
 
 .picker__menu {
   position: absolute;
-  left: -14px;
-  bottom: calc(100% + 18px);
-  width: 330px;
-  max-height: 340px;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 8;
+  max-height: 320px;
   overflow: auto;
   padding: 6px;
   display: flex;
@@ -265,7 +221,8 @@
   cursor: pointer;
 }
 
-.picker__option:hover {
+.picker__option:hover,
+.picker__option:focus-visible {
   background: var(--surface);
 }
 
@@ -294,23 +251,73 @@
   cursor: pointer;
 }
 
-.picker__manage:hover {
+.picker__manage:hover,
+.picker__manage:focus-visible {
   color: var(--pumpkin-light);
 }
 
-.launchbar__status {
+/* Four facts about the profile in a quiet 2×2 grid. */
+.launch-card__facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.launch-card__facts li {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
   min-width: 0;
+  font-size: 12px;
+}
+
+.launch-card__facts b {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.launch-card__status {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  padding-top: 14px;
+  border-top: var(--px) solid var(--ink);
+  box-shadow: inset 0 var(--px) 0 var(--panel-light);
 }
 
-.launchbar__headline {
+.launch-card__headline {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
   min-width: 0;
   color: var(--text);
+}
+
+.launch-card__detail {
+  font-size: 12.5px;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.launch-card__detail--error {
+  color: #f08c86;
+  white-space: normal;
+}
+
+.launch-card__tools {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
 }
 
 .live-dot {
@@ -330,19 +337,6 @@
   font-family: var(--font);
   font-size: 12px;
   -webkit-font-smoothing: antialiased;
-}
-
-.launchbar__detail {
-  font-size: 12.5px;
-  color: var(--text-dim);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.launchbar__detail--error {
-  color: #f08c86;
-  white-space: normal;
 }
 
 /* Progress like Minecraft's experience bar: segmented, pumpkin fill. */
@@ -366,24 +360,64 @@
   background: repeating-linear-gradient(to right, transparent 0 calc(10% - 2px), rgba(7, 4, 12, 0.7) calc(10% - 2px) 10%);
 }
 
-.launchbar__actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
 .btn--pressed {
   --fill: var(--surface-light);
   box-shadow: inset var(--px) calc(2 * var(--px)) 0 var(--surface-dark);
 }
 
+/* The one big button in the launcher. */
 .play {
-  min-width: 210px;
-  height: 58px;
+  width: 100%;
+  height: 64px;
   padding: 0 26px 4px;
-  font-size: 32px;
-  line-height: 32px;
+  font-size: 34px;
+  line-height: 34px;
   gap: 14px;
   box-shadow: inset var(--px) var(--px) 0 var(--light), inset calc(-1 * var(--px)) calc(-3 * var(--px)) 0 var(--dark);
 }
 
+/* ------------------------------------------------------------------ news */
+
+.news-line {
+  grid-column: 1 / -1;
+  justify-self: start;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: var(--text-dim);
+  background: rgba(18, 11, 30, 0.72);
+  border: var(--px) solid var(--ink);
+  clip-path: var(--cut);
+  cursor: pointer;
+}
+
+.news-line:hover,
+.news-line:focus-visible {
+  color: var(--text);
+  background: rgba(27, 18, 40, 0.92);
+}
+
+.news-line__title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.news-line__more {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+  color: var(--accent-light);
+}
+
+/* narrow windows: the player gets smaller, the card keeps its size */
+@media (max-width: 1119px), (max-height: 700px) {
+  .player .skin3d {
+    zoom: 0.8;
+  }
+}

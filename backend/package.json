@@ -1,14 +1,14 @@
 {
   "name": "medirian-services",
-  "version": "0.3.0",
-  "description": "Medirian services: accounts via the Mojang session handshake, cosmetics and cloud profiles",
+  "version": "0.4.0",
+  "description": "Medirian services: accounts via the Mojang session handshake, cosmetics, cloud profiles and profile share codes",
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=22"
+    "node": ">=22.9"
   },
   "scripts": {
-    "start": "node src/index.mjs",
+    "start": "node --env-file-if-exists=../.env src/index.mjs",
     "test": "node --test test/"
   }
 }

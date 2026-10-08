@@ -2,6 +2,7 @@ package dev.medirian.module.impl.combat;
 
 import dev.medirian.core.Medirian;
 import dev.medirian.event.Events;
+import dev.medirian.hud.HudSurface;
 import dev.medirian.hud.Anchor;
 import dev.medirian.hud.HudElement;
 import dev.medirian.hud.HudStyle;
@@ -85,7 +86,7 @@ public final class TargetHudModule extends Module {
             int head = showHead.on() ? 30 : 0;
             width = 132;
             height = 40;
-            UiDraw.roundRect(g, 0, 0, width, height, 4, background.argb());
+            HudSurface.panel(g, 0, 0, width, height, background.argb());
             if (entity == null) {
                 g.text(I18n.tr("hud.targethud.none", "No target"), 6, 16, HudStyle.DEFAULT_TEXT, true);
                 return;

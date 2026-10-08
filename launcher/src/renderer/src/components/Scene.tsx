@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import bat from '../../assets/bat.png';
 import far from '../../assets/scene/far.png';
 import fog from '../../assets/scene/fog.png';
 import forest from '../../assets/scene/forest.png';
@@ -17,8 +16,8 @@ const FOG_Y = 186;
 /**
  * The Medirian night behind the launcher: the same pixel-art scene as the game's main menu
  * (scripts/generate-pixel-art.mjs). Drawn at whole screen pixels per art pixel whenever that
- * covers the window closely, anchored to the bottom. Fog drifts, the lights flicker, a bat flies
- * by now and then and the layers follow the mouse a little; with motion off it is a still image.
+ * covers the window closely, anchored to the bottom. It is the backdrop, not the show: only the fog
+ * drifts slowly and the windows glow; with motion off it is a still image.
  */
 export function Scene({ dim, home, motion }: { dim: boolean; home: boolean; motion: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -40,46 +39,21 @@ export function Scene({ dim, home, motion }: { dim: boolean; home: boolean; moti
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => {
-    const el = ref.current;
-    if (!el || !motion) {
-      el?.style.setProperty('--mx', '0');
-      el?.style.setProperty('--my', '0');
-      return;
-    }
-    let frame = 0;
-    const move = (e: MouseEvent) => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        el.style.setProperty('--mx', (e.clientX / window.innerWidth - 0.5).toFixed(3));
-        el.style.setProperty('--my', (e.clientY / window.innerHeight - 0.5).toFixed(3));
-      });
-    };
-    window.addEventListener('mousemove', move);
-    return () => {
-      window.removeEventListener('mousemove', move);
-      cancelAnimationFrame(frame);
-    };
-  }, [motion]);
-
   const style = { '--s': scale, '--sw': `${W * scale}px`, '--sh': `${H * scale}px`, '--snow': `url(${snow})` } as CSSProperties;
-  const layer = (src: string, depth: number, className = '') => (
-    <div className={`scene__layer ${className}`} style={{ backgroundImage: `url(${src})`, '--depth': depth } as CSSProperties} />
+  const layer = (src: string, className = '') => (
+    <div className={`scene__layer ${className}`} style={{ backgroundImage: `url(${src})` }} />
   );
 
   return (
-    <div ref={ref} className={`scene${dim ? ' scene--dim' : ''}${home ? ' scene--home' : ''}`} style={style} aria-hidden="true">
+    <div ref={ref} className={`scene${dim ? ' scene--dim' : ''}${home ? ' scene--home' : ''}${motion ? '' : ' scene--still'}`} style={style} aria-hidden="true">
       <div className="scene__underground" />
       <div className="scene__frame">
-        {layer(sky, 1)}
-        {layer(far, 2)}
-        <div className="scene__bat">
-          <div className="scene__bat-wings" style={{ backgroundImage: `url(${bat})` }} />
-        </div>
-        {layer(forest, 3)}
+        {layer(sky)}
+        {layer(far)}
+        {layer(forest)}
         <div className="scene__fog" style={{ backgroundImage: `url(${fog})`, top: `calc(${FOG_Y}px * var(--s))`, height: `calc(${FOG_H}px * var(--s))` }} />
-        {layer(ground, 5)}
-        {layer(glow, 5, 'scene__glow')}
+        {layer(ground)}
+        {layer(glow, 'scene__glow')}
       </div>
       <div className="scene__snow scene__snow--far" />
       <div className="scene__snow scene__snow--near" />

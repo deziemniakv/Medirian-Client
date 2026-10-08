@@ -2,6 +2,18 @@
 
 All notable changes to Medirian Client. The launcher shows the newest entries on its home screen.
 
+## 0.4.0 — 2026-10-08 — Glass, Codes & a Calmer Launcher
+
+- The HUD in Liquid Glass: smaller, separate widgets on translucent glass — a soft blur of the world behind them, a faint light edge and rounded corners. Settings → HUD → Look: style (Glass or Classic), glass opacity, blur, border, corner radius and padding. Every widget still moves and scales on its own in the HUD editor. The blur is made once per frame, only while a glass widget is on screen.
+- Settings → Advanced in the game, in five sections: Graphics, Rendering, Visibility, Performance and Interface. Minecraft's own options (render distance, graphics, clouds, particles, mipmaps, VSync, field of view, GUI scale, chat and more) change with exactly the same effects as in Minecraft's option screens, and only the options your Minecraft version has are shown. Every option says what it does.
+- Visibility distances: players, entities, dropped items, block entities, particles, name tags, waypoints and cosmetics can each stop being drawn beyond a distance you choose (default: no limit).
+- Distance fog can start later or be switched off (fog under water, in lava and from blindness stays), and animated textures can be frozen to save a little CPU and GPU time.
+- Share a profile with a code like MDN-7K4X-92QP-L8F2: Profiles → Share makes the code, Import code shows what the profile contains before you add it as a new profile or replace one of yours. A code never carries your account, tokens, passwords or Java settings, and you can delete it any time.
+- A calmer launcher: your selected profile and a big Play button come first, your skin stands next to them as a large 3D figure, and the key facts (version, loader, memory, mods) are at a glance. The account window shows your skin large.
+- Your skin in the game's main menu is large now: you stand on the path in front of the cabin with your name above you. Click yourself to open the cosmetics.
+- Mods come from Modrinth only. CurseForge is gone; mods installed from it in 0.3.0 stay in your profiles as local files.
+- The launcher reaches Medirian services only over HTTPS, and the developer fields in its settings are gone: an official build carries its own configuration (About shows what this build has).
+
 ## 0.3.0 — 2026-10-06 — Mods, Skins & a Real Home on Windows
 
 - Mods: a new Mods tab in the launcher. Search Modrinth and CurseForge, see each mod's icon, author, description, downloads and category, and install it into the profile you pick — with the mods it needs. Medirian checks the Minecraft version and loader first and tells you plainly when a mod does not fit (for example "This mod is not compatible with Minecraft 1.8.9").

@@ -1,15 +1,15 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
-import { mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, before, test } from 'node:test';
-import type { LaunchProfile, ModSearchQuery, ModSource, ModSummary, ModTargetInfo } from '../src/common/types.ts';
+import type { LaunchProfile, ModSearchQuery, ModSummary, ModTargetInfo } from '../src/common/types.ts';
 import { ModService, describeIssue } from '../src/main/mods/mods.ts';
-import type { ModProvider, ProviderVersion } from '../src/main/mods/provider.ts';
+import type { ModCatalog, ProviderVersion } from '../src/main/mods/provider.ts';
 import { ProfileStore } from '../src/main/profiles/profiles.ts';
 
 // ------------------------------------------------------------------ a tiny fake mod platform
@@ -25,16 +25,14 @@ interface FakeVersion {
   gameVersions: string[];
   requires?: string[];
   incompatibleWith?: string[];
-  restricted?: boolean;
 }
 
-const PROJECTS: Record<string, string> = { sodium: 'Sodium', 'fabric-api': 'Fabric API', oldpvp: 'Old PvP', 'cf-only': 'Website Only' };
+const PROJECTS: Record<string, string> = { sodium: 'Sodium', 'fabric-api': 'Fabric API', oldpvp: 'Old PvP' };
 const VERSIONS: FakeVersion[] = [
   { id: 'sodium-2', projectId: 'sodium', versionNumber: '0.7.0', gameVersions: ['1.21.8'], requires: ['fabric-api'] },
   { id: 'sodium-1', projectId: 'sodium', versionNumber: '0.6.0', gameVersions: ['1.21.8'], requires: ['fabric-api'] },
   { id: 'fapi-1', projectId: 'fabric-api', versionNumber: '0.130.0', gameVersions: ['1.21.8'] },
-  { id: 'oldpvp-1', projectId: 'oldpvp', versionNumber: '1.0', gameVersions: ['1.8.9'] },
-  { id: 'cf-1', projectId: 'cf-only', versionNumber: '2.0', gameVersions: ['1.21.8'], restricted: true }
+  { id: 'oldpvp-1', projectId: 'oldpvp', versionNumber: '1.0', gameVersions: ['1.8.9'] }
 ];
 
 const fileName = (v: FakeVersion) => `${v.projectId}-${v.versionNumber}.jar`;
@@ -57,26 +55,21 @@ function providerVersion(v: FakeVersion, target: ModTargetInfo): ProviderVersion
       ...(v.requires ?? []).map((projectId) => ({ projectId, type: 'required' as const })),
       ...(v.incompatibleWith ?? []).map((projectId) => ({ projectId, type: 'incompatible' as const }))
     ],
-    url: v.restricted ? null : `${base}/${fileName(v)}`,
-    sha1: createHash('sha1').update(body).digest('hex'),
-    pageUrl: `https://example.invalid/${v.projectId}/files/${v.id}`
+    url: `${base}/${fileName(v)}`,
+    sha1: createHash('sha1').update(body).digest('hex')
   };
 }
 
 function summary(projectId: string): ModSummary {
   return {
-    source: 'modrinth', projectId, slug: projectId, name: PROJECTS[projectId] ?? projectId, description: '', author: 'Someone',
+    projectId, slug: projectId, name: PROJECTS[projectId] ?? projectId, description: '', author: 'Someone',
     iconUrl: null, downloads: 1, categories: [], gameVersions: [], loaders: ['fabric'], pageUrl: `https://example.invalid/${projectId}`,
     updatedAt: '2026-01-01T00:00:00Z'
   };
 }
 
-class FakeProvider implements ModProvider {
-  readonly id: ModSource = 'modrinth';
-  readonly name: string = 'Modrinth';
-  unavailableReason(): string | null {
-    return null;
-  }
+/** Modrinth, offline. */
+class FakeCatalog implements ModCatalog {
   async search(_query: ModSearchQuery): Promise<{ hits: ModSummary[]; total: number }> {
     return { hits: Object.keys(PROJECTS).map(summary), total: Object.keys(PROJECTS).length };
   }
@@ -116,15 +109,6 @@ class FakeProvider implements ModProvider {
   }
 }
 
-/** CurseForge without its API key. */
-class KeylessProvider extends FakeProvider {
-  override readonly id: ModSource = 'curseforge';
-  override readonly name: string = 'CurseForge';
-  override unavailableReason(): string | null {
-    return 'CurseForge needs an API key.';
-  }
-}
-
 // ------------------------------------------------------------------ fixture
 
 const TARGETS: Record<string, ModTargetInfo> = {
@@ -157,13 +141,11 @@ before(async () => {
   a = await store.create({ name: 'My PvP Profile', targetId: '1.21.8' });
   b = await store.create({ name: 'Other 1.21.8', targetId: '1.21.8' });
   pvp = await store.create({ name: 'Old PvP', targetId: '1.8.9' });
-  const provider = new FakeProvider();
   mods = new ModService({
     profiles: store,
     target: (id) => TARGETS[id] ?? TARGETS['1.21.8'],
     isRunning: (id) => running.has(id),
-    providers: { modrinth: provider, curseforge: new KeylessProvider() },
-    modrinth: provider as never,
+    catalog: new FakeCatalog(),
     concurrency: () => 4,
     emitTask: () => undefined
   });
@@ -187,18 +169,18 @@ test('every profile has its own game folder named after it', () => {
 });
 
 test('a mod made for another Minecraft version is refused with a clear reason', async () => {
-  const plan = await mods.plan(pvp.id, 'modrinth', 'sodium');
+  const plan = await mods.plan(pvp.id, 'sodium');
   assert.deepEqual(plan.problems, [{ code: 'incompatible', name: 'Sodium' }]);
   assert.equal(describeIssue(plan.problems[0], plan.target), 'Sodium is not compatible with Minecraft 1.8.9 (Legacy Fabric).');
   assert.equal(plan.steps.length, 0);
 });
 
 test('required dependencies are planned and installed with the mod, into that profile only', async () => {
-  const plan = await mods.plan(a.id, 'modrinth', 'sodium');
+  const plan = await mods.plan(a.id, 'sodium');
   assert.deepEqual(plan.problems, []);
   assert.deepEqual(plan.steps.map((s) => [s.name, s.reason]), [['Sodium', 'requested'], ['Fabric API', 'dependency']]);
 
-  const state = await mods.install(a.id, 'modrinth', 'sodium');
+  const state = await mods.install(a.id, 'sodium');
   assert.deepEqual(await files(a), ['fabric-api-0.130.0.jar', 'sodium-0.7.0.jar']);
   assert.deepEqual(await files(b), [], 'the other profile of the same version stays clean');
   const sodium = state.mods.find((m) => m.name === 'Sodium')!;
@@ -209,7 +191,7 @@ test('required dependencies are planned and installed with the mod, into that pr
 });
 
 test('installing the same version again is reported, not repeated', async () => {
-  const plan = await mods.plan(a.id, 'modrinth', 'sodium');
+  const plan = await mods.plan(a.id, 'sodium');
   assert.deepEqual(plan.problems, [{ code: 'alreadyInstalled', name: 'Sodium', version: '0.7.0' }]);
 });
 
@@ -219,10 +201,10 @@ test('disabling renames the jar, enabling restores it, nothing is deleted', asyn
   assert.equal(state.mods.find((m) => m.name === 'Fabric API')!.enabled, false);
   // a plan that needs the disabled dependency says it will switch it back on
   await mods.remove(a.id, 'sodium-0.7.0.jar');
-  const plan = await mods.plan(a.id, 'modrinth', 'sodium');
+  const plan = await mods.plan(a.id, 'sodium');
   assert.deepEqual(plan.warnings, [{ code: 'dependencyDisabled', name: 'Fabric API' }]);
   assert.deepEqual(plan.satisfied, ['Fabric API']);
-  await mods.install(a.id, 'modrinth', 'sodium');
+  await mods.install(a.id, 'sodium');
   state = await mods.installed(a.id);
   assert.deepEqual(await files(a), ['fabric-api-0.130.0.jar', 'sodium-0.7.0.jar']);
   state = await mods.setEnabled(a.id, 'fabric-api-0.130.0.jar', true);
@@ -243,7 +225,7 @@ test('nothing changes while Minecraft runs with the profile', async () => {
 
 test('an older version is found as an update and replaced by the newer file', async () => {
   await mods.remove(a.id, 'sodium-0.7.0.jar');
-  await mods.install(a.id, 'modrinth', 'sodium', 'sodium-1');
+  await mods.install(a.id, 'sodium', 'sodium-1');
   assert.deepEqual(await files(a), ['fabric-api-0.130.0.jar', 'sodium-0.6.0.jar']);
   const checked = await mods.checkUpdates(a.id);
   assert.deepEqual(checked.mods.find((m) => m.name === 'Sodium')!.update, { versionId: 'sodium-2', versionNumber: '0.7.0' });
@@ -258,22 +240,32 @@ test('removing deletes the jar and the dependency shows as missing', async () =>
   assert.deepEqual(state.mods[0].dependencies, [{ name: 'Fabric API', installed: false }]);
 });
 
-test('mods whose authors forbid third-party downloads point to their page instead', async () => {
-  const plan = await mods.plan(b.id, 'modrinth', 'cf-only');
-  assert.deepEqual(plan.problems, [{ code: 'manualDownload', name: 'Website Only', source: 'Modrinth' }]);
-  assert.equal(plan.manualDownloadUrl, 'https://example.invalid/cf-only/files/cf-1');
-});
-
-test('CurseForge without an API key is reported as unavailable, not faked', async () => {
-  const curseforge = mods.sources().find((s) => s.id === 'curseforge')!;
-  assert.equal(curseforge.available, false);
-  await assert.rejects(mods.search({ source: 'curseforge', query: '', profileId: a.id, category: null, sort: 'relevance', page: 0, pageSize: 20 } as ModSearchQuery), /API key/);
+test('search goes to Modrinth for the profile\'s version and loader', async () => {
+  const result = await mods.search({ query: '', profileId: pvp.id, category: null, sort: 'relevance', page: 0, pageSize: 20 } as ModSearchQuery);
+  assert.equal(result.target.loader, 'legacy-fabric');
+  assert.equal(result.hits.length, 3);
 });
 
 test('jars added by hand are listed from their file', async () => {
+  await mods.installed(b.id);
   await writeFile(join(store.directoryOf(b), 'mods', 'handmade.jar'), 'not really a jar');
   const state = await mods.installed(b.id);
   assert.deepEqual(state.mods.map((m) => [m.file, m.source, m.name]), [['handmade.jar', 'local', 'handmade']]);
+});
+
+test('mods 0.3.0 installed from CurseForge stay as local files', async () => {
+  const dir = store.directoryOf(b);
+  await writeFile(join(dir, 'mods', 'jei.jar'), 'jei');
+  const index = JSON.parse(await readFile(join(dir, 'medirian-mods.json'), 'utf8'));
+  index.mods['jei.jar'] = {
+    source: 'curseforge', projectId: '238222', versionId: '238222:5101', name: 'JEI', versionNumber: '19.0', iconUrl: null,
+    author: 'mezz', pageUrl: 'https://www.curseforge.com/minecraft/mc-mods/jei', sha1: 'x', size: 3, modId: 'jei',
+    dependencies: [], installedAt: 1
+  };
+  await writeFile(join(dir, 'medirian-mods.json'), JSON.stringify(index));
+  const jei = (await mods.installed(b.id)).mods.find((m) => m.file === 'jei.jar')!;
+  assert.deepEqual([jei.source, jei.projectId, jei.pageUrl, jei.name], ['local', null, null, 'JEI']);
+  await assert.rejects(mods.update(b.id, 'jei.jar'), /Only mods from Modrinth/);
 });
 
 test('a duplicated profile copies its mods into a new folder', async () => {

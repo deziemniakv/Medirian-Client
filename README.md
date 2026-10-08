@@ -4,7 +4,7 @@
 
 <h1 align="center">Medirian Client</h1>
 
-<p align="center">Klient Minecraft z własnym launcherem: HUD, moduły PvP, mody z Modrinth i CurseForge, wydajność — dla 1.8.9, 1.21.8, 1.21.11 i 26.3.</p>
+<p align="center">Klient Minecraft z własnym launcherem: HUD w stylu Liquid Glass, moduły PvP, mody z Modrinth, wydajność — dla 1.8.9, 1.21.8, 1.21.11 i 26.3.</p>
 
 <p align="center"><b>Pobierz:</b> Medirian Client → Windows → <code>MedirianClientSetup.exe</code> (strona pobierania: <code>website/</code>)</p>
 
@@ -20,7 +20,8 @@
 | **Adapter Minecraft 1.21.11** | `client/targets/mc-1.21.11/` | Fabric, Mixin, Java 21 |
 | **Adapter Minecraft 1.21.8** | `client/targets/mc-1.21.8/` | Fabric, Mixin, Java 21 (kopia 1.21.11 dla serwerów na 1.21.8) |
 | **Adapter Minecraft 26.3** | `client/targets/mc-26.3/` | Fabric (bez obfuskacji, bez remapowania), Mixin, Java 25, SDL3 |
-| Dokumentacja | `docs/ARCHITECTURE.md`, `docs/PROTOCOL.md`, `docs/RELEASING.md`, `TODO.md` | |
+| Dokumentacja | `docs/OWNER_SETUP.md` (konfiguracja właściciela), `docs/ARCHITECTURE.md`, `docs/PROTOCOL.md`, `docs/RELEASING.md`, `docs/SERVICES.md`, `TODO.md` | |
+| Konfiguracja właściciela | `.env.example` → `.env` (nie commitowany), `scripts/check-env.mjs` | |
 | CI i wydania | `.github/workflows/`, `scripts/` | GitHub Actions, Node |
 | **Usługi Medirian** (konta, kosmetyki, profile w chmurze) | `backend/` | Node 22+, bez zależności — [docs/SERVICES.md](docs/SERVICES.md) |
 | **Strona pobierania** (GitHub Pages) | `website/` | statyczny HTML/CSS/JS |
@@ -35,23 +36,37 @@ pomarańcz dyń, księżyc, mgła. Launcher i gra używają tej samej sceny, log
 `node scripts/generate-pixel-art.mjs` (`scripts/pixel/`: scena, logo, 70+ ikon 16×16, własna czcionka Medirian Pixel).
 W grze: własne menu główne, nowe Mod Menu (kafelki z ikonami modułów i lampką ON/OFF), wszystkie ekrany w stylu pixel art.
 
-## Funkcje (0.3.0)
+## Funkcje (0.4.0)
+
+**HUD Liquid Glass** — mniejsze, osobne widżety na półprzezroczystym szkle: lekkie rozmycie świata pod spodem,
+subtelna jasna krawędź, zaokrąglone rogi. *Ustawienia → HUD → Wygląd*: styl (Szkło / Klasyczny), krycie szkła, rozmycie,
+obramowanie, zaokrąglenie, odstęp. Rozmycie to piramida zmniejszeń z filtrem liniowym (bez dodatkowych shaderów), robiona
+raz na klatkę i tylko gdy widżet szklany jest na ekranie; każdy widżet nadal przesuwa się i skaluje osobno.
+
+**Ustawienia → Zaawansowane** (w grze) — Grafika, Renderowanie, Widoczność, Wydajność, Interfejs. Opcje Minecrafta zmieniane
+tak samo jak w jego ekranach opcji (te same efekty uboczne), tylko te, które ma dana wersja; dystanse rysowania graczy, encji,
+przedmiotów, bloków-encji, cząsteczek, nazw, punktów nawigacyjnych i kosmetyków; mgła odległości (Minecraft / zmniejszona /
+wyłączona); zatrzymanie animowanych tekstur. Każda opcja ma opis.
+
+**Kody profili** — *Profile → Udostępnij* tworzy kod `MDN-XXXX-XXXX-XXXX` (usługi Medirian, ważny 90 dni, można go usunąć),
+*Importuj kod* pokazuje zawartość i pyta przed nadpisaniem. Kod nigdy nie zawiera konta, tokenów, haseł ani ustawień Javy.
+
 
 **Instalacja (Windows)** — `MedirianClientSetup.exe` instaluje Medirian Client dla bieżącego użytkownika bez uprawnień
 administratora (`%LOCALAPPDATA%\Programs\Medirian Client\Medirian Client.exe`; opcjonalnie „dla wszystkich”), tworzy skrót
 na pulpicie i w menu Start oraz wpis w „Aplikacje i funkcje” z deinstalatorem. Launcher aktualizuje się sam (electron-updater,
 cicha instalacja w tym samym folderze); dane graczy w `MEDIRIAN_HOME` nie są ruszane przy instalacji, aktualizacji ani deinstalacji.
 
-**Mody** — zakładka *Mods*: wyszukiwanie w Modrinth i CurseForge (oficjalne API), ikona, autor, opis, pobrania, kategorie,
+**Mody** — zakładka *Mods*: wyszukiwanie w Modrinth (oficjalne API v2, bez klucza), ikona, autor, opis, pobrania, kategorie,
 sortowanie, paginacja; instalacja do wybranego profilu z wymaganymi zależnościami, sprawdzanie zgodności z wersją Minecrafta
 i loaderem (Fabric / Legacy Fabric) z czytelnym komunikatem („Ten mod nie jest kompatybilny z Minecraft 1.8.9”), lista
 zainstalowanych: włącz/wyłącz (`.jar.disabled`), usuń, aktualizacje, strona moda, zależności i „wymagany przez”.
 Każdy profil ma własny folder gry (`MEDIRIAN_HOME/profiles/<profil>/` — mody, konfiguracja, światy), więc mody jednego
 profilu nigdy nie trafiają do innego.
 
-**Skin** — aktualny skin konta Minecraft (serwer sesji Mojang) w launcherze (model 3D na ekranie głównym i w oknie konta,
-głowa w pasku) i w menu głównym gry; odświeżany przy zmianie konta, powrocie do launchera i co 10 minut. Bez konta lub
-bez skina: domyślny skin Medirian.
+**Skin** — aktualny skin konta Minecraft (serwer sesji Mojang) w launcherze (duży model 3D obok wybranego profilu na ekranie
+głównym i w oknie konta, głowa w pasku) i w menu głównym gry (duża postać na ścieżce przed chatką, z nickiem; kliknięcie otwiera
+kosmetyki); odświeżany przy zmianie konta, powrocie do launchera i co 10 minut. Bez konta lub bez skina: domyślny skin Medirian.
 
 **Launcher** — kreator pierwszego uruchomienia z diagnostyką i automatycznymi naprawami, automatyczna
 instalacja Javy (Mojang: Java 8 dla 1.8.9, Java 21 dla 1.21.8 i 1.21.11, Java 25 dla 26.3), pobieranie i weryfikacja SHA-1 plików
@@ -100,8 +115,8 @@ npm run dist         # instalator Windows: launcher/dist/MedirianClientSetup.exe
 npm test             # testy jednostkowe launchera (mody, profile, skiny, aktualizacje, Discord)
 ```
 
-Lokalny `npm run dist` nie ma kanału auto-aktualizacji ani wbudowanego URL manifestu klienta (to dodaje workflow wydań);
-grę w takim buildzie uruchomisz po ustawieniu kanału w *Ustawienia → Aktualizacje*.
+Lokalny `npm run dist` nie ma kanału auto-aktualizacji launchera (to dodaje workflow wydań). Konfigurację (logowanie
+Microsoft, usługi, manifest) bierze z `.env` — patrz niżej.
 
 Pojedynczy target / testy:
 
@@ -123,45 +138,28 @@ wszystkich ekranów, `MEDIRIAN_DEV_LAUNCH=<profil>` uruchamia grę przez pełny 
 
 ## Konfiguracja wydania
 
-| Zmienna | Gdzie | Znaczenie |
-|---|---|---|
-| `MEDIRIAN_MSA_CLIENT_ID` | build/uruchomienie launchera (lub *Ustawienia → Deweloperskie*) | identyfikator aplikacji Azure dla logowania Microsoft |
-| `MEDIRIAN_MANIFEST_URL` / `MAIN_VITE_MANIFEST_URL` | uruchomienie / build launchera | domyślny URL manifestu wydań (kanał stabilny), gdy pole w ustawieniach jest puste |
-| `MEDIRIAN_DISCORD_APP_ID` / `MAIN_VITE_DISCORD_APP_ID` | uruchomienie / build launchera (lub *Ustawienia → Discord*) | identyfikator aplikacji Discord dla Rich Presence |
-| `MEDIRIAN_SERVICES_URL` / `MAIN_VITE_SERVICES_URL` | uruchomienie / build launchera (lub *Ustawienia → Deweloperskie*) | adres usług Medirian, przekazywany klientowi jako `-Dmedirian.api` |
-| `MEDIRIAN_API_URL` | klient (bez launchera) | adres usług Medirian |
-| `MEDIRIAN_CURSEFORGE_API_KEY` / `MAIN_VITE_CURSEFORGE_API_KEY` | uruchomienie / build launchera (lub *Ustawienia → Mody*) | klucz API CurseForge dla zakładki Mods (Modrinth działa bez klucza) |
-| `MEDIRIAN_HOME` | launcher i klient | zmiana folderu danych (domyślnie `%APPDATA%\.medirian`) |
+Cała konfiguracja właściciela jest w jednym pliku **`.env`** (wzór: [`.env.example`](.env.example), nie commitowany),
+a na GitHubie w *Settings → Secrets and variables → Actions* pod tymi samymi nazwami. Do launchera trafia tylko pięć
+wartości publicznych (`MEDIRIAN_MSA_CLIENT_ID`, `MEDIRIAN_DISCORD_APP_ID`, `MEDIRIAN_SERVICES_URL`, `MEDIRIAN_MANIFEST_URL`,
+`MEDIRIAN_CONTACT`); sekrety podpisu służą tylko do budowania. Wszystkie adresy muszą być HTTPS.
 
-**Logowanie Microsoft** wymaga własnej rejestracji aplikacji w Azure (konta osobiste, przepływ
-„device code”, uprawnienie `XboxLive.signin`) oraz zatwierdzenia przez Mojang dostępu do API Minecraft
-Services — to wymóg Mojang dla każdego launchera. Do tego czasu build deweloperski udostępnia konto
-offline do testów w singleplayer.
+```bash
+cp .env.example .env
+node scripts/check-env.mjs            # co jest ustawione / czego brakuje (bez wypisywania sekretów)
+node scripts/check-env.mjs --release  # czy można zbudować publiczne wydanie
+```
 
-**Discord Rich Presence** wymaga aplikacji w [Discord Developer Portal](https://discord.com/developers/applications)
-(nazwa aplikacji = nazwa widoczna na profilu, np. „Medirian Client”). W *Rich Presence → Art Assets* dodaj
-`branding/medirian-icon-512.png` pod nazwą `medirian`. Identyfikator aplikacji wpisz w launcherze lub wbuduj
-przez `MAIN_VITE_DISCORD_APP_ID`. Launcher łączy się z lokalnym Discordem (named pipe / unix socket) i pokazuje
-wersję gry, profil Medirian, menu / singleplayer / serwer (adres można ukryć) oraz czas gry.
+Krok po kroku — Microsoft (Azure + zgoda Mojang), Discord, domena i HTTPS, backend, Modrinth, podpis kodu Windows
+(Azure Artifact Signing, certyfikat na tokenie albo plik .pfx), macOS, instalator, aktualizacje, publikacja i lista kontrolna:
+**[docs/OWNER_SETUP.md](docs/OWNER_SETUP.md)**.
 
-**CurseForge** wymaga klucza API: załóż konto w [CurseForge for Studios](https://console.curseforge.com/),
-utwórz klucz (*API keys*) i wpisz go w *Ustawienia → Mody* albo wbuduj w wydania jako sekret repozytorium
-`CURSEFORGE_API_KEY` (workflow przekazuje go jako `MAIN_VITE_CURSEFORGE_API_KEY`). Bez klucza zakładka Mods pokazuje
-„CurseForge wymaga klucza API” i działa z Modrinth. Pliki, których autorzy zablokowali pobieranie przez inne aplikacje,
-launcher otwiera na stronie CurseForge zamiast je pobierać.
+Zmienne deweloperskie: `MEDIRIAN_HOME` (inny folder danych niż `%APPDATA%\.medirian`), `MEDIRIAN_SESSION_SERVER`
+(atrapa serwera sesji Mojang do testów usług).
 
-**Podpis cyfrowy (Windows)**: bez certyfikatu Authenticode instalator jest niepodpisany — SmartScreen pokaże ostrzeżenie, a
-Windows 11 z włączonym *Smart App Control* może zablokować instalator, aplikację lub deinstalator. Do publicznej dystrybucji
-potrzebny jest certyfikat (sekrety `CSC_LINK` / `CSC_KEY_PASSWORD`, patrz [docs/RELEASING.md](docs/RELEASING.md)).
-
-**Publikacja**: tag `v<wersja>` uruchamia `.github/workflows/release.yml` — jary, manifest, instalatory launchera
-i kanał jego auto-aktualizacji trafiają do GitHub Releases (szczegóły i sekrety podpisywania: [docs/RELEASING.md](docs/RELEASING.md)).
-Własny serwer: `node scripts/build-clients.mjs --base-url https://twoj-cdn/medirian/0.3.0/`, wgraj
-zawartość `distribution/` pod ten adres i ustaw URL manifestu w launcherze.
-
-**Strona pobierania**: `.github/workflows/pages.yml` publikuje `website/` na GitHub Pages (jednorazowo: *Settings → Pages →
-Source: GitHub Actions*). Przycisk „Pobierz dla Windows” prowadzi do
-`https://github.com/<repo>/releases/latest/download/MedirianClientSetup.exe`, więc zawsze daje najnowszy instalator.
+**Publikacja**: tag `v<wersja>` uruchamia `.github/workflows/release.yml` — sprawdzenie konfiguracji, jary, manifest,
+podpisane instalatory launchera i kanał jego auto-aktualizacji trafiają do GitHub Releases ([docs/RELEASING.md](docs/RELEASING.md)).
+**Strona pobierania**: `.github/workflows/pages.yml` publikuje `website/` na GitHub Pages; przycisk „Pobierz dla Windows” prowadzi do
+`https://github.com/<repo>/releases/latest/download/MedirianClientSetup.exe`.
 
 ## Struktura danych
 

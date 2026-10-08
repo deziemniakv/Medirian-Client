@@ -185,6 +185,13 @@ public final class SettingsList {
         protected float rx;
         protected float ry;
         protected float rw;
+        /** Lines the description took when last drawn (1 or 2); rows grow to fit it. */
+        protected int descriptionLines = 1;
+
+        /** Height of a row with a description of {@link #descriptionLines} lines. */
+        protected float describedHeight() {
+            return ROW_HEIGHT + DESC_HEIGHT * descriptionLines - 2;
+        }
 
         public float height() {
             return ROW_HEIGHT;
@@ -213,7 +220,16 @@ public final class SettingsList {
                 return;
             }
             g.text(UiDraw.ellipsize(g, text, (int) maxWidth), rx, ry + 4, theme.text, false);
-            g.text(UiDraw.ellipsize(g, description, (int) maxWidth), rx, ry + 15, theme.textMuted, false);
+            // descriptions wrap onto a second line instead of being cut off
+            java.util.List<String> lines = UiDraw.wrap(g, description, (int) maxWidth);
+            descriptionLines = Math.max(1, Math.min(2, lines.size()));
+            for (int i = 0; i < descriptionLines; i++) {
+                String line = lines.get(i);
+                if (i == 1 && lines.size() > 2) {
+                    line = UiDraw.ellipsize(g, line + " " + lines.get(2), (int) maxWidth);
+                }
+                g.text(line, rx, ry + 15 + i * DESC_HEIGHT, theme.textMuted, false);
+            }
         }
     }
 
@@ -283,7 +299,7 @@ public final class SettingsList {
 
         @Override
         public float height() {
-            return setting.displayDescription() != null ? ROW_HEIGHT + DESC_HEIGHT - 2 : ROW_HEIGHT;
+            return setting.displayDescription() != null ? describedHeight() : ROW_HEIGHT;
         }
 
         @Override
@@ -337,6 +353,43 @@ public final class SettingsList {
         }
     }
 
+    /** A row shown only while {@code when} holds (e.g. a module's settings while it is on). */
+    public static final class GuardedRow extends Row {
+        private final Row inner;
+        private final java.util.function.BooleanSupplier when;
+
+        public GuardedRow(Row inner, java.util.function.BooleanSupplier when) {
+            this.inner = inner;
+            this.when = when;
+        }
+
+        @Override
+        public float height() {
+            return inner.height();
+        }
+
+        @Override
+        public boolean visible() {
+            return when.getAsBoolean() && inner.visible();
+        }
+
+        @Override
+        public void layout(float x, float y, float w) {
+            super.layout(x, y, w);
+            inner.layout(x, y, w);
+        }
+
+        @Override
+        public void render(Gfx g, float mx, float my) {
+            inner.render(g, mx, my);
+        }
+
+        @Override
+        public Widget control() {
+            return inner.control();
+        }
+    }
+
     /** Label with one control on the right (button, switch…). */
     public static final class ControlRow extends Row {
         private final String label;
@@ -353,7 +406,7 @@ public final class SettingsList {
 
         @Override
         public float height() {
-            return description != null ? ROW_HEIGHT + DESC_HEIGHT - 2 : ROW_HEIGHT;
+            return description != null ? describedHeight() : ROW_HEIGHT;
         }
 
         @Override

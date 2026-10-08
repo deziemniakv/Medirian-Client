@@ -1,6 +1,7 @@
 package dev.medirian.module.impl.hud;
 
 import dev.medirian.core.Medirian;
+import dev.medirian.hud.HudSurface;
 import dev.medirian.hud.Anchor;
 import dev.medirian.hud.HudElement;
 import dev.medirian.hud.HudStyle;
@@ -138,7 +139,15 @@ public final class KeystrokesModule extends Module {
             float radius = rounded.on() ? 3f : 0f;
 
             if (mode == Style.FILLED) {
-                UiDraw.roundRect(g, x, y, w, h, radius, bg);
+                if (HudSurface.glass()) {
+                    // every key is its own pane of glass; a press lights it up
+                    HudSurface.panel(g, x, y, w, h, bg);
+                    if (t > 0.01f) {
+                        UiDraw.roundRect(g, x, y, w, h, HudSurface.radius(), Colors.fade(pressedBackground.argb(), t * 0.8f));
+                    }
+                } else {
+                    UiDraw.roundRect(g, x, y, w, h, radius, bg);
+                }
             } else if (mode == Style.OUTLINED) {
                 UiDraw.roundRect(g, x, y, w, h, radius, Colors.fade(bg, t));
                 UiDraw.hairline(g, x, y, w, h, Colors.lerp(Colors.withAlpha(textColor.argb(), 110), pressedBackground.argb(), t));

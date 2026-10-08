@@ -1,18 +1,8 @@
 import type { LauncherSettings } from '../../common/types';
 import { readJson, writeJson } from './json';
 
-/**
- * Release manifest of the stable channel when the user has not set one: MEDIRIAN_MANIFEST_URL at
- * runtime, else the URL built in by the release workflow (MAIN_VITE_MANIFEST_URL).
- */
-export function defaultManifestUrl(): string {
-  return process.env.MEDIRIAN_MANIFEST_URL || import.meta.env.MAIN_VITE_MANIFEST_URL || '';
-}
-
-/** Medirian services when the user has not set a URL: MEDIRIAN_SERVICES_URL, else the built-in one. */
-export function defaultServicesUrl(): string {
-  return process.env.MEDIRIAN_SERVICES_URL || import.meta.env.MAIN_VITE_SERVICES_URL || '';
-}
+/** Settings of older launchers that are configured in .env now (docs/OWNER_SETUP.md). */
+const RETIRED = ['theme', 'manifestUrl', 'msaClientId', 'servicesUrl', 'discordAppId', 'curseforgeApiKey'];
 
 export function defaultSettings(localDistributionDir: string): LauncherSettings {
   return {
@@ -22,19 +12,14 @@ export function defaultSettings(localDistributionDir: string): LauncherSettings 
     winterSnow: true,
     afterLaunch: 'keep',
     updateChannel: localDistributionDir ? 'local' : 'stable',
-    manifestUrl: '',
     localDistributionDir,
     concurrentDownloads: 12,
     reuseMinecraftAssets: true,
     setupCompleted: false,
     selectedProfileId: null,
-    msaClientId: '',
-    servicesUrl: '',
     discordPresence: true,
     discordShowServer: true,
-    discordShowInLauncher: false,
-    discordAppId: '',
-    curseforgeApiKey: ''
+    discordShowInLauncher: false
   };
 }
 
@@ -46,11 +31,16 @@ export class SettingsStore {
     this.settings = settings;
   }
 
-  static async load(file: string, defaults: LauncherSettings): Promise<SettingsStore> {
-    const stored = await readJson<Partial<LauncherSettings> & { theme?: unknown }>(file, {});
-    // seasonal themes are gone: Halloween is Medirian's look all year
-    delete stored.theme;
-    return new SettingsStore(file, { ...defaults, ...stored, version: 1 });
+  static async load(file: string, defaults: LauncherSettings, packaged: boolean): Promise<SettingsStore> {
+    const stored = await readJson<Record<string, unknown>>(file, {});
+    for (const key of RETIRED) {
+      delete stored[key];
+    }
+    // installed launchers always use the release channel of their build
+    if (packaged) {
+      stored.updateChannel = 'stable';
+    }
+    return new SettingsStore(file, { ...defaults, ...(stored as Partial<LauncherSettings>), version: 1 });
   }
 
   get(): LauncherSettings {

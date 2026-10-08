@@ -60,7 +60,7 @@ export function AccountDialog() {
 
   return (
     <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && !code && close()}>
-      <div className="dialog px-frame">
+      <div className={`dialog px-frame${code ? '' : ' dialog--wide account-dialog'}`}>
         <div className="dialog__header">
           <Icon name="user" size={16} />
           <h2 className="dialog__title">{t('account.title')}</h2>
@@ -72,15 +72,7 @@ export function AccountDialog() {
         </div>
         <div className="dialog__body">
 
-        {!code && <SkinPanel signedIn={!!account} />}
-        {account && !code && (
-          <div className="account-card">
-            <div>
-              <div className="account-card__name">{t('account.signedInAs', { name: account.name })}</div>
-              <div className="muted">{account.type === 'microsoft' ? t('account.microsoft') : t('account.offline')}</div>
-            </div>
-          </div>
-        )}
+        {!code && <SkinPanel signedIn={!!account} name={account?.name ?? null} type={account?.type ?? null} />}
 
         {code ? (
           <>
@@ -142,10 +134,11 @@ export function AccountDialog() {
   );
 }
 
-/** The account's skin in 3D, where it comes from, and a refresh. */
-function SkinPanel({ signedIn }: { signedIn: boolean }) {
+/** The player's skin, large, next to the account and where the skin comes from. */
+function SkinPanel({ signedIn, name, type }: { signedIn: boolean; name: string | null; type: 'microsoft' | 'offline' | null }) {
   const t = useT();
   const skin = useStore((s) => s.skin);
+  const motion = useStore((s) => s.settings?.sceneMotion ?? true);
   const [refreshing, setRefreshing] = useState(false);
   const refresh = async () => {
     setRefreshing(true);
@@ -156,9 +149,21 @@ function SkinPanel({ signedIn }: { signedIn: boolean }) {
     }
   };
   return (
-    <div className="skin-panel px-inset">
-      <Skin3D scale={6} />
-      <div className="skin-panel__info">
+    <div className="account-profile">
+      <div className="account-profile__stage px-inset">
+        <Skin3D scale={10} animate={motion} />
+        <span className="account-profile__hint muted">{t('skin.drag')}</span>
+      </div>
+      <div className="account-profile__side">
+        {name ? (
+          <>
+            <div className="account-profile__name pixel">{name}</div>
+            <div className="muted">{type === 'microsoft' ? t('account.microsoft') : t('account.offline')}</div>
+          </>
+        ) : (
+          <div className="account-profile__name pixel">{t('account.notSignedIn')}</div>
+        )}
+        <hr className="groove" />
         <div className="field__label">{t('skin.title')}</div>
         {skin?.source === 'mojang' ? (
           <>
@@ -169,7 +174,6 @@ function SkinPanel({ signedIn }: { signedIn: boolean }) {
           <div className="muted">{signedIn ? t('skin.none') : t('skin.default')}</div>
         )}
         {skin?.error && <div className="skin-panel__error">{skin.error}</div>}
-        <div className="muted skin-panel__hint">{t('skin.drag')}</div>
         {signedIn && (
           <div className="row skin-panel__actions">
             <button className="btn btn--small" disabled={refreshing} onClick={() => void refresh()}>

@@ -2,11 +2,13 @@ package dev.medirian.mc1_8_9.mixin;
 
 import dev.medirian.perf.CullState;
 import dev.medirian.platform.Hooks;
+import dev.medirian.render.Visibility;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.CameraView;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
@@ -15,7 +17,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** Entity Culling: distance and occlusion culling of entities that passed vanilla's frustum check. */
+/**
+ * Entity Culling and Advanced → Visibility: distance (per kind) and occlusion culling of entities
+ * that passed vanilla's frustum check.
+ */
 @Mixin(EntityRenderDispatcher.class)
 public abstract class EntityRenderDispatcherMixin {
 
@@ -31,7 +36,8 @@ public abstract class EntityRenderDispatcherMixin {
         }
         Vec3d offset = Camera.getPosition();
         Box box = entity.getBoundingBox();
-        if (!Hooks.shouldRenderEntity((CullState) entity, entity instanceof PlayerEntity,
+        if (!Hooks.shouldRenderEntity((CullState) entity,
+                entity instanceof PlayerEntity ? Visibility.PLAYER : entity instanceof ItemEntity ? Visibility.ITEM : Visibility.OTHER,
                 viewX + offset.x, viewY + offset.y, viewZ + offset.z,
                 box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ)) {
             cir.setReturnValue(false);

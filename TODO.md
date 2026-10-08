@@ -1,33 +1,43 @@
 # Medirian — roadmapa
 
-Stan: **0.3.0** (mody z Modrinth i CurseForge w osobnych profilach, skin konta w launcherze i w grze, czapki osadzone na głowie,
-instalator Windows `MedirianClientSetup.exe`, strona pobierania; pixel art + noc Halloween; cztery targety klienta —
-1.8.9, 1.21.8, 1.21.11, 26.3 — HUD, 41 modułów, konfiguracja, wydajność).
+Stan: **0.4.0** (HUD Liquid Glass, *Ustawienia → Zaawansowane* w grze z opcjami Minecrafta i dystansami widoczności,
+kody profili `MDN-…`, spokojniejszy launcher z dużym skinem, mody wyłącznie z Modrinth, jeden plik `.env` właściciela
+i [docs/OWNER_SETUP.md](docs/OWNER_SETUP.md); wcześniej: profile z własnymi folderami, instalator Windows, strona pobierania,
+pixel art + noc Halloween; cztery targety klienta — 1.8.9, 1.21.8, 1.21.11, 26.3).
 Poniżej kolejne etapy. Zasada bez zmian: funkcja trafia do UI dopiero, gdy naprawdę działa.
 
 ## Etap 1 — przed pierwszym publicznym wydaniem
 
-- [ ] **Rejestracja aplikacji Azure + zgoda Mojang** dla logowania Microsoft (`MEDIRIAN_MSA_CLIENT_ID`).
-      Kod device-code flow jest gotowy (`launcher/src/main/auth`), brakuje wyłącznie identyfikatora.
+- [ ] **Konfiguracja właściciela** — wszystko krok po kroku w [docs/OWNER_SETUP.md](docs/OWNER_SETUP.md) (lista kontrolna
+      na końcu). Kod jest gotowy; brakuje wyłącznie kont, kluczy i serwera właściciela:
+  - [ ] **Rejestracja aplikacji Azure + zgoda Mojang** (`MEDIRIAN_MSA_CLIENT_ID`) — bez niej workflow wydania się zatrzyma.
+  - [ ] **Repozytorium na GitHubie** (brak zdalnego `origin` w lokalnym repozytorium), Variables/Secrets, Pages.
+  - [ ] **Domena + serwer + `backend/deploy`** (Caddy, HTTPS) i `MEDIRIAN_SERVICES_URL`.
+  - [ ] **Discord** (`MEDIRIAN_DISCORD_APP_ID`, asset `medirian`) i **kontakt dla Modrinth** (`MEDIRIAN_CONTACT`).
 - [x] **Hosting wydań** (0.1.4) — `.github/workflows/release.yml`: tag `v<wersja>` → GitHub Release z jarami,
       `release-manifest.json` (adresy z `--base-url`), instalatorami i notatkami z CHANGELOG; domyślny manifest
-      wbudowany przez `MAIN_VITE_MANIFEST_URL` (`releases/latest/download/release-manifest.json`). Opis: docs/RELEASING.md.
+      wbudowany przez `MEDIRIAN_MANIFEST_URL` (`releases/latest/download/release-manifest.json`). Opis: docs/RELEASING.md.
 - [x] **Auto-update launchera** (0.1.4) — `electron-updater` (`main/updates/launcherUpdate.ts`), feed z GitHub Releases;
       sprawdzone lokalnie end-to-end (0.1.4 wykrył i pobrał 0.1.5 z lokalnego serwera).
-- [ ] **Podpisywanie kodu** — konfiguracja gotowa (sekrety `CSC_LINK`, `CSC_KEY_PASSWORD`, `APPLE_*` w workflow),
-      brakuje certyfikatów właściciela (Authenticode, Apple Developer ID). Bez podpisu auto-update na macOS nie działa,
-      a Windows 11 ze Smart App Control blokuje niepodpisany instalator / aplikację / deinstalator (sprawdzone w 0.3.0).
+- [ ] **Podpisywanie kodu** — workflow gotowy na Azure Artifact Signing (`AZURE_*`), certyfikat w pliku (`WIN_CSC_*`) albo podpis lokalny tokenem + szkic wydania (`MEDIRIAN_RELEASE_DRAFT`)
+      i Apple Developer ID (`CSC_*`, `APPLE_*`); brakuje certyfikatu właściciela (docs/OWNER_SETUP.md §10–11). Bez podpisu
+      wydanie publiczne jest blokowane (Smart App Control w Windows 11 blokuje niepodpisany instalator / aplikację /
+      deinstalator — sprawdzone w 0.3.0), a auto-update na macOS nie działa. Podpis Azure nie był testowany (wymaga konta).
 - [x] **Instalator Windows** (0.3.0) — `MedirianClientSetup.exe` (NSIS, per-user bez administratora, skróty, wpis
       w „Aplikacje i funkcje”, cicha auto-aktualizacja w tym samym folderze). Sprawdzone: instalacja, start, aktualizacja
       0.3.0 → 0.3.2 z zachowaniem danych, deinstalacja.
 - [x] **Strona pobierania** (0.3.0) — `website/` + `.github/workflows/pages.yml`. Właściciel: repozytorium na GitHubie,
       *Settings → Pages → Source: GitHub Actions*.
-- [x] **Mody w launcherze** (0.3.0) — zakładka Mods (`main/mods`): Modrinth (bez klucza) i CurseForge (klucz API),
+- [x] **Mody w launcherze** (0.3.0; od 0.4.0 tylko Modrinth, CurseForge usunięty) — zakładka Mods (`main/mods`), Modrinth bez klucza,
       zgodność z wersją MC i loaderem, zależności, instalacja do profilu, włącz/wyłącz/usuń/aktualizuj; każdy profil
       z własnym folderem gry. Sprawdzone end-to-end: Mod Menu + Fabric API z Modrinth ładują się tylko w swoim profilu,
       wyłączony i usunięty mod nie ładuje się po ponownym starcie.
-- [ ] **Klucz CurseForge** — sekret `CURSEFORGE_API_KEY` (console.curseforge.com); bez niego zakładka Mods działa z Modrinth,
-      a CurseForge po wpisaniu własnego klucza w *Ustawienia → Mody*.
+- [x] **Ustawienia → Zaawansowane** (0.4.0) — opcje Minecrafta przez `VanillaOptions` (te same efekty co ekrany opcji; self-test
+      zmienia i przywraca 14–25 opcji w każdej wersji), dystanse widoczności, mgła, animacje tekstur.
+- [x] **HUD Liquid Glass** (0.4.0) — rozmycie tła (piramida zmniejszeń, bez shaderów) na 4 wersjach; self-test sprawdza, że powstaje.
+- [x] **Kody profili** (0.4.0) — `/v1/shares` w usługach, eksport/import/usuwanie w launcherze; sprawdzone z lokalnym backendem.
+- [ ] Kody profili także w grze (*Ustawienia → Profile*) — dziś tylko w launcherze.
+- [ ] Domyślny układ HUD bez przerw, gdy część modułów jest wyłączona (dziś stałe pozycje; gracz układa widżety w edytorze).
 - [ ] Licencja projektu (do wyboru przez właściciela) i pola `license` w `fabric.mod.json` / `package.json`.
 - [x] CI (0.1.4) — `.github/workflows/ci.yml`: testy Shared, build wszystkich targetów, launcher (build + testy) na
       Windows/macOS/Linux, testy skryptów, self-test w Xvfb z porównaniem zrzutów.
@@ -51,7 +61,7 @@ Każdy wymaga hooka w obu adapterach (nowe `Capability`):
 - [x] **Chat: kopiowanie wiadomości** (0.1.3) — prawy klik linii w otwartym czacie kopiuje całą wiadomość
       (bez znacznika czasu i licznika); 1.8.9: mapa linia→wiadomość, modern: `endOfEntry`.
 - [x] **Discord Rich Presence** (0.1.3) — launcher (`main/discord`), status z kanału live. Do zrobienia przez właściciela:
-      aplikacja w Discord Developer Portal + asset `medirian`, identyfikator wbudowany przez `MAIN_VITE_DISCORD_APP_ID`.
+      aplikacja w Discord Developer Portal + asset `medirian`, identyfikator wbudowany przez `MEDIRIAN_DISCORD_APP_ID` (docs/OWNER_SETUP.md §4).
 - [x] **Occlusion culling** w Entity Culling (0.1.2): promienie z kamery do środka i narożników hitboxa (`perf/OcclusionCuller`).
 - [x] **Culling block entities** (skrzynie, tabliczki, głowy, banery) tym samym `OcclusionCuller` (0.1.2).
 - [x] Pomiar zysku z okluzji w self-teście (160 świń za ścianą, okluzja wł./wył.; pomiar pomijany, gdy ktoś używa okna):

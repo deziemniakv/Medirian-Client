@@ -51,7 +51,7 @@ public final class SpeedModule extends Module {
         vertical = add(new BooleanSetting("vertical", "Include vertical movement", false));
         on(Events.Tick.class, e -> sample());
         on(Events.WorldJoin.class, e -> reset());
-        hud(new TextHudElement(this, Anchor.TOP_LEFT, 4, 76) {
+        hud(new TextHudElement(this, Anchor.TOP_LEFT, 4, 89) {
             @Override
             protected void collect(Lines out, boolean editor) {
                 double perSecond = blocksPerSecond();

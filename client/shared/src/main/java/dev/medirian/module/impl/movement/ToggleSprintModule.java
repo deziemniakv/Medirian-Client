@@ -31,7 +31,7 @@ public final class ToggleSprintModule extends Module {
             }
             wasDown = down;
         });
-        hud(new TextHudElement(this, Anchor.TOP_LEFT, 4, 182) {
+        hud(new TextHudElement(this, Anchor.TOP_LEFT, 4, 190) {
             @Override
             protected void collect(Lines out, boolean editor) {
                 String state = state(editor);

@@ -33,7 +33,13 @@ public final class ModernCapes {
 
     /** {@code skin} with the player's Medirian cape, or null to keep it as it is. */
     public static PlayerSkin withCape(AbstractClientPlayer player, PlayerSkin skin) {
-        String asset = Hooks.capeTexture(player.getUUID(), player == Minecraft.getInstance().player);
+        Minecraft minecraft = Minecraft.getInstance();
+        boolean local = player == minecraft.player;
+        // far away players' capes are not drawn (Settings → Advanced → Visibility)
+        if (!local && !Hooks.cosmeticsVisible(minecraft.gameRenderer.getMainCamera().getPosition().distanceToSqr(player.position()))) {
+            return null;
+        }
+        String asset = Hooks.capeTexture(player.getUUID(), local);
         if (asset == null || skin == null) {
             return null;
         }
