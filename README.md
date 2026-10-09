@@ -6,7 +6,7 @@
 
 <p align="center">Klient Minecraft z własnym launcherem: HUD w stylu Liquid Glass, moduły PvP, mody z Modrinth, wydajność — dla 1.8.9, 1.21.8, 1.21.11 i 26.3.</p>
 
-<p align="center"><b>Pobierz:</b> Medirian Client → Windows → <code>MedirianClientSetup.exe</code> (strona pobierania: <code>website/</code>)</p>
+<p align="center"><b>Pobierz:</b> Medirian Client → Windows → <code>MedirianClientSetup.exe</code> (strona: <code>website/</code>)</p>
 
 ---
 
@@ -24,7 +24,7 @@
 | Konfiguracja właściciela | `.env.example` → `.env` (nie commitowany), `scripts/check-env.mjs` | |
 | CI i wydania | `.github/workflows/`, `scripts/` | GitHub Actions, Node |
 | **Usługi Medirian** (konta, kosmetyki, profile w chmurze) | `backend/` | Node 22+, bez zależności — [docs/SERVICES.md](docs/SERVICES.md) |
-| **Strona pobierania** (GitHub Pages) | `website/` | statyczny HTML/CSS/JS |
+| **Strona internetowa** (GitHub Pages) | `website/` | statyczny HTML/CSS/JS, `scripts/build-website.mjs` |
 | Branding | `branding/` (źródłowe logo w `branding/source/`) | |
 
 Pełny opis architektury i decyzji technologicznych: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
@@ -158,8 +158,9 @@ Zmienne deweloperskie: `MEDIRIAN_HOME` (inny folder danych niż `%APPDATA%\.medi
 
 **Publikacja**: tag `v<wersja>` uruchamia `.github/workflows/release.yml` — sprawdzenie konfiguracji, jary, manifest,
 podpisane instalatory launchera i kanał jego auto-aktualizacji trafiają do GitHub Releases ([docs/RELEASING.md](docs/RELEASING.md)).
-**Strona pobierania**: `.github/workflows/pages.yml` publikuje `website/` na GitHub Pages; przycisk „Pobierz dla Windows” prowadzi do
-`https://github.com/<repo>/releases/latest/download/MedirianClientSetup.exe`.
+**Strona internetowa**: `.github/workflows/pages.yml` buduje i sprawdza `website/` (`node scripts/build-website.mjs`) i publikuje
+ją na GitHub Pages; przycisk „Download for Windows” prowadzi do najnowszego `MedirianClientSetup.exe` z GitHub Releases
+([docs/OWNER_SETUP.md §16](docs/OWNER_SETUP.md#16-strona-internetowa)).
 
 ## Struktura danych
 

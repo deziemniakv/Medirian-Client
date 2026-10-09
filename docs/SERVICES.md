@@ -27,7 +27,7 @@ Wszystkie odpowiedzi to JSON; błędy: `{ "error": "…" }` z kodem 4xx/5xx.
 
 | Metoda | Ścieżka | Opis |
 |---|---|---|
-| GET | `/v1/status` | `{ name, version }` |
+| GET | `/v1/status` | `{ name, version }` — jedyna trasa z `Access-Control-Allow-Origin: *` (status na stronie `website/`) |
 | POST | `/v1/auth/challenge` | nowe wyzwanie (limit 12/min na IP) |
 | POST | `/v1/auth/session` | `{ name, serverId }` → token sesji |
 | GET 🔒 | `/v1/me` | `{ uuid, name }` |
