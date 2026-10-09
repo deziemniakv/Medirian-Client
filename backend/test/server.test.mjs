@@ -56,6 +56,9 @@ test('status', async () => {
   const { status, body } = await call('GET', '/v1/status');
   assert.equal(status, 200);
   assert.equal(body.name, 'medirian-services');
+  // the website reads it from another origin; nothing else is open to other origins
+  assert.equal((await fetch(`${base}/v1/status`)).headers.get('access-control-allow-origin'), '*');
+  assert.equal((await fetch(`${base}/v1/cosmetics`)).headers.get('access-control-allow-origin'), null);
 });
 
 test('sign-in works only after joining the challenge at the session server', async () => {

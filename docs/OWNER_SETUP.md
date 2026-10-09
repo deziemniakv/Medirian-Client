@@ -26,7 +26,8 @@ podpis kodu → wydanie. Na końcu jest [lista kontrolna](#lista-kontrolna).
 13. [Budowanie wydania lokalnie](#13-budowanie-wydania-lokalnie)
 14. [Publikacja nowej wersji](#14-publikacja-nowej-wersji)
 15. [Przed pierwszym publicznym wydaniem](#15-przed-pierwszym-publicznym-wydaniem)
-16. [Lista kontrolna](#lista-kontrolna)
+16. [Strona internetowa](#16-strona-internetowa)
+17. [Lista kontrolna](#lista-kontrolna)
 
 ---
 
@@ -96,6 +97,9 @@ za proxy odrzuca żądania, które nie przyszły przez HTTPS.
 | `CSC_LINK`, `CSC_KEY_PASSWORD`, `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID` | sekrety | [§11](#11-podpis-i-notaryzacja-macos-opcjonalnie) | Secrets | build macOS niepodpisany |
 | `MEDIRIAN_SERVICES_DOMAIN`, `MEDIRIAN_SERVICES_ACME_EMAIL` | serwerowe | [§5](#5-domena-i-https) | — (tylko serwer) | brak HTTPS dla backendu |
 | `MEDIRIAN_SERVICES_PORT`, `…_HOST`, `…_DATA_DIR`, `…_TRUST_PROXY` | serwerowe | [§6](#6-backend--medirian-services) | — | wartości domyślne |
+| `MEDIRIAN_DISCORD_URL` | strona | zaproszenie na serwer Discord ([§16](#16-strona-internetowa)) | Variable | brak linku Discord w stopce strony |
+| `MEDIRIAN_PRIVACY_URL`, `MEDIRIAN_TERMS_URL` | strona | polityka prywatności i regulamin ([§16](#16-strona-internetowa)) | Variables | brak linków Privacy / Terms w stopce strony |
+| `MEDIRIAN_SITE_URL` | strona | własna domena strony ([§16](#16-strona-internetowa)) | Variable (opcjonalnie) | adres GitHub Pages |
 | `MEDIRIAN_HOME`, `MEDIRIAN_SESSION_SERVER` | tylko deweloperskie | — | — | — (zostaw puste w wydaniach) |
 
 Wycofane nazwy (nieużywane od 0.4.0): `MEDIRIAN_API_URL`, `MAIN_VITE_*`, `MEDIRIAN_CURSEFORGE_API_KEY`,
@@ -145,7 +149,7 @@ git push -u origin main
 |---|---|---|
 | `.github/workflows/ci.yml` | każdy push na `main`/`master` i pull request | testy rdzenia (JUnit), build 4 wersji klienta, launcher na Windows/macOS/Linux (typecheck, build, testy), testy backendu, testy skryptów, self-test w grze ze zrzutami (nieblokujący) |
 | `.github/workflows/release.yml` | push taga `v<wersja>` | sprawdza konfigurację właściciela (`check-env --release`), buduje jary + `release-manifest.json`, launcher na 3 systemy (podpisany), publikuje GitHub Release z notatkami z `CHANGELOG.md` |
-| `.github/workflows/pages.yml` | zmiana w `website/`, opublikowane wydanie, ręcznie | publikuje stronę pobierania na GitHub Pages |
+| `.github/workflows/pages.yml` | zmiana w `website/`, opublikowane wydanie, ręcznie | buduje i sprawdza stronę (`scripts/build-website.mjs`) i publikuje ją na GitHub Pages ([§16](#16-strona-internetowa)) |
 
 **Jak sprawdzić:** zakładka *Actions* → workflow *CI* po pierwszym pushu powinien być zielony
 (job *Self-test and screenshots* może być żółty — jest nieblokujący, patrz `docs/RELEASING.md`).
@@ -602,7 +606,8 @@ popraw błąd wydaniem N+1.
    pobierania; przestrzegaj [Minecraft Usage Guidelines](https://www.minecraft.net/usage-guidelines)
    (bez sprzedawania dostępu do gry, bez logo Minecrafta jako własnego).
 2. **Polityka prywatności**: backend przechowuje UUID i nick gracza, jego kosmetyki, profile w chmurze
-   i kody profili. Opublikuj krótką politykę prywatności (np. w `website/`) i podaj kontakt do usuwania danych.
+   i kody profili. Opublikuj krótką politykę prywatności i podaj kontakt do usuwania danych; jej adres wpisz
+   w `MEDIRIAN_PRIVACY_URL`, a strona pokaże link w stopce (§16).
 3. **Zgoda Mojang** (§3.2) — bez niej nikt się nie zaloguje.
 4. **Podpis** (§10) — bez niego Smart App Control zablokuje instalację u części graczy. Zamów certyfikat
    wcześnie: weryfikacja tożsamości trwa od kilku dni do kilku tygodni.
@@ -611,6 +616,63 @@ popraw błąd wydaniem N+1.
 7. **Wydanie testowe**: ustaw tymczasowo zmienną `MEDIRIAN_ALLOW_UNSIGNED=1` tylko jeśli musisz
    przetestować cały pipeline przed otrzymaniem certyfikatu, opublikuj je jako *pre-release* i usuń
    zmienną przed publicznym wydaniem.
+
+---
+
+## 16. Strona internetowa
+
+`website/` to oficjalna strona Medirian Client (statyczny HTML/CSS/JS, bez frameworka i bez zależności):
+czym jest Medirian, funkcje, prawdziwe zrzuty ekranu, mody z Modrinth, profile, HUD, ustawienia, kosmetyki,
+pobieranie i FAQ, po angielsku i po polsku. `.github/workflows/pages.yml` buduje ją poleceniem
+`node scripts/build-website.mjs` i publikuje na GitHub Pages przy zmianie strony, przy każdym opublikowanym
+wydaniu i ręcznie. Build sprawdza stronę (pliki, linki `#`, teksty alternatywne i rozmiary obrazków,
+tłumaczenia, wersje Minecrafta i liczbę modułów zgodne z kodem, rozmiar) i przerywa publikację przy błędzie;
+ten sam test działa w CI (`scripts/test/website.test.mjs`).
+
+**Co strona bierze sama**
+
+| Dane | Skąd |
+|---|---|
+| przycisk „Download” | `https://github.com/<repo>/releases/latest/download/MedirianClientSetup.exe` — repozytorium, w którym działa workflow |
+| wersja, rozmiar i data instalatora; pliki macOS / Linux | API GitHuba: najnowsze wydanie (`/releases/latest`, bez szkiców i pre-release) |
+| status „Medirian Services” | `GET <MEDIRIAN_SERVICES_URL>/v1/status` (backend odpowiada na nie z `Access-Control-Allow-Origin: *`) |
+| link GitHub w stopce | repozytorium, w którym działa workflow |
+
+Dopóki repozytorium nie ma opublikowanego wydania z `MedirianClientSetup.exe`, przyciski pobierania pokazują
+„Coming soon” i link do wydań — strona nigdy nie podaje wymyślonej wersji ani linku. Pierwsze wydanie (§14)
+uruchamia workflow strony i od tej chwili wszystko pojawia się samo.
+
+**Do ustawienia (GitHub → Settings → Secrets and variables → Actions → Variables; puste = element ukryty)**
+
+| Variable | Przykład | Co włącza |
+|---|---|---|
+| `MEDIRIAN_SERVICES_URL` | `https://api.medirian.example` | linia „Medirian Services · Online” w sekcji Download (ta sama zmienna co dla launchera, §6) |
+| `MEDIRIAN_DISCORD_URL` | `https://discord.gg/…` | link Discord w stopce — zaproszenie z Discorda: *Server → Invite People → Edit invite link → Expire after: Never* |
+| `MEDIRIAN_PRIVACY_URL` | `https://…/privacy` | link Privacy w stopce (§15 pkt 2) |
+| `MEDIRIAN_TERMS_URL` | `https://…/terms` | link Terms w stopce |
+| `MEDIRIAN_SITE_URL` | `https://medirian.example/` | tylko przy własnej domenie: adres do podglądu linków (obrazek `og:image`); domyślnie adres GitHub Pages |
+
+Wszystkie adresy muszą być HTTPS; build odrzuca `http://`, wartości z `.env.example` i zaproszenia spoza
+`discord.gg` / `discord.com`.
+
+**Jednorazowo**: *Settings → Pages → Build and deployment → Source: GitHub Actions* (§2.3). Własna domena:
+*Settings → Pages → Custom domain* + rekord CNAME u rejestratora, potem `MEDIRIAN_SITE_URL`. Ta sama strona
+działa też na Vercelu lub dowolnym hostingu statycznym: zbuduj ją z tymi samymi zmiennymi
+(`GITHUB_REPOSITORY=<owner>/<repo>` zamiast workflow) i opublikuj folder `distribution/website`.
+
+**Lokalnie**
+
+```bash
+node scripts/build-website.mjs              # → distribution/website, z wartościami z .env
+GITHUB_REPOSITORY=owner/repo node scripts/build-website.mjs --external   # + sprawdza linki zewnętrzne
+npx serve distribution/website              # podgląd (albo dowolny serwer plików)
+```
+
+Zrzuty ekranu, grafiki i teksty: `website/README.md`.
+
+**Jak sprawdzić**: na opublikowanej stronie przycisk *Download for Windows* pobiera `MedirianClientSetup.exe`
+najnowszego wydania, pod nim widać numer wersji i rozmiar, linia *Medirian Services* mówi *Online*, a linki
+w stopce prowadzą tam, gdzie trzeba.
 
 ---
 
@@ -631,6 +693,8 @@ Zaznaczaj po kolei; każda pozycja ma sposób sprawdzenia w sekcji obok.
 - [ ] **Modrinth** — `MEDIRIAN_CONTACT` w Variables, wyszukiwanie i instalacja moda działa (§7)
 - [ ] **Code signing** — wariant B (Azure Artifact Signing), C (certyfikat OV na tokenie, podpis lokalny + szkic wydania)
       albo A (`WIN_CSC_*`); `Get-AuthenticodeSignature` → *Valid* na instalatorze z Releases (§10); macOS opcjonalnie (§11)
+- [ ] **Website** — *Pages: GitHub Actions*, workflow „Website” zielony, przycisk pobierania daje instalator
+      najnowszego wydania z wersją i rozmiarem, status usług *Online*, Discord / Privacy / Terms w stopce (§16)
 - [ ] **Installer** — instalacja, skróty, uruchomienie, deinstalacja na czystym Windows 11 (§12)
 - [ ] **Updates** — wersja N zainstalowana, N+1 opublikowana, launcher aktualizuje się po cichu; klient
       w grze pobiera nowe jary z manifestu (§9)

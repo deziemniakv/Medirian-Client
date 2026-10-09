@@ -67,7 +67,7 @@ języki EN/PL/DE/ES), instalacja **dla bieżącego użytkownika bez administrato
 („dla wszystkich” jest opcją i wtedy prosi o uprawnienia), program `Medirian Client.exe`, skróty „Medirian Client” na pulpicie
 i w menu Start, wpis w *Aplikacje i funkcje* (`Uninstall Medirian Client.exe`), `deleteAppDataOnUninstall: false`.
 Nazwa pliku nie ma wersji, więc `https://github.com/<repo>/releases/latest/download/MedirianClientSetup.exe` zawsze wskazuje
-najnowszy instalator (z tego korzysta strona pobierania `website/`). Dane graczy są w `MEDIRIAN_HOME` (`%APPDATA%\.medirian`),
+najnowszy instalator (z tego korzysta strona `website/`). Dane graczy są w `MEDIRIAN_HOME` (`%APPDATA%\.medirian`),
 poza folderem programu — instalacja, aktualizacja i deinstalacja ich nie ruszają.
 
 „Aktualizuj” w launcherze instaluje pobraną wersję **po cichu** (`quitAndInstall(true, true)`: bez okien instalatora,
@@ -87,12 +87,14 @@ instalator, zainstalowany `Medirian Client.exe` i kopię deinstalatora uruchamia
 installer”). Rozwiązaniem jest podpis Authenticode (sekrety niżej) — bez niego publiczne wydanie nie zadziała na komputerach
 z włączonym Smart App Control.
 
-## Strona pobierania (`pages.yml`)
+## Strona internetowa (`pages.yml`)
 
 `website/` (HTML/CSS/JS, grafiki z `scripts/generate-pixel-art.mjs`) trafia na GitHub Pages przy zmianie strony, przy
-każdym opublikowanym wydaniu i ręcznie. Workflow wpisuje nazwę repozytorium w `data-repo` w `index.html`; strona pobiera
-z API GitHuba wersję i rozmiar najnowszego instalatora oraz pliki dla macOS i Linuxa (bez API działa stały link do
-`MedirianClientSetup.exe`). Teksty EN/PL wg języka przeglądarki.
+każdym opublikowanym wydaniu i ręcznie. `scripts/build-website.mjs` wpisuje konfigurację (repozytorium, adres usług,
+opcjonalne linki stopki) i sprawdza stronę; błąd przerywa publikację. Strona pobiera z API GitHuba wersję, rozmiar
+i datę najnowszego instalatora oraz pliki dla macOS i Linuxa (bez API działa stały link do `MedirianClientSetup.exe`);
+bez opublikowanego wydania przyciski mówią „Coming soon”. Teksty EN/PL wg języka przeglądarki. Szczegóły:
+[OWNER_SETUP.md §16](OWNER_SETUP.md#16-strona-internetowa).
 
 ## Do zrobienia przez właściciela (jednorazowo)
 
@@ -107,7 +109,7 @@ Wszystkie wartości, skąd je wziąć, gdzie wkleić i jak sprawdzić: **[OWNER_
 | `MEDIRIAN_DISCORD_APP_ID` | Variables | brak Discord Rich Presence |
 | `WIN_CSC_LINK` + `WIN_CSC_KEY_PASSWORD` **albo** `AZURE_SIGNING_*` (Variables) + `AZURE_TENANT_ID` / `AZURE_CLIENT_ID` / `AZURE_CLIENT_SECRET` | Secrets | wydanie zablokowane (Smart App Control blokuje niepodpisane pliki) |
 | `CSC_LINK`, `CSC_KEY_PASSWORD`, `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID` | Secrets | build macOS niepodpisany, bez notaryzacji i auto-aktualizacji |
-| *Settings → Pages → Source: GitHub Actions* | ustawienia repozytorium | strona pobierania `website/` nie jest publikowana |
+| *Settings → Pages → Source: GitHub Actions* | ustawienia repozytorium | strona `website/` nie jest publikowana |
 | *Settings → Actions → General → Workflow permissions: Read and write* | ustawienia repozytorium | workflow nie utworzy wydania |
 
 Certyfikaty kupuje i przechowuje właściciel — nie trafiają do repozytorium (`*.pfx`, `*.p12`, `*.pem`, `*.key` są w `.gitignore`).

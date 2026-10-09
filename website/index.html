@@ -1,106 +1,504 @@
 <!doctype html>
-<!-- data-repo is the GitHub repository whose releases the page links to; the Pages workflow
-     (.github/workflows/pages.yml) fills it in when it publishes the site. -->
-<html lang="en" data-repo="OWNER/REPO">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Medirian Client — download</title>
-  <meta name="description" content="Medirian Client: a cozy Minecraft client and launcher for 1.8.9, 1.21.8, 1.21.11 and 26.3. Download for Windows.">
-  <meta name="theme-color" content="#120b1e">
+  <title>Medirian Client — a Minecraft client and launcher</title>
+  <meta name="description" content="Medirian Client is a Minecraft client and launcher for 1.8.9, 1.21.8, 1.21.11 and 26.3: 41 modules, a Liquid Glass HUD, mods from Modrinth, separate profiles and cosmetics. Download for Windows.">
+  <meta name="theme-color" content="#0c0814">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Medirian Client">
+  <meta property="og:description" content="A modern Minecraft client built for performance, customization and a better way to play.">
+  <!-- og:image and the canonical address are filled in by scripts/build-website.mjs when the site address is known -->
+  <meta property="og:image" content="assets/social.png" data-site-url>
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/png" href="assets/icon.png">
+  <link rel="preload" href="assets/medirian-pixel.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="assets/icons.css">
+  <!-- Filled in by scripts/build-website.mjs from the owner's configuration (docs/OWNER_SETUP.md, "Website").
+       Empty values hide what depends on them. -->
+  <script type="application/json" id="medirian-config">{"repo":"","servicesUrl":"","discordUrl":"","privacyUrl":"","termsUrl":""}</script>
+  <script src="app.js" defer></script>
 </head>
 <body>
-  <header class="top">
-    <a class="brand" href="#" aria-label="Medirian Client">
-      <img src="assets/logo.png" alt="Medirian Client" width="276" height="80">
-    </a>
-    <nav class="links">
-      <a href="#features" data-t="nav.features">Features</a>
-      <a href="#download" data-t="nav.download">Download</a>
-      <a class="js-releases" href="#" data-t="nav.releases">Releases</a>
-      <button class="lang" type="button" aria-label="Language">PL</button>
-    </nav>
+  <a class="skip" href="#features" data-t="nav.skip">Skip to content</a>
+
+  <header class="nav" data-nav>
+    <div class="nav__inner">
+      <a class="nav__brand" href="#top" aria-label="Medirian Client — home">
+        <img src="assets/logo.png" alt="Medirian Client" width="134" height="34">
+      </a>
+      <nav class="nav__menu" id="menu" aria-label="Main">
+        <a href="#top" data-t="nav.home">Home</a>
+        <a href="#features" data-t="nav.features">Features</a>
+        <a href="#mods" data-t="nav.mods">Mods</a>
+        <a href="#download" data-t="nav.download">Download</a>
+        <a href="#faq" data-t="nav.faq">FAQ</a>
+        <button class="nav__lang js-lang" type="button" lang="pl" aria-label="Polski">PL</button>
+      </nav>
+      <a class="btn btn--primary btn--small nav__cta" href="#download" data-t="nav.cta">Download</a>
+      <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Menu" data-t-label="nav.menu">
+        <span></span>
+      </button>
+    </div>
   </header>
 
   <main>
-    <section class="hero">
-      <div class="scene" aria-hidden="true">
-        <div class="scene__fog"></div>
+    <!-- ============================================================ hero -->
+    <section class="hero" id="top">
+      <div class="hero__scene" aria-hidden="true">
+        <img class="layer layer--sky" src="assets/scene/sky.png" alt="" width="480" height="270" fetchpriority="high">
+        <img class="layer layer--far" src="assets/scene/far.png" alt="" width="480" height="270">
+        <img class="layer layer--forest" src="assets/scene/forest.png" alt="" width="480" height="270">
+        <div class="layer layer--fog"></div>
+        <img class="layer layer--ground" src="assets/scene/ground.png" alt="" width="480" height="270">
+        <div class="fireflies"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
       </div>
-      <div class="hero__text">
-        <h1 class="pixel" data-t="hero.title">A cozy night in Minecraft</h1>
-        <p class="hero__lead" data-t="hero.lead">Medirian Client is a launcher and a client for Minecraft 1.8.9, 1.21.8, 1.21.11 and 26.3 — 41 modules, a HUD in soft Liquid Glass, your own skin everywhere, cosmetics and mods from Modrinth in separate profiles.</p>
-        <div class="download" id="download">
-          <a class="btn btn--pumpkin js-windows" href="#">
-            <img src="assets/icon-play.png" alt="" width="32" height="32">
-            <span>
-              <span class="pixel" data-t="download.windows">Download for Windows</span>
-              <small class="js-meta">MedirianClientSetup.exe</small>
-            </span>
+      <div class="hero__content">
+        <h1 class="hero__title"><img src="assets/logo.png" alt="Medirian Client" width="134" height="34"></h1>
+        <p class="hero__lead" data-t="hero.lead">A modern Minecraft client built for performance, customization and a better way to play.</p>
+        <div class="hero__actions">
+          <a class="btn btn--primary btn--big js-installer" href="#download">
+            <span class="ico ico--play" aria-hidden="true"></span><span data-t="hero.download">Download for Windows</span>
           </a>
-          <p class="download__other">
-            <span data-t="download.other">Also for</span>
-            <a class="js-mac" href="#">macOS</a> ·
-            <a class="js-linux" href="#">Linux</a> ·
-            <a class="js-releases" href="#" data-t="download.all">all releases</a>
-          </p>
-          <p class="download__note js-note" hidden></p>
+          <a class="btn btn--big" href="#features" data-t="hero.explore">Explore Features</a>
+        </div>
+        <p class="hero__meta">
+          <span class="js-version-line" hidden><span data-t="hero.latest">Latest version</span> <b class="js-version"></b> ·</span>
+          <span data-t="hero.meta">Windows 10/11 · Minecraft 1.8.9, 1.21.8, 1.21.11 and 26.3</span>
+        </p>
+      </div>
+    </section>
+
+    <!-- ============================================================ features -->
+    <section class="section" id="features">
+      <div class="wrap">
+        <header class="section__head">
+          <p class="eyebrow" data-t="features.eyebrow">Launcher + client</p>
+          <h2 data-t="features.title">Everything you need.</h2>
+          <p class="section__lead" data-t="features.lead">Medirian installs Minecraft and Java for you, then starts the game with its own menus, modules and HUD. One download, nothing to set up by hand.</p>
+        </header>
+        <ul class="features">
+          <li class="feature">
+            <span class="ico ico--cat-performance" aria-hidden="true"></span>
+            <h3 data-t="f.perf.t">Performance</h3>
+            <p data-t="f.perf.d">Entity culling, Dynamic FPS, particle control and separate render distances help keep the game smooth.</p>
+          </li>
+          <li class="feature">
+            <span class="ico ico--cat-hud" aria-hidden="true"></span>
+            <h3 data-t="f.hud.t">HUD</h3>
+            <p data-t="f.hud.d">A fully configurable HUD of independent widgets — drag, snap and scale each one in the HUD editor.</p>
+          </li>
+          <li class="feature">
+            <span class="ico ico--cat-all" aria-hidden="true"></span>
+            <h3 data-t="f.menu.t">Mod Menu</h3>
+            <p data-t="f.menu.d">Medirian's own menu for its 41 modules: categories, search, and a lamp that switches each one on or off.</p>
+          </li>
+          <li class="feature">
+            <span class="ico ico--mods" aria-hidden="true"></span>
+            <h3 data-t="f.mods.t">Mods</h3>
+            <p data-t="f.mods.d">Search Modrinth and install mods straight from the launcher, together with the mods they need.</p>
+          </li>
+          <li class="feature">
+            <span class="ico ico--profiles" aria-hidden="true"></span>
+            <h3 data-t="f.profiles.t">Profiles</h3>
+            <p data-t="f.profiles.d">Separate profiles that never mix. Share one as a code and import someone else's in seconds.</p>
+          </li>
+          <li class="feature">
+            <span class="ico ico--cosmetics" aria-hidden="true"></span>
+            <h3 data-t="f.cosmetics.t">Cosmetics</h3>
+            <p data-t="f.cosmetics.d">Capes, hats, wings, trails and emotes — and your own Minecraft skin in the launcher and the main menu.</p>
+          </li>
+          <li class="feature">
+            <span class="ico ico--settings" aria-hidden="true"></span>
+            <h3 data-t="f.advanced.t">Advanced Settings</h3>
+            <p data-t="f.advanced.d">Graphics, rendering, visibility, performance and interface in one place. Every option says what it does.</p>
+          </li>
+          <li class="feature">
+            <span class="ico ico--cat-world" aria-hidden="true"></span>
+            <h3 data-t="f.versions.t">Multiple Minecraft Versions</h3>
+            <p data-t="f.versions.d">1.8.9, 1.21.8, 1.21.11 and 26.3 with the same modules, HUD and cosmetics. Java is installed for you.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============================================================ screenshots -->
+    <section class="section section--tint" id="screenshots">
+      <div class="wrap">
+        <header class="section__head">
+          <p class="eyebrow" data-t="shots.eyebrow">Screenshots</p>
+          <h2 data-t="shots.title">See it for yourself.</h2>
+          <p class="section__lead" data-t="shots.lead">Real screens from Medirian Client 0.4.0 — the launcher and the game, nothing mocked up.</p>
+        </header>
+        <!-- To add a screenshot: put a .webp into assets/screens/ and add a tab and a figure (website/README.md). -->
+        <div class="shots" data-shots>
+          <div class="shots__tabs" role="tablist" aria-label="Screenshots">
+            <button type="button" role="tab" id="tab-launcher" aria-controls="shot-launcher" aria-selected="true" data-t="shots.launcher.t">Launcher</button>
+            <button type="button" role="tab" id="tab-menu" aria-controls="shot-menu" aria-selected="false" data-t="shots.menu.t">Main Menu</button>
+            <button type="button" role="tab" id="tab-modmenu" aria-controls="shot-modmenu" aria-selected="false" data-t="shots.modmenu.t">Mod Menu</button>
+            <button type="button" role="tab" id="tab-settings" aria-controls="shot-settings" aria-selected="false" data-t="shots.settings.t">Settings</button>
+            <button type="button" role="tab" id="tab-cosmetics" aria-controls="shot-cosmetics" aria-selected="false" data-t="shots.cosmetics.t">Cosmetics</button>
+          </div>
+          <figure class="shot" role="tabpanel" id="shot-launcher" aria-labelledby="tab-launcher">
+            <div class="shot__frame"><img src="assets/screens/launcher-profiles.webp" width="1180" height="740" loading="lazy" decoding="async" alt="The Medirian launcher's Profiles page: three profiles on the left and the selected profile's version, memory, Java and Medirian configuration on the right."></div>
+            <figcaption data-t="shots.launcher.d">The launcher. Each profile starts one Minecraft version with its own memory, Java and Medirian configuration.</figcaption>
+          </figure>
+          <figure class="shot" role="tabpanel" id="shot-menu" aria-labelledby="tab-menu">
+            <div class="shot__frame"><img src="assets/screens/main-menu.webp" width="1600" height="900" loading="lazy" decoding="async" alt="Medirian's main menu in Minecraft: the logo and menu buttons on the left, a player standing in front of a cabin under the moon."></div>
+            <figcaption data-t="shots.menu.d">Medirian's own main menu in the game: a quiet night by the cabin, with your skin on the path.</figcaption>
+          </figure>
+          <figure class="shot" role="tabpanel" id="shot-modmenu" aria-labelledby="tab-modmenu">
+            <div class="shot__frame"><img src="assets/screens/mod-menu.webp" width="1600" height="900" loading="lazy" decoding="async" alt="The Mod Menu: a grid of module tiles with pixel-art icons and ON/OFF lamps, category tabs on the left and a search field at the top."></div>
+            <figcaption data-t="shots.modmenu.d">The Mod Menu (Right Shift). Every module has its own icon and an ON/OFF lamp; click a tile for its settings.</figcaption>
+          </figure>
+          <figure class="shot" role="tabpanel" id="shot-settings" aria-labelledby="tab-settings">
+            <div class="shot__frame"><img src="assets/screens/settings.webp" width="1600" height="900" loading="lazy" decoding="async" alt="Medirian's settings screen in the game, General section: language, main menu, font, notifications, animations and key bindings."></div>
+            <figcaption data-t="shots.settings.d">Settings in the game: General, HUD, Advanced, Performance, Profiles and your Medirian account.</figcaption>
+          </figure>
+          <figure class="shot" role="tabpanel" id="shot-cosmetics" aria-labelledby="tab-cosmetics">
+            <div class="shot__frame"><img src="assets/screens/cosmetics.webp" width="1600" height="900" loading="lazy" decoding="async" alt="The Cosmetics screen: tabs for capes, hats, wings, trails and emotes, a grid of capes and a preview of the selected Moonlit cape."></div>
+            <figcaption data-t="shots.cosmetics.d">Cosmetics: capes, hats, wings, trails and emotes in one screen.</figcaption>
+          </figure>
         </div>
       </div>
     </section>
 
-    <section class="steps">
-      <h2 class="pixel" data-t="steps.title">Three steps to the night</h2>
-      <ol>
-        <li><span class="pixel">1</span><p data-t="steps.1">Download <b>MedirianClientSetup.exe</b>.</p></li>
-        <li><span class="pixel">2</span><p data-t="steps.2">Run it — Medirian Client installs for your Windows user, no administrator needed, with shortcuts on the desktop and in the Start Menu.</p></li>
-        <li><span class="pixel">3</span><p data-t="steps.3">Open Medirian Client, sign in with Microsoft and press Play. Updates install themselves.</p></li>
-      </ol>
+    <!-- ============================================================ mods -->
+    <section class="section" id="mods">
+      <div class="wrap split">
+        <div class="split__text">
+          <p class="eyebrow" data-t="mods.eyebrow">Mods from Modrinth</p>
+          <h2 data-t="mods.title">Your mods. Your way.</h2>
+          <p data-t="mods.lead">The launcher's Mods tab searches Modrinth and installs a mod into the profile you pick — together with the mods it needs. Medirian checks the Minecraft version and loader first, and tells you plainly when a mod doesn't fit.</p>
+          <ul class="ticks">
+            <li data-t="mods.l1">Fabric mods, and Legacy Fabric mods for 1.8.9</li>
+            <li data-t="mods.l2">Required dependencies installed with the mod</li>
+            <li data-t="mods.l3">Switch a mod off, update it or remove it</li>
+            <li data-t="mods.l4">Mods stay inside their own profile</li>
+          </ul>
+          <p class="note" data-t="mods.note">Medirian uses Modrinth only — mods download straight from Modrinth, through its official API.</p>
+          <a class="link-arrow" href="https://modrinth.com/mods" rel="noopener" data-t="mods.browse">Browse mods on Modrinth</a>
+        </div>
+        <ol class="flow" aria-label="How installing a mod works">
+          <li class="flow__step"><span class="ico ico--search" aria-hidden="true"></span><span data-t="mods.s1">Search Modrinth</span></li>
+          <li class="flow__step"><span class="ico ico--mods" aria-hidden="true"></span><span data-t="mods.s2">Select Mod</span></li>
+          <li class="flow__step"><span class="ico ico--profiles" aria-hidden="true"></span><span data-t="mods.s3">Install to Profile</span></li>
+          <li class="flow__step flow__step--last"><span class="ico ico--play" aria-hidden="true"></span><span data-t="mods.s4">Launch Minecraft</span></li>
+        </ol>
+      </div>
     </section>
 
-    <section class="features" id="features">
-      <h2 class="pixel" data-t="features.title">What is inside</h2>
-      <div class="grid">
-        <article class="card">
-          <img src="assets/icon-mods.png" alt="" width="48" height="48">
-          <h3 class="pixel" data-t="f.mods.t">Mods per profile</h3>
-          <p data-t="f.mods.d">Search Modrinth, install with dependencies into one profile. Medirian checks the Minecraft version and loader for you.</p>
-        </article>
-        <article class="card">
-          <img src="assets/icon-profiles.png" alt="" width="48" height="48">
-          <h3 class="pixel" data-t="f.profiles.t">Separate profiles</h3>
-          <p data-t="f.profiles.d">Every profile has its own folder: mods, settings and worlds never mix. Share a profile with a friend as a short code.</p>
-        </article>
-        <article class="card">
-          <img src="assets/icon-hudedit.png" alt="" width="48" height="48">
-          <h3 class="pixel" data-t="f.hud.t">41 modules and a HUD</h3>
-          <p data-t="f.hud.d">Keystrokes, CPS, armor, coordinates, zoom, freelook and more on translucent glass — drag and scale every widget.</p>
-        </article>
-        <article class="card">
-          <img src="assets/icon-cosmetics.png" alt="" width="48" height="48">
-          <h3 class="pixel" data-t="f.cosmetics.t">Your skin, your style</h3>
-          <p data-t="f.cosmetics.d">Your Minecraft skin in the launcher and in the game menu. Capes, hats, wings, trails and emotes.</p>
-        </article>
-        <article class="card">
-          <img src="assets/icon-fps.png" alt="" width="48" height="48">
-          <h3 class="pixel" data-t="f.perf.t">Fast</h3>
-          <p data-t="f.perf.d">Entity and block-entity culling, render distances per kind, fog and graphics options in one place, Java installed for you.</p>
-        </article>
-        <article class="card">
-          <img src="assets/icon-news.png" alt="" width="48" height="48">
-          <h3 class="pixel" data-t="f.updates.t">Always up to date</h3>
-          <p data-t="f.updates.d">The launcher and the client update in the background; your profiles and worlds stay where they are.</p>
-        </article>
+    <!-- ============================================================ profiles -->
+    <section class="section section--tint" id="profiles">
+      <div class="wrap split split--reverse">
+        <div class="split__text">
+          <p class="eyebrow" data-t="profiles.eyebrow">Profiles</p>
+          <h2 data-t="profiles.title">One client. Multiple setups.</h2>
+          <p data-t="profiles.lead">A profile is one way to play: a Minecraft version with its own memory, Java and game folder, started with the Medirian configuration you choose for it. Mods, settings and worlds of one profile never end up in another.</p>
+          <p class="chips-label" data-t="profiles.own">Every profile can have its own</p>
+          <ul class="chips">
+            <li data-t="profiles.c1">Modules</li>
+            <li data-t="profiles.c2">HUD</li>
+            <li data-t="profiles.c3">Settings</li>
+            <li data-t="profiles.c4">Mods</li>
+            <li data-t="profiles.c5">Configuration</li>
+          </ul>
+        </div>
+        <div class="profiles-demo">
+          <p class="demo-label" data-t="profiles.example">Example setups</p>
+          <ul class="profile-list">
+            <li class="profile">
+              <span class="ico ico--cat-world" aria-hidden="true"></span>
+              <span class="profile__name">PvP</span>
+              <span class="profile__meta">Minecraft 1.8.9</span>
+              <span class="profile__tag"><span data-t="profiles.config">Configuration:</span> PvP</span>
+            </li>
+            <li class="profile">
+              <span class="ico ico--cat-world" aria-hidden="true"></span>
+              <span class="profile__name">Performance</span>
+              <span class="profile__meta">Minecraft 1.21.11</span>
+              <span class="profile__tag"><span data-t="profiles.config">Configuration:</span> Performance</span>
+            </li>
+            <li class="profile">
+              <span class="ico ico--cat-world" aria-hidden="true"></span>
+              <span class="profile__name">Vanilla+</span>
+              <span class="profile__meta">Minecraft 1.21.11</span>
+              <span class="profile__tag"><span data-t="profiles.config">Configuration:</span> Default</span>
+            </li>
+          </ul>
+          <div class="share">
+            <p class="share__title" data-t="profiles.share.t">Share a profile with a code</p>
+            <p class="share__code"><code>MDN-7K4X-92QP-L8F2</code></p>
+            <p class="share__text" data-t="profiles.share.d">Profiles → Share makes a code with the profile's version, memory, modules, HUD and video settings. Import code shows what's inside before you add it. A code never carries your account, tokens, passwords or Java settings, and it expires after 90 days.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ HUD -->
+    <section class="section" id="hud">
+      <div class="wrap">
+        <header class="section__head">
+          <p class="eyebrow" data-t="hud.eyebrow">HUD</p>
+          <h2 data-t="hud.title">Small widgets. Exactly where you want them.</h2>
+          <p class="section__lead" data-t="hud.lead">Every HUD module is its own widget: drag it, snap it to the guides and scale it in the HUD editor. Pick the look — Liquid Glass, with a soft blur of the world behind it, or Classic.</p>
+        </header>
+        <div class="hud-demo" data-look="glass">
+          <div class="hud-demo__stage">
+            <img class="hud-demo__bg" src="assets/scene/sky.png" alt="" width="480" height="270" loading="lazy" aria-hidden="true">
+            <img class="hud-demo__bg" src="assets/scene/forest.png" alt="" width="480" height="270" loading="lazy" aria-hidden="true">
+            <img class="hud-demo__bg" src="assets/scene/ground.png" alt="" width="480" height="270" loading="lazy" aria-hidden="true">
+            <div class="widget widget--keys" aria-label="Keystrokes">
+              <span class="key">W</span>
+              <span class="key">A</span><span class="key key--on">S</span><span class="key">D</span>
+              <span class="key key--wide key--on">LMB <small>11</small></span><span class="key key--wide">RMB <small>0</small></span>
+            </div>
+            <div class="widget widget--fps"><b>FPS</b> 240</div>
+            <div class="widget widget--cps"><b>CPS</b> 11</div>
+            <div class="widget widget--ping"><b>Ping</b> 23 ms</div>
+            <div class="widget widget--xyz"><b>XYZ</b> 128 64 -310</div>
+            <div class="widget widget--target">
+              <span class="target__name">Opponent</span>
+              <span class="target__bar"><i style="width: 70%"></i></span>
+              <span class="target__info">14 / 20 · 2.8 m</span>
+            </div>
+            <div class="widget widget--session"><b data-t="hud.session">Session</b> 1h 24m</div>
+          </div>
+          <div class="hud-demo__bar">
+            <div class="segmented" role="group" aria-label="HUD style">
+              <button type="button" aria-pressed="true" data-look-set="glass">Liquid Glass</button>
+              <button type="button" aria-pressed="false" data-look-set="classic" data-t="hud.classic">Classic</button>
+            </div>
+            <p class="demo-label" data-t="hud.illustration">Illustration — the numbers are examples.</p>
+          </div>
+        </div>
+        <ul class="widget-names">
+          <li><span class="ico ico--keystrokes" aria-hidden="true"></span>Keystrokes</li>
+          <li><span class="ico ico--cps" aria-hidden="true"></span>CPS</li>
+          <li><span class="ico ico--fps" aria-hidden="true"></span>FPS</li>
+          <li><span class="ico ico--ping" aria-hidden="true"></span>Ping</li>
+          <li><span class="ico ico--coordinates" aria-hidden="true"></span>Coordinates</li>
+          <li><span class="ico ico--targethud" aria-hidden="true"></span>Target HUD</li>
+          <li><span class="ico ico--sessioninfo" aria-hidden="true"></span>Session Info</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============================================================ advanced settings -->
+    <section class="section section--tint" id="settings">
+      <div class="wrap split">
+        <div class="split__text">
+          <p class="eyebrow" data-t="adv.eyebrow">Advanced settings</p>
+          <h2 data-t="adv.title">Fine-tune everything.</h2>
+          <p data-t="adv.lead">Settings → Advanced puts Minecraft's own options next to Medirian's, in five sections. They change exactly as in Minecraft's option screens, only the options your Minecraft version has are shown, and each one says what it does.</p>
+          <p data-t="adv.lead2">Players, entities, dropped items, particles, name tags and cosmetics can each stop being drawn beyond a distance you choose, and the distance fog can start later or be switched off.</p>
+        </div>
+        <div class="panel" data-panel>
+          <div class="panel__tabs" role="tablist" aria-label="Advanced settings sections">
+            <button type="button" role="tab" aria-selected="true" aria-controls="adv-graphics" id="adv-tab-graphics"><span class="ico ico--fullbright" aria-hidden="true"></span><span data-t="adv.graphics">Graphics</span></button>
+            <button type="button" role="tab" aria-selected="false" aria-controls="adv-rendering" id="adv-tab-rendering"><span class="ico ico--blockoverlay" aria-hidden="true"></span><span data-t="adv.rendering">Rendering</span></button>
+            <button type="button" role="tab" aria-selected="false" aria-controls="adv-visibility" id="adv-tab-visibility"><span class="ico ico--cat-render" aria-hidden="true"></span><span data-t="adv.visibility">Visibility</span></button>
+            <button type="button" role="tab" aria-selected="false" aria-controls="adv-performance" id="adv-tab-performance"><span class="ico ico--cat-performance" aria-hidden="true"></span><span data-t="adv.performance">Performance</span></button>
+            <button type="button" role="tab" aria-selected="false" aria-controls="adv-interface" id="adv-tab-interface"><span class="ico ico--cat-hud" aria-hidden="true"></span><span data-t="adv.interface">Interface</span></button>
+          </div>
+          <div class="panel__body">
+            <ul class="rows" role="tabpanel" id="adv-graphics" aria-labelledby="adv-tab-graphics">
+              <li><span>Render distance</span><span class="ctl">12 chunks</span></li>
+              <li><span>Graphics</span><span class="ctl">Fancy</span></li>
+              <li><span>Smooth lighting</span><span class="ctl ctl--on" aria-label="On"></span></li>
+              <li><span>Clouds</span><span class="ctl">Fancy</span></li>
+              <li><span>VSync</span><span class="ctl ctl--on" aria-label="On"></span></li>
+              <li><span>Field of view</span><span class="ctl">70</span></li>
+            </ul>
+            <ul class="rows" role="tabpanel" id="adv-rendering" aria-labelledby="adv-tab-rendering" hidden>
+              <li><span>Distance fog</span><span class="ctl">Minecraft</span></li>
+              <li><span>Damage tilt</span><span class="ctl">100%</span></li>
+              <li><span>Weather Changer</span><span class="ctl ctl--off" aria-label="Off"></span></li>
+              <li><span>Block Overlay</span><span class="ctl ctl--on" aria-label="On"></span></li>
+              <li><span>Item Physics</span><span class="ctl ctl--off" aria-label="Off"></span></li>
+              <li><span>Fullbright</span><span class="ctl ctl--off" aria-label="Off"></span></li>
+            </ul>
+            <ul class="rows" role="tabpanel" id="adv-visibility" aria-labelledby="adv-tab-visibility" hidden>
+              <li><span>Player render distance</span><span class="ctl">No limit</span></li>
+              <li><span>Entity render distance</span><span class="ctl">No limit</span></li>
+              <li><span>Item render distance</span><span class="ctl">48 blocks</span></li>
+              <li><span>Particle distance</span><span class="ctl">No limit</span></li>
+              <li><span>Name tag distance</span><span class="ctl">No limit</span></li>
+              <li><span>Cosmetic render distance</span><span class="ctl">No limit</span></li>
+            </ul>
+            <ul class="rows" role="tabpanel" id="adv-performance" aria-labelledby="adv-tab-performance" hidden>
+              <li><span>Performance mode</span><span class="ctl">Balanced</span></li>
+              <li><span>Animated textures</span><span class="ctl ctl--on" aria-label="On"></span></li>
+              <li><span>Entity Culling</span><span class="ctl ctl--on" aria-label="On"></span></li>
+              <li><span>Particle Control</span><span class="ctl ctl--on" aria-label="On"></span></li>
+              <li><span>Dynamic FPS</span><span class="ctl ctl--on" aria-label="On"></span></li>
+            </ul>
+            <ul class="rows" role="tabpanel" id="adv-interface" aria-labelledby="adv-tab-interface" hidden>
+              <li><span>GUI scale</span><span class="ctl">Auto</span></li>
+              <li><span>HUD scale</span><span class="ctl">1.00x</span></li>
+              <li><span>Animations</span><span class="ctl ctl--on" aria-label="On"></span></li>
+              <li><span>Notifications</span><span class="ctl ctl--on" aria-label="On"></span></li>
+              <li><span>Chat opacity</span><span class="ctl">100%</span></li>
+            </ul>
+          </div>
+          <p class="panel__note demo-label" data-t="adv.illustration">Illustration of Settings → Advanced; the values are examples.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ cosmetics -->
+    <section class="section" id="cosmetics">
+      <div class="wrap split split--reverse">
+        <div class="split__text">
+          <p class="eyebrow" data-t="cos.eyebrow">Cosmetics</p>
+          <h2 data-t="cos.title">Make it yours.</h2>
+          <p data-t="cos.lead">Pick a cape, a hat, wings, a trail and emotes in the Cosmetics screen. Other Medirian players see them when you're signed in to Medirian services, and a hat hides while you wear a helmet.</p>
+          <ul class="cos-list">
+            <li><img src="assets/capes/moonlit.png" alt="" width="40" height="64" loading="lazy" class="cos-list__cape"><span><b>6</b> <span data-t="cos.capes">capes</span></span></li>
+            <li><img src="assets/cosmetics/hat_tophat.png" alt="" width="64" height="64" loading="lazy"><span><b>4</b> <span data-t="cos.hats">hats</span></span></li>
+            <li><img src="assets/cosmetics/wings_medirian.png" alt="" width="64" height="64" loading="lazy"><span><b>3</b> <span data-t="cos.wings">pairs of wings</span></span></li>
+            <li><img src="assets/cosmetics/trail_sparkles.png" alt="" width="64" height="64" loading="lazy"><span><b>4</b> <span data-t="cos.trails">trails</span></span></li>
+            <li><img src="assets/cosmetics/emote_wave.png" alt="" width="64" height="64" loading="lazy"><span><b>3</b> <span data-t="cos.emotes">emotes</span></span></li>
+          </ul>
+          <p class="note" data-t="cos.skin">Your own Minecraft skin shows up in the launcher and in the game's main menu.</p>
+        </div>
+        <div class="wardrobe" data-wardrobe>
+          <div class="wardrobe__stage">
+            <div class="wardrobe__figure" aria-hidden="true">
+              <img class="wardrobe__skin" src="assets/skin-back.png" alt="" width="16" height="32" loading="lazy">
+              <img class="wardrobe__cape js-cape" src="assets/capes/moonlit.png" alt="" width="40" height="64" loading="lazy">
+            </div>
+          </div>
+          <div class="wardrobe__capes" role="radiogroup" aria-label="Try a cape">
+            <button type="button" role="radio" aria-checked="false" data-cape="medirian" aria-label="Medirian cape"><img src="assets/capes/medirian.png" alt="" width="40" height="64" loading="lazy"></button>
+            <button type="button" role="radio" aria-checked="true" data-cape="moonlit" aria-label="Moonlit cape"><img src="assets/capes/moonlit.png" alt="" width="40" height="64" loading="lazy"></button>
+            <button type="button" role="radio" aria-checked="false" data-cape="aurora" aria-label="Aurora cape"><img src="assets/capes/aurora.png" alt="" width="40" height="64" loading="lazy"></button>
+            <button type="button" role="radio" aria-checked="false" data-cape="ember" aria-label="Ember cape"><img src="assets/capes/ember.png" alt="" width="40" height="64" loading="lazy"></button>
+            <button type="button" role="radio" aria-checked="false" data-cape="frost" aria-label="Frost cape"><img src="assets/capes/frost.png" alt="" width="40" height="64" loading="lazy"></button>
+          </div>
+          <p class="demo-label"><span data-t="cos.try">Try a cape:</span> <b class="js-cape-name">Moonlit</b></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ why -->
+    <section class="section section--tint" id="why">
+      <div class="wrap">
+        <header class="section__head">
+          <h2 data-t="why.title">Built differently.</h2>
+        </header>
+        <ul class="why">
+          <li><h3 data-t="why.1.t">Performance focused</h3><p data-t="why.1.d">Culling, Dynamic FPS and per-kind render distances are built in, not bolted on.</p></li>
+          <li><h3 data-t="why.2.t">Highly customizable</h3><p data-t="why.2.d">41 modules, each with its own settings and key bindings.</p></li>
+          <li><h3 data-t="why.3.t">Built-in mod management</h3><p data-t="why.3.d">Modrinth search, dependencies and updates right in the launcher.</p></li>
+          <li><h3 data-t="why.4.t">Custom HUD</h3><p data-t="why.4.d">Separate widgets in Liquid Glass or Classic, placed exactly where you want.</p></li>
+          <li><h3 data-t="why.5.t">Profiles</h3><p data-t="why.5.d">Setups that never mix, and a short code to share one.</p></li>
+          <li><h3 data-t="why.6.t">Cozy pixel-art identity</h3><p data-t="why.6.d">A Halloween night all year round, in the launcher and in the game.</p></li>
+          <li><h3 data-t="why.7.t">Regular updates</h3><p data-t="why.7.d">The launcher and the client update themselves; your profiles and worlds stay put.</p></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============================================================ download -->
+    <section class="section download" id="download">
+      <div class="wrap">
+        <header class="section__head">
+          <h2 data-t="dl.title">Download Medirian Client</h2>
+          <p class="section__lead" data-t="dl.lead">One installer. It sets up the launcher for your Windows user — no administrator rights — and the launcher keeps itself and the client up to date.</p>
+        </header>
+        <div class="dl">
+          <div class="dl__card">
+            <div class="dl__os">
+              <svg class="dl__win" viewBox="0 0 16 16" width="32" height="32" aria-hidden="true" shape-rendering="crispEdges"><path fill="currentColor" d="M1 2h6v6H1zM9 2h6v6H9zM1 9h6v5H1zM9 9h6v5H9z"/></svg>
+              <h3>Windows</h3>
+            </div>
+            <a class="btn btn--primary btn--big js-installer" href="#download">
+              <span class="ico ico--play" aria-hidden="true"></span><span class="js-installer-label" data-t="dl.button">Download Installer</span>
+            </a>
+            <p class="dl__file"><code>MedirianClientSetup.exe</code></p>
+            <ul class="dl__meta">
+              <li>Windows 10/11</li>
+              <li class="js-version-item" hidden><span data-t="dl.version">Version</span> <b class="js-version"></b></li>
+              <li class="js-size-item" hidden><span class="js-size"></span></li>
+              <li class="js-date-item" hidden><span data-t="dl.released">Released</span> <span class="js-date"></span></li>
+            </ul>
+            <p class="dl__state js-state" role="status" hidden></p>
+            <p class="dl__more js-more" hidden></p>
+          </div>
+          <ol class="steps">
+            <li><span class="steps__n">1</span><p data-t="dl.s1">Download <b>MedirianClientSetup.exe</b>.</p></li>
+            <li><span class="steps__n">2</span><p data-t="dl.s2">Run it. Medirian Client installs for your Windows user, with shortcuts on the desktop and in the Start Menu.</p></li>
+            <li><span class="steps__n">3</span><p data-t="dl.s3">Open Medirian Client, sign in with Microsoft and press Play. Minecraft and Java are installed for you.</p></li>
+          </ol>
+        </div>
+        <p class="status js-status" hidden><span class="status__dot"></span><span data-t="status.name">Medirian Services</span> · <span class="js-status-text"></span></p>
+      </div>
+    </section>
+
+    <!-- ============================================================ FAQ -->
+    <section class="section section--tint" id="faq">
+      <div class="wrap wrap--narrow">
+        <header class="section__head">
+          <h2 data-t="faq.title">Questions</h2>
+        </header>
+        <div class="faq">
+          <details>
+            <summary data-t="faq.1.q">What is Medirian Client?</summary>
+            <p data-t="faq.1.a">A launcher and a Minecraft client in one. The launcher installs Minecraft and Java, keeps your profiles and mods, and starts the game with Medirian: its own main menu, Mod Menu, 41 modules, a configurable HUD and cosmetics.</p>
+          </details>
+          <details>
+            <summary data-t="faq.2.q">Which Minecraft versions are supported?</summary>
+            <p data-t="faq.2.a">Minecraft: Java Edition 1.8.9 (on Legacy Fabric), 1.21.8, 1.21.11 and 26.3 (on Fabric). All four get the same modules, HUD and cosmetics.</p>
+          </details>
+          <details>
+            <summary data-t="faq.3.q">Is Medirian free?</summary>
+            <p data-t="faq.3.a">Yes. Downloading and playing with Medirian costs nothing, and there is nothing to buy in the launcher or the game. You need your own copy of Minecraft: Java Edition.</p>
+          </details>
+          <details>
+            <summary data-t="faq.4.q">How do I install Medirian?</summary>
+            <p data-t="faq.4.a">Download <b>MedirianClientSetup.exe</b> and run it — no administrator rights needed. Then open Medirian Client, sign in with Microsoft and press Play. Uninstall it like any other app in Settings → Apps; your profiles and worlds are kept.</p>
+          </details>
+          <details>
+            <summary data-t="faq.5.q">Can I install mods?</summary>
+            <p data-t="faq.5.a">Yes — in the launcher's Mods tab, into the profile you choose. Medirian installs the mods a mod needs, checks that it fits your Minecraft version and loader, and lets you switch mods off, update or remove them.</p>
+          </details>
+          <details>
+            <summary data-t="faq.6.q">Where do mods come from?</summary>
+            <p data-t="faq.6.a">From <a href="https://modrinth.com/mods" rel="noopener">Modrinth</a>, through its official API. Medirian doesn't host mods itself and doesn't use CurseForge.</p>
+          </details>
+          <details>
+            <summary data-t="faq.7.q">Can I import profiles?</summary>
+            <p data-t="faq.7.a">Yes. Profiles → Import code takes a code like <code>MDN-7K4X-92QP-L8F2</code> made with Share, shows what the profile contains and asks before replacing anything. Codes last 90 days. Medirian configurations can also be kept in Medirian Cloud (Settings → Profiles in the game).</p>
+          </details>
+          <details>
+            <summary data-t="faq.8.q">Does Medirian require a Microsoft account?</summary>
+            <p data-t="faq.8.a">Yes. You sign in with the Microsoft account that owns Minecraft: Java Edition, on Microsoft's own sign-in page — Medirian never sees your password.</p>
+          </details>
+          <details>
+            <summary data-t="faq.9.q">Is Medirian available on macOS or Linux?</summary>
+            <p data-t="faq.9.a">Windows 10 and 11 come first: that's where Medirian is built and tested. The launcher is also built for macOS and Linux; when a release includes those builds, they're listed in the Download section above.</p>
+          </details>
+        </div>
       </div>
     </section>
   </main>
 
   <footer class="foot">
-    <p data-t="foot.legal">Medirian Client is not an official Minecraft product and is not approved by or associated with Mojang or Microsoft.</p>
+    <div class="wrap foot__inner">
+      <a class="foot__brand" href="#top"><img src="assets/logo.png" alt="Medirian Client" width="134" height="34" loading="lazy"></a>
+      <nav class="foot__links" aria-label="Footer">
+        <a class="js-github" href="#" hidden>GitHub</a>
+        <a class="js-discord" href="#" hidden>Discord</a>
+        <a href="#download" data-t="foot.download">Download</a>
+        <a href="#faq">FAQ</a>
+        <a class="js-privacy" href="#" hidden data-t="foot.privacy">Privacy</a>
+        <a class="js-terms" href="#" hidden data-t="foot.terms">Terms</a>
+      </nav>
+      <p class="foot__copy">© <span class="js-year">2026</span> Medirian Client</p>
+      <p class="foot__legal" data-t="foot.legal">Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.</p>
+    </div>
   </footer>
-
-  <script src="app.js"></script>
 </body>
 </html>

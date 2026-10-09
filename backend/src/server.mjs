@@ -452,6 +452,10 @@ export function createServer({ dataDir, sessionServer = 'https://sessionserver.m
       }
       limit(`ip:${clientIp(req)}`, LIMITS.requestsPerMinute);
       const path = new URL(req.url, 'http://localhost').pathname;
+      if (path === '/v1/status') {
+        // public and harmless: lets the Medirian website show whether the services are up
+        headers['Access-Control-Allow-Origin'] = '*';
+      }
       const route = routes.find(([method, pattern]) => method === req.method && pattern.test(path));
       if (!route) {
         throw new HttpError(routes.some(([, pattern]) => pattern.test(path)) ? 405 : 404, 'Not found');
